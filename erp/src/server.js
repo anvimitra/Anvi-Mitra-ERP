@@ -10,6 +10,7 @@ const { registerExamRoutes } = require('./exams');
 const { registerFeeRoutes } = require('./fees');
 const { registerFeeAssignmentRoutes } = require('./fee_assignments');
 const { registerNotificationRoutes } = require('./notifications');
+const { startNotificationWorker } = require('./notification_worker');
 const { registerReportCardEngineRoute } = require('./reportcard_engine_route');
 const { registerReportCardRoutes } = require('./reportcards');
 const { registerReportCardContextRoutes } = require('./reportcard_context');
@@ -31,7 +32,7 @@ app.disable('x-powered-by');
 app.use(cors({ origin: process.env.CORS_ORIGIN || true, credentials: true }));
 app.use(express.json({ limit: '1mb' }));
 app.get('/api/health', async (_req,res)=>{let database='not-configured';if(pool){try{await pool.query('SELECT 1');database='ok'}catch(_e){database='unavailable'}}res.json({ok:true,service:'anvi-mitra-erp-api',product:'Anvi Mitra ERP',database,timestamp:new Date().toISOString()})});
-if(pool){registerAuthRoutes(app,pool);registerRoutes(app);registerPeopleRoutes(app,pool);registerAttendanceRoutes(app,pool);registerExamRoutes(app,pool);registerFeeRoutes(app,pool);registerFeeAssignmentRoutes(app,pool);registerNotificationRoutes(app,pool);registerReportCardEngineRoute(app,pool);registerReportCardRoutes(app,pool);registerReportCardContextRoutes(app,pool);registerReportCardListRoutes(app,pool);registerReportCardBulkRoutes(app,pool);registerAcademicRoutes(app,pool);registerAcademicMasterRoutes(app,pool);registerAdmissionRoutes(app,pool);registerPortalRoutes(app,pool);registerStudentCrudRoutes(app,pool);registerEnrollmentRoutes(app,pool);registerTeacherAssignmentRoutes(app,pool);registerOrganizationRoutes(app,pool);registerMobileRoutes(app,pool)}else{app.post('/api/auth/login',(_req,res)=>res.status(503).json({error:'Database is not configured'}))}
+if(pool){registerAuthRoutes(app,pool);registerRoutes(app);registerPeopleRoutes(app,pool);registerAttendanceRoutes(app,pool);registerExamRoutes(app,pool);registerFeeRoutes(app,pool);registerFeeAssignmentRoutes(app,pool);registerNotificationRoutes(app,pool);registerReportCardEngineRoute(app,pool);registerReportCardRoutes(app,pool);registerReportCardContextRoutes(app,pool);registerReportCardListRoutes(app,pool);registerReportCardBulkRoutes(app,pool);registerAcademicRoutes(app,pool);registerAcademicMasterRoutes(app,pool);registerAdmissionRoutes(app,pool);registerPortalRoutes(app,pool);registerStudentCrudRoutes(app,pool);registerEnrollmentRoutes(app,pool);registerTeacherAssignmentRoutes(app,pool);registerOrganizationRoutes(app,pool);registerMobileRoutes(app,pool);startNotificationWorker(pool)}else{app.post('/api/auth/login',(_req,res)=>res.status(503).json({error:'Database is not configured'}))}
 app.use((err,_req,res,_next)=>{console.error(err);const status=[400,401,403,404,409,422].includes(err?.statusCode)?err.statusCode:500;res.status(status).json({error:status<500?(err.message||'Request failed'):'Internal server error'})});
 if(require.main===module)app.listen(port,()=>console.log(`Anvi Mitra ERP API listening on ${port}`));
 module.exports={app,pool};
