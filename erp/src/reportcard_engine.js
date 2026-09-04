@@ -8,17 +8,21 @@ async function generateReportCard({ client, auth, studentId, sessionId, configId
   const student = await client.query(`SELECT id,admission_no AS "admissionNo",full_name AS "fullName",branch_id AS "branchId" FROM students WHERE id=$1 AND school_id=$2 AND ($3::uuid IS NULL OR branch_id IS NULL OR branch_id=$3)`, [studentId, auth.schoolId, branchId]);
   if (!student.rowCount) throw Object.assign(new Error('Student not found for this school or branch'), { statusCode: 404 });
 
-  const enrollment = await client.query(`SELECT id,branch_id AS "branchId" FROM enrollments WHERE student_id=$1 AND school_id=$2 AND session_id=$3 AND is_active=true AND ($4::uuid IS NULL OR branch_id=$4 OR branch_id IS NULL) ORDER BY branch_id NULLS LAST,created_at DESC LIMIT 1`, [studentId, auth.schoolId, sessionId, branchId]);
+  const enrollment = await client.query(`SELECT e.id,e.branch_id AS "branchId",sec.class_id AS "classId",sec.id AS "sectionId" FROM enrollments e JOIN sections sec ON sec.id=e.section_id WHERE e.student_id=$1 AND e.school_id=$2 AND e.session_id=$3 AND e.is_active=true AND ($4::uuid IS NULL OR e.branch_id=$4 OR e.branch_id IS NULL) ORDER BY CASE WHEN e.branch_id=$4 THEN 0 ELSE 1 END,e.created_at DESC LIMIT 1`, [studentId, auth.schoolId, sessionId, branchId]);
   if (!enrollment.rowCount) throw Object.assign(new Error('Student has no active enrollment for this session/branch'), { statusCode: 422 });
+  const enrollmentRow = enrollment.rows[0];
 
-  const cfg = await client.query(`SELECT c.id,c.session_id AS "sessionId",c.branch_id AS "branchId",c.template_id AS "templateId",x.exam_type_id AS "examTypeId",x.weight_percent AS "weightPercent" FROM report_card_configs c JOIN report_card_components x ON x.config_id=c.id WHERE c.id=$1 AND c.school_id=$2 AND c.session_id=$3 AND ($4::uuid IS NULL OR c.branch_id=$4) ORDER BY x.display_order`, [configId, auth.schoolId, sessionId, branchId]);
+  const cfg = await client.query(`SELECT c.id,c.session_id AS "sessionId",c.branch_id AS "branchId",c.template_id AS "templateId",x.exam_type_id AS "examTypeId",x.weight_percent AS "weightPercent" FROM report_card_configs c JOIN report_card_components x ON x.config_id=c.id WHERE c.id=$1 AND c.school_id=$2 AND c.session_id=$3 AND ($4::uuid IS NULL OR c.branch_id=$4 OR c.branch_id IS NULL) ORDER BY CASE WHEN c.branch_id=$4 THEN 0 ELSE 1 END,x.display_order`, [configId, auth.schoolId, sessionId, branchId]);
   if (!cfg.rowCount) throw Object.assign(new Error('Report card configuration not found'), { statusCode: 404 });
 
   const components = cfg.rows;
-  const existing = await client.query(`SELECT id,status FROM report_cards WHERE school_id=$1 AND session_id=$2 AND student_id=$3 AND ($4::uuid IS NULL OR branch_id=$4) FOR UPDATE`, [auth.schoolId, sessionId, studentId, branchId]);
+  const selectedConfigBranchId = components[0]?.branchId || null;
+  if (branchId && selectedConfigBranchId !== branchId && selectedConfigBranchId !== null) throw Object.assign(new Error('Report card configuration is not valid for this branch'), { statusCode: 403 });
+
+  const existing = await client.query(`SELECT id,status FROM report_cards WHERE school_id=$1 AND session_id=$2 AND student_id=$3 FOR UPDATE`, [auth.schoolId, sessionId, studentId]);
   if (existing.rows[0]?.status === 'published') throw Object.assign(new Error('Report card is already published'), { statusCode: 409 });
 
-  const exams = await client.query(`SELECT e.id,e.exam_type_id AS "examTypeId",es.id AS "examSubjectId",es.subject_id AS "subjectId",es.max_marks AS "maxMarks",m.marks FROM exams e JOIN exam_subjects es ON es.exam_id=e.id LEFT JOIN exam_marks m ON m.exam_subject_id=es.id AND m.student_id=$1 AND m.school_id=$2 WHERE e.school_id=$2 AND e.session_id=$3 AND ($4::uuid IS NULL OR e.branch_id=$4) AND e.exam_type_id=ANY($5::uuid[]) ORDER BY es.subject_id,e.created_at DESC`, [studentId, auth.schoolId, sessionId, branchId, components.map(x => x.examTypeId)]);
+  const exams = await client.query(`WITH ranked AS (SELECT e.id,e.exam_type_id AS "examTypeId",es.id AS "examSubjectId",es.subject_id AS "subjectId",es.max_marks AS "maxMarks",m.marks,e.created_at,e.starts_on,ROW_NUMBER() OVER (PARTITION BY es.subject_id,e.exam_type_id ORDER BY CASE WHEN e.status IN ('published','completed','open') THEN 0 ELSE 1 END,e.starts_on DESC NULLS LAST,e.created_at DESC,e.id DESC) AS rn FROM exams e JOIN exam_subjects es ON es.exam_id=e.id LEFT JOIN exam_marks m ON m.exam_subject_id=es.id AND m.student_id=$1 AND m.school_id=$2 WHERE e.school_id=$2 AND e.session_id=$3 AND ($4::uuid IS NULL OR e.branch_id=$4 OR e.branch_id IS NULL) AND es.class_id=$5 AND ($4::uuid IS NULL OR es.branch_id=$4 OR es.branch_id IS NULL) AND e.exam_type_id=ANY($6::uuid[])) SELECT id,"examTypeId","examSubjectId","subjectId","maxMarks",marks FROM ranked WHERE rn=1 ORDER BY "subjectId","examTypeId"`, [studentId, auth.schoolId, sessionId, branchId, enrollmentRow.classId, components.map(x => x.examTypeId)]);
   const bySubject = new Map();
   for (const row of exams.rows) {
     if (!bySubject.has(row.subjectId)) bySubject.set(row.subjectId, []);
