@@ -31,10 +31,17 @@ function registerAuthRoutes(app, pool) {
 
   app.post('/api/auth/switch-branch', authenticate, async (req,res,next)=>{
     try {
-      const branchId = await resolveBranch(pool,req.auth.schoolId,req.body?.branchId,null,req.auth.role);
-      if (!branchId) return res.status(400).json({error:'branchId is required'});
-      const token=signAccessToken({sub:req.auth.sub,schoolId:req.auth.schoolId,branchId,role:req.auth.role});
-      res.json({accessToken:token,branchId});
+      if (!Object.prototype.hasOwnProperty.call(req.body || {}, 'branchId')) return res.status(400).json({error:'branchId is required'});
+      const branchId = req.body.branchId || null;
+      const schoolWide = ['super_admin','principal','admin'].includes(req.auth.role);
+      if (!branchId) {
+        if (!schoolWide) return res.status(403).json({error:'Only school-wide administrators can switch to school level'});
+        const token=signAccessToken({sub:req.auth.sub,schoolId:req.auth.schoolId,branchId:null,role:req.auth.role});
+        return res.json({accessToken:token,branchId:null});
+      }
+      const effectiveBranchId = await resolveBranch(pool,req.auth.schoolId,branchId,null,req.auth.role);
+      const token=signAccessToken({sub:req.auth.sub,schoolId:req.auth.schoolId,branchId:effectiveBranchId,role:req.auth.role});
+      res.json({accessToken:token,branchId:effectiveBranchId});
     } catch(err){next(err)}
   });
 
