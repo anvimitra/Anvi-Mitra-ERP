@@ -9,6 +9,7 @@ function registerFeeAssignmentRoutes(app, pool) {
       const { studentId,sessionId,feeHeadId,amount,frequency='annual',startDate,dueDay=null,branchId=null }=req.body||{};
       if(!studentId||!sessionId||!feeHeadId||amount===undefined||!startDate)return res.status(400).json({error:'studentId, sessionId, feeHeadId, amount and startDate are required'});
       if(!['monthly','quarterly','half_yearly','annual','one_time'].includes(frequency))return res.status(400).json({error:'Invalid frequency'});
+      if(Number(amount)<0)return res.status(400).json({error:'amount cannot be negative'});
       const effectiveBranch=branchId||req.auth.branchId||null;
       if(req.auth.branchId&&branchId&&branchId!==req.auth.branchId)return res.status(403).json({error:'Branch mismatch'});
       const {rows}=await pool.query(`SELECT s.id,s.branch_id,e.section_id,sec.class_id FROM students s JOIN enrollments e ON e.student_id=s.id AND e.school_id=s.school_id AND e.session_id=$3 AND e.status='active' JOIN sections sec ON sec.id=e.section_id AND sec.school_id=e.school_id WHERE s.id=$1 AND s.school_id=$2 AND ($4::uuid IS NULL OR s.branch_id=$4 OR s.branch_id IS NULL) LIMIT 1`,[studentId,req.auth.schoolId,sessionId,effectiveBranch]);
@@ -39,35 +40,34 @@ function registerFeeAssignmentRoutes(app, pool) {
       const {rows:assignments}=await client.query(`SELECT a.* FROM student_fee_assignments a WHERE a.school_id=$1 AND a.session_id=$2 AND a.status='active' AND ($3::uuid IS NULL OR a.branch_id=$3 OR a.branch_id IS NULL) AND ($4::uuid IS NULL OR a.student_id=$4) AND a.start_date <= $5::date AND (a.end_date IS NULL OR a.end_date >= $6::date)`,[req.auth.schoolId,sessionId,req.auth.branchId||null,studentId,toDate,fromDate]);
       let created=0;
       for(const a of assignments){
+        const rangeStart=new Date(Math.max(new Date(fromDate).getTime(),new Date(a.start_date).getTime())).toISOString().slice(0,10);
+        const rangeEnd=new Date(Math.min(new Date(toDate).getTime(),new Date(a.end_date||toDate).getTime())).toISOString().slice(0,10);
         const {rows}=await client.query(`
           INSERT INTO fee_installments(school_id,assignment_id,student_id,session_id,fee_head_id,branch_id,period_start,period_end,due_date,amount,status)
           SELECT $1,$2,$3,$4,$5,$6,g::date,
             CASE
-              WHEN $7='monthly' THEN LEAST((g + interval '1 month - 1 day')::date,COALESCE($11::date,(g + interval '1 month - 1 day')::date))
-              WHEN $7='quarterly' THEN LEAST((g + interval '3 months - 1 day')::date,COALESCE($11::date,(g + interval '3 months - 1 day')::date))
-              WHEN $7='half_yearly' THEN LEAST((g + interval '6 months - 1 day')::date,COALESCE($11::date,(g + interval '6 months - 1 day')::date))
+              WHEN $7='monthly' THEN (g + interval '1 month - 1 day')::date
+              WHEN $7='quarterly' THEN (g + interval '3 months - 1 day')::date
+              WHEN $7='half_yearly' THEN (g + interval '6 months - 1 day')::date
               ELSE g::date
             END,
-            LEAST((date_trunc('month',g)::date + ($8::int-1)),
+            LEAST(
+              date_trunc('month',g)::date + ($8::int-1),
               CASE
                 WHEN $7='monthly' THEN (g + interval '1 month - 1 day')::date
                 WHEN $7='quarterly' THEN (g + interval '3 months - 1 day')::date
                 WHEN $7='half_yearly' THEN (g + interval '6 months - 1 day')::date
                 ELSE g::date
-              END,
-              COALESCE($11::date,
-                CASE
-                  WHEN $7='monthly' THEN (g + interval '1 month - 1 day')::date
-                  WHEN $7='quarterly' THEN (g + interval '3 months - 1 day')::date
-                  WHEN $7='half_yearly' THEN (g + interval '6 months - 1 day')::date
-                  ELSE g::date
-                END)),
+              END
+            ),
             $9,'due'
-          FROM generate_series(GREATEST($10::date,$12::date),LEAST($11::date,COALESCE($13::date,$11::date)),
-            CASE WHEN $7='monthly' THEN interval '1 month' WHEN $7='quarterly' THEN interval '3 months' WHEN $7='half_yearly' THEN interval '6 months' ELSE interval '100 years' END) g
-          WHERE $7 IN ('monthly','quarterly','half_yearly') OR (g::date BETWEEN $10::date AND $11::date)
+          FROM generate_series(
+            $10::date,$11::date,
+            CASE WHEN $7='monthly' THEN interval '1 month' WHEN $7='quarterly' THEN interval '3 months' WHEN $7='half_yearly' THEN interval '6 months' ELSE interval '100 years' END
+          ) g
+          WHERE $7 IN ('monthly','quarterly','half_yearly') OR g::date=$10::date
           ON CONFLICT (assignment_id,period_start) DO NOTHING RETURNING id`,
-          [req.auth.schoolId,a.id,a.student_id,a.session_id,a.fee_head_id,a.branch_id,a.frequency,a.due_day||1,a.amount,toDate,a.end_date||toDate,a.start_date,fromDate]);
+          [req.auth.schoolId,a.id,a.student_id,a.session_id,a.fee_head_id,a.branch_id,a.frequency,a.due_day||1,a.amount,rangeStart,rangeEnd]);
         created+=rows.length;
       }
       await client.query('COMMIT');
