@@ -27,17 +27,22 @@ function registerNotificationRoutes(app, pool) {
   });
 }
 
-async function queueFeePaymentNotifications(client, { schoolId, invoiceId, studentId, amount, receiptNo, method, paidAmount, balanceAmount }) {
-  const { rows: parents } = await client.query(`SELECT DISTINCT p.user_id AS "userId",p.relation,p.is_primary AS "isPrimary",pr.phone,s.full_name AS "studentName" FROM student_portal_profiles p JOIN students s ON s.id=p.student_id AND s.school_id=p.school_id LEFT JOIN parents pr ON pr.user_id=p.user_id AND pr.school_id=p.school_id WHERE p.school_id=$1 AND p.student_id=$2 AND p.status='active' AND p.user_id IS NOT NULL`, [schoolId,studentId]);
+async function queueParentNotifications(client, { schoolId, studentId, type, title, message, data, eventType }) {
+  const { rows: parents } = await client.query(`SELECT DISTINCT p.user_id AS "userId",pr.phone,s.full_name AS "studentName" FROM student_portal_profiles p JOIN students s ON s.id=p.student_id AND s.school_id=p.school_id LEFT JOIN parents pr ON pr.user_id=p.user_id AND pr.school_id=p.school_id WHERE p.school_id=$1 AND p.student_id=$2 AND p.status='active' AND p.user_id IS NOT NULL`, [schoolId,studentId]);
   for (const parent of parents) {
-    const title = 'Fee Payment Received';
-    const message = `Fee payment received for ${parent.studentName}. Amount ₹${Number(amount).toFixed(2)}, Receipt ${receiptNo}. Balance ₹${Number(balanceAmount).toFixed(2)}.`;
-    const data = { event: 'fee_payment', invoiceId, studentId, amount:Number(amount), receiptNo, method, paidAmount:Number(paidAmount), balanceAmount:Number(balanceAmount) };
-    await client.query(`INSERT INTO parent_notifications (school_id,user_id,student_id,type,title,message,data_json) VALUES ($1,$2,$3,'fee_payment',$4,$5,$6)`, [schoolId,parent.userId,studentId,title,message,JSON.stringify(data)]);
-    if (parent.phone) {
-      await client.query(`INSERT INTO notification_sms_queue (school_id,user_id,student_id,phone,message,event_type) VALUES ($1,$2,$3,$4,$5,'fee_payment')`, [schoolId,parent.userId,studentId,parent.phone,message]);
-    }
+    await client.query(`INSERT INTO parent_notifications (school_id,user_id,student_id,type,title,message,data_json) VALUES ($1,$2,$3,$4,$5,$6,$7)`, [schoolId,parent.userId,studentId,type,title,message,JSON.stringify(data||{})]);
+    if (parent.phone) await client.query(`INSERT INTO notification_sms_queue (school_id,user_id,student_id,phone,message,event_type) VALUES ($1,$2,$3,$4,$5,$6)`, [schoolId,parent.userId,studentId,parent.phone,message,eventType||type]);
   }
 }
 
-module.exports = { registerNotificationRoutes, queueFeePaymentNotifications };
+async function queueFeePaymentNotifications(client, { schoolId, invoiceId, studentId, amount, receiptNo, method, paidAmount, balanceAmount }) {
+  const message = `Fee payment received for ${studentId}. Amount ₹${Number(amount).toFixed(2)}, Receipt ${receiptNo}. Balance ₹${Number(balanceAmount).toFixed(2)}.`;
+  await queueParentNotifications(client,{schoolId,studentId,type:'fee_payment',title:'Fee Payment Received',message,data:{event:'fee_payment',invoiceId,studentId,amount:Number(amount),receiptNo,method,paidAmount:Number(paidAmount),balanceAmount:Number(balanceAmount)},eventType:'fee_payment'});
+}
+
+async function queueFeeInvoiceNotifications(client, { schoolId, invoiceId, studentId, invoiceNo, amount, dueDate }) {
+  const message = `Fee invoice ${invoiceNo} generated for ${studentId}. Amount ₹${Number(amount).toFixed(2)}, due ${dueDate}.`;
+  await queueParentNotifications(client,{schoolId,studentId,type:'fee_invoice',title:'Fee Invoice Generated',message,data:{event:'fee_invoice',invoiceId,studentId,invoiceNo,amount:Number(amount),dueDate},eventType:'fee_invoice'});
+}
+
+module.exports = { registerNotificationRoutes, queueFeePaymentNotifications, queueFeeInvoiceNotifications };
