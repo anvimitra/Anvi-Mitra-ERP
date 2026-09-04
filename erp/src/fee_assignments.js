@@ -40,8 +40,42 @@ function registerFeeAssignmentRoutes(app, pool) {
     }catch(err){await client.query('ROLLBACK').catch(()=>{});next(err)}finally{client.release()}
   });
 
+  app.post('/api/fees/installments/invoice', authenticate, requireRoles(...financeRoles), async(req,res,next)=>{
+    const client=await pool.connect();
+    try{
+      const {sessionId,studentId=null,fromDate=null,toDate=null,installmentIds=null,dueDate=null}=req.body||{};
+      if(!sessionId)return res.status(400).json({error:'sessionId is required'});
+      await client.query('BEGIN');
+      const params=[req.auth.schoolId,sessionId,req.auth.branchId||null,studentId];
+      let sql=`SELECT fi.id,fi.student_id AS "studentId",fi.fee_head_id AS "feeHeadId",fh.name AS "feeHeadName",fi.period_start AS "periodStart",fi.period_end AS "periodEnd",fi.due_date AS "dueDate",fi.amount,fi.invoice_id AS "invoiceId" FROM fee_installments fi JOIN fee_heads fh ON fh.id=fi.fee_head_id AND fh.school_id=fi.school_id JOIN students s ON s.id=fi.student_id AND s.school_id=fi.school_id WHERE fi.school_id=$1 AND fi.session_id=$2 AND fi.status='due' AND fi.invoice_id IS NULL AND ($3::uuid IS NULL OR fi.branch_id=$3 OR s.branch_id=$3 OR (fi.branch_id IS NULL AND s.branch_id IS NULL)) AND ($4::uuid IS NULL OR fi.student_id=$4)`;
+      if(Array.isArray(installmentIds)&&installmentIds.length){params.push(installmentIds);sql+=` AND fi.id=ANY($${params.length}::uuid[])`}
+      if(fromDate){params.push(fromDate);sql+=` AND fi.due_date >= $${params.length}`}
+      if(toDate){params.push(toDate);sql+=` AND fi.due_date <= $${params.length}`}
+      sql+=' ORDER BY fi.student_id,fi.due_date,fi.id FOR UPDATE';
+      const {rows:installments}=await client.query(sql,params);
+      if(!installments.length){await client.query('ROLLBACK');return res.status(404).json({error:'No uninvoiced due installments found'})}
+      const groups=new Map();
+      for(const item of installments){if(!groups.has(item.studentId))groups.set(item.studentId,[]);groups.get(item.studentId).push(item)}
+      const invoices=[];
+      for(const [sid,items] of groups){
+        const total=items.reduce((sum,x)=>sum+Number(x.amount||0),0);
+        const branch=req.auth.branchId||null;
+        const invoiceNo=`INV-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Date.now().toString(36).toUpperCase()}-${invoices.length+1}`;
+        const invoiceDue=dueDate||items.reduce((min,x)=>!min||x.dueDate<min?x.dueDate:min,null);
+        const {rows:inv}=await client.query(`INSERT INTO fee_invoices(school_id,student_id,session_id,branch_id,invoice_no,due_date,total_amount,discount_amount,net_amount,paid_amount,balance_amount,status) VALUES($1,$2,$3,$4,$5,$6,$7,0,$7,0,$7,'unpaid') RETURNING id,invoice_no AS "invoiceNo",student_id AS "studentId",net_amount AS "netAmount",balance_amount AS "balanceAmount",status`,[req.auth.schoolId,sid,sessionId,branch,invoiceNo,invoiceDue,total]);
+        for(const item of items){
+          await client.query(`INSERT INTO fee_invoice_items(school_id,invoice_id,fee_head_id,description,amount) VALUES($1,$2,$3,$4,$5)`,[req.auth.schoolId,inv[0].id,item.feeHeadId,`${item.feeHeadName} (${item.periodStart} to ${item.periodEnd})`,Number(item.amount)]);
+          await client.query(`UPDATE fee_installments SET invoice_id=$1,status='invoiced' WHERE id=$2 AND invoice_id IS NULL`,[inv[0].id,item.id]);
+        }
+        invoices.push({...inv[0],installmentCount:items.length});
+      }
+      await client.query('COMMIT');
+      res.status(201).json({invoices,count:invoices.length,totalAmount:invoices.reduce((s,x)=>s+Number(x.netAmount||0),0)});
+    }catch(err){await client.query('ROLLBACK').catch(()=>{});next(err)}finally{client.release()}
+  });
+
   app.get('/api/fees/installments', authenticate, requireRoles(...financeRoles), async(req,res,next)=>{
-    try{const {sessionId=null,studentId=null,status=null}=req.query;const params=[req.auth.schoolId,sessionId,req.auth.branchId||null,studentId,status];let sql=`SELECT fi.id,fi.student_id AS "studentId",s.admission_no AS "admissionNo",s.full_name AS "studentName",fi.session_id AS "sessionId",fi.fee_head_id AS "feeHeadId",fh.name AS "feeHeadName",fi.period_start AS "periodStart",fi.period_end AS "periodEnd",fi.due_date AS "dueDate",fi.amount,fi.invoice_id AS "invoiceId",fi.status FROM fee_installments fi JOIN students s ON s.id=fi.student_id JOIN fee_heads fh ON fh.id=fi.fee_head_id WHERE fi.school_id=$1 AND ($2::uuid IS NULL OR fi.session_id=$2) AND ($3::uuid IS NULL OR fi.student_id IN (SELECT id FROM students WHERE id=fi.student_id AND (branch_id=$3 OR branch_id IS NULL))) AND ($4::uuid IS NULL OR fi.student_id=$4) AND ($5::text IS NULL OR fi.status=$5) ORDER BY fi.due_date,s.full_name`;const {rows}=await pool.query(sql,params);res.json({installments:rows,totalDue:rows.filter(x=>x.status!=='paid'&&x.status!=='cancelled').reduce((s,x)=>s+Number(x.amount||0),0)})}catch(err){next(err)}
+    try{const {sessionId=null,studentId=null,status=null}=req.query;const params=[req.auth.schoolId,sessionId,req.auth.branchId||null,studentId,status];let sql=`SELECT fi.id,fi.student_id AS "studentId",s.admission_no AS "admissionNo",s.full_name AS "studentName",fi.session_id AS "sessionId",fi.fee_head_id AS "feeHeadId",fh.name AS "feeHeadName",fi.period_start AS "periodStart",fi.period_end AS "periodEnd",fi.due_date AS "dueDate",fi.amount,COALESCE(fi.paid_amount,0) AS "paidAmount",fi.invoice_id AS "invoiceId",fi.status FROM fee_installments fi JOIN students s ON s.id=fi.student_id JOIN fee_heads fh ON fh.id=fi.fee_head_id WHERE fi.school_id=$1 AND ($2::uuid IS NULL OR fi.session_id=$2) AND ($3::uuid IS NULL OR fi.student_id IN (SELECT id FROM students WHERE id=fi.student_id AND (branch_id=$3 OR branch_id IS NULL))) AND ($4::uuid IS NULL OR fi.student_id=$4) AND ($5::text IS NULL OR fi.status=$5) ORDER BY fi.due_date,s.full_name`;const {rows}=await pool.query(sql,params);res.json({installments:rows,totalDue:rows.filter(x=>x.status!=='paid'&&x.status!=='cancelled').reduce((s,x)=>s+Math.max(0,Number(x.amount||0)-Number(x.paidAmount||0)),0)})}catch(err){next(err)}
   });
 }
 module.exports={registerFeeAssignmentRoutes};
