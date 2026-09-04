@@ -28,21 +28,31 @@ function registerNotificationRoutes(app, pool) {
 }
 
 async function queueParentNotifications(client, { schoolId, studentId, type, title, message, data, eventType }) {
-  const { rows: parents } = await client.query(`SELECT DISTINCT p.user_id AS "userId",pr.phone,s.full_name AS "studentName" FROM student_portal_profiles p JOIN students s ON s.id=p.student_id AND s.school_id=p.school_id LEFT JOIN parents pr ON pr.user_id=p.user_id AND pr.school_id=p.school_id WHERE p.school_id=$1 AND p.student_id=$2 AND p.status='active' AND p.user_id IS NOT NULL`, [schoolId,studentId]);
+  const { rows: parents } = await client.query(`SELECT DISTINCT p.user_id AS "userId",pr.phone,s.full_name AS "studentName",s.admission_no AS "admissionNo" FROM student_portal_profiles p JOIN students s ON s.id=p.student_id AND s.school_id=p.school_id LEFT JOIN parents pr ON pr.user_id=p.user_id AND pr.school_id=p.school_id WHERE p.school_id=$1 AND p.student_id=$2 AND p.status='active' AND p.user_id IS NOT NULL`, [schoolId,studentId]);
   for (const parent of parents) {
-    await client.query(`INSERT INTO parent_notifications (school_id,user_id,student_id,type,title,message,data_json) VALUES ($1,$2,$3,$4,$5,$6,$7)`, [schoolId,parent.userId,studentId,type,title,message,JSON.stringify(data||{})]);
-    if (parent.phone) await client.query(`INSERT INTO notification_sms_queue (school_id,user_id,student_id,phone,message,event_type) VALUES ($1,$2,$3,$4,$5,$6)`, [schoolId,parent.userId,studentId,parent.phone,message,eventType||type]);
+    await client.query(`INSERT INTO parent_notifications (school_id,user_id,student_id,type,title,message,data_json) VALUES ($1,$2,$3,$4,$5,$6,$7)`, [schoolId,parent.userId,studentId,type,title,message,JSON.stringify({...data||{},studentName:parent.studentName,admissionNo:parent.admissionNo})]);
+    if (parent.phone) await client.query(`INSERT INTO notification_sms_queue (school_id,user_id,student_id,phone,message,event_type) VALUES ($1,$2,$3,$4,$5,$6)`, [schoolId,parent.userId,studentId,phoneForSms(parent.phone),message,eventType||type]);
   }
 }
 
+function phoneForSms(phone) {
+  return String(phone || '').trim();
+}
+
 async function queueFeePaymentNotifications(client, { schoolId, invoiceId, studentId, amount, receiptNo, method, paidAmount, balanceAmount }) {
-  const message = `Fee payment received for ${studentId}. Amount ₹${Number(amount).toFixed(2)}, Receipt ${receiptNo}. Balance ₹${Number(balanceAmount).toFixed(2)}.`;
-  await queueParentNotifications(client,{schoolId,studentId,type:'fee_payment',title:'Fee Payment Received',message,data:{event:'fee_payment',invoiceId,studentId,amount:Number(amount),receiptNo,method,paidAmount:Number(paidAmount),balanceAmount:Number(balanceAmount)},eventType:'fee_payment'});
+  const { rows } = await client.query(`SELECT full_name AS "studentName",admission_no AS "admissionNo" FROM students WHERE id=$1 AND school_id=$2 LIMIT 1`, [studentId,schoolId]);
+  const student = rows[0] || {};
+  const label = student.studentName ? `${student.studentName}${student.admissionNo ? ` (${student.admissionNo})` : ''}` : 'student';
+  const message = `Fee payment received for ${label}. Amount ₹${Number(amount).toFixed(2)}, Receipt ${receiptNo}. Balance ₹${Number(balanceAmount).toFixed(2)}.`;
+  await queueParentNotifications(client,{schoolId,studentId,type:'fee_payment',title:'Fee Payment Received',message,data:{event:'fee_payment',invoiceId,studentId,studentName:student.studentName||null,admissionNo:student.admissionNo||null,amount:Number(amount),receiptNo,method,paidAmount:Number(paidAmount),balanceAmount:Number(balanceAmount)},eventType:'fee_payment'});
 }
 
 async function queueFeeInvoiceNotifications(client, { schoolId, invoiceId, studentId, invoiceNo, amount, dueDate }) {
-  const message = `Fee invoice ${invoiceNo} generated for ${studentId}. Amount ₹${Number(amount).toFixed(2)}, due ${dueDate}.`;
-  await queueParentNotifications(client,{schoolId,studentId,type:'fee_invoice',title:'Fee Invoice Generated',message,data:{event:'fee_invoice',invoiceId,studentId,invoiceNo,amount:Number(amount),dueDate},eventType:'fee_invoice'});
+  const { rows } = await client.query(`SELECT full_name AS "studentName",admission_no AS "admissionNo" FROM students WHERE id=$1 AND school_id=$2 LIMIT 1`, [studentId,schoolId]);
+  const student = rows[0] || {};
+  const label = student.studentName ? `${student.studentName}${student.admissionNo ? ` (${student.admissionNo})` : ''}` : 'student';
+  const message = `Fee invoice ${invoiceNo} generated for ${label}. Amount ₹${Number(amount).toFixed(2)}, due ${dueDate}.`;
+  await queueParentNotifications(client,{schoolId,studentId,type:'fee_invoice',title:'Fee Invoice Generated',message,data:{event:'fee_invoice',invoiceId,studentId,studentName:student.studentName||null,admissionNo:student.admissionNo||null,invoiceNo,amount:Number(amount),dueDate},eventType:'fee_invoice'});
 }
 
 module.exports = { registerNotificationRoutes, queueFeePaymentNotifications, queueFeeInvoiceNotifications };
