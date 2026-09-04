@@ -6,7 +6,7 @@ function registerExamResultRoutes(app, pool) {
 
   app.get('/api/exam-results/student/:studentId', authenticate, requireRoles(...staffRoles), async (req,res,next) => {
     try {
-      const { sessionId, examTypeId } = req.query || {};
+      const { sessionId, examTypeId, examId } = req.query || {};
       if (!sessionId) return res.status(400).json({ error: 'sessionId is required' });
       const branchId = req.auth.branchId || null;
       const { rows } = await pool.query(`
@@ -33,15 +33,16 @@ function registerExamResultRoutes(app, pool) {
         WHERE ($4::uuid IS NULL OR es.branch_id=$4 OR es.branch_id IS NULL)
           AND ($4::uuid IS NULL OR e.branch_id=$4 OR e.branch_id IS NULL)
           AND ($5::uuid IS NULL OR et.id=$5)
+          AND ($6::uuid IS NULL OR e.id=$6)
         ORDER BY e.starts_on NULLS LAST,et.display_order,e.name,s.name`,
-        [req.auth.schoolId,req.params.studentId,sessionId,branchId,examTypeId||null]);
+        [req.auth.schoolId,req.params.studentId,sessionId,branchId,examTypeId||null,examId||null]);
       res.json({ results: rows });
     } catch (err) { next(err); }
   });
 
   app.get('/api/exam-results/summary', authenticate, requireRoles(...staffRoles), async (req,res,next) => {
     try {
-      const { sessionId, examTypeId, classId, sectionId } = req.query || {};
+      const { sessionId, examTypeId, examId, classId, sectionId } = req.query || {};
       if (!sessionId) return res.status(400).json({ error: 'sessionId is required' });
       const branchId=req.auth.branchId||null;
       const { rows } = await pool.query(`
@@ -64,13 +65,14 @@ function registerExamResultRoutes(app, pool) {
           AND ($3::uuid IS NULL OR en.branch_id=$3 OR en.branch_id IS NULL)
           AND ($3::uuid IS NULL OR c.branch_id=$3 OR c.branch_id IS NULL)
           AND ($4::uuid IS NULL OR e.exam_type_id=$4)
-          AND ($5::uuid IS NULL OR en.class_id=$5)
-          AND ($6::uuid IS NULL OR en.section_id=$6)
+          AND ($5::uuid IS NULL OR e.id=$5)
+          AND ($6::uuid IS NULL OR en.class_id=$6)
+          AND ($7::uuid IS NULL OR en.section_id=$7)
           AND ($3::uuid IS NULL OR es.branch_id=$3 OR es.branch_id IS NULL)
           AND ($3::uuid IS NULL OR e.branch_id=$3 OR e.branch_id IS NULL)
-        GROUP BY s.id,s.admission_no,s.full_name,c.name,sec.name,s.full_name
+        GROUP BY s.id,s.admission_no,s.full_name,c.name,sec.name
         ORDER BY c.name,sec.name,s.full_name`,
-        [req.auth.schoolId,sessionId,branchId,examTypeId||null,classId||null,sectionId||null]);
+        [req.auth.schoolId,sessionId,branchId,examTypeId||null,examId||null,classId||null,sectionId||null]);
       res.json({ results: rows });
     } catch(err){ next(err); }
   });
