@@ -21,7 +21,8 @@ function registerReportCardContextRoutes(app, pool) {
       if (!card.rowCount) return res.status(404).json({error:'Report card not found for this school or branch'});
       const c = card.rows[0];
       const parents = await pool.query(`
-        SELECT p.full_name AS "fullName", p.phone, p.email, sp.relation
+        SELECT p.full_name AS "fullName", p.phone, p.email, sp.relation,
+               sp.is_primary AS "isPrimary"
         FROM student_parents sp JOIN parents p ON p.id=sp.parent_id
         WHERE sp.student_id=$1 AND p.school_id=$2 AND p.status='active'
         ORDER BY sp.is_primary DESC,p.full_name`, [c.studentId, req.auth.schoolId]);
@@ -30,8 +31,13 @@ function registerReportCardContextRoutes(app, pool) {
         FROM attendance_records
         WHERE school_id=$1 AND student_id=$2 AND session_id=$3
         GROUP BY status`, [req.auth.schoolId, c.studentId, c.sessionId]);
-      const summary = {present:0,absent:0,late:0,halfDay:0,leave:0,total:0};
-      for (const r of attendance.rows) { const k=r.status==='half_day'?'halfDay':r.status; summary[k]=Number(r.count); summary.total+=Number(r.count); }
+      const summary = {present:0,absent:0,late:0,halfDay:0,leave:0,total:0,attendancePercent:0};
+      for (const r of attendance.rows) {
+        const k=r.status==='half_day'?'halfDay':r.status;
+        if (Object.prototype.hasOwnProperty.call(summary,k)) summary[k]=Number(r.count);
+      }
+      summary.total=summary.present+summary.absent+summary.late+summary.halfDay+summary.leave;
+      summary.attendancePercent=summary.total ? Number((((summary.present + (summary.late * 0.5) + (summary.halfDay * 0.5)) / summary.total) * 100).toFixed(2)) : 0;
       const classSection = c.className ? `${c.className}${c.sectionName ? ' • '+c.sectionName : ''}` : null;
       res.json({student:{id:c.studentId,admissionNo:c.admissionNo,fullName:c.fullName,photoUrl:c.photoUrl,classId:c.classId,sectionId:c.sectionId,className:c.className,sectionName:c.sectionName,classSection,sessionName:c.sessionName},parents:parents.rows,attendance:summary});
     } catch(err) { next(err); }
