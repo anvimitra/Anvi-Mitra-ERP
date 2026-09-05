@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'app_config.dart';
+import 'app_version.dart';
 
 class AppUpdateInfo {
   final String? latestVersion;
@@ -11,6 +12,9 @@ class AppUpdateInfo {
   final String? iosUrl;
   final String? releaseNotesUrl;
   AppUpdateInfo({this.latestVersion,this.minimumVersion,this.forceUpdate=false,this.androidUrl,this.iosUrl,this.releaseNotesUrl});
+  bool get available => AppVersion.isUpdateAvailable(latestVersion);
+  bool get required => forceUpdate || AppVersion.isUpdateRequired(minimumVersion);
+  String? get updateUrl => androidUrl ?? iosUrl;
 }
 
 class UpdateChecker {
@@ -28,5 +32,5 @@ class UpdateChecker {
 class UpdateDialog extends StatelessWidget {
   final AppUpdateInfo info;
   const UpdateDialog({super.key,required this.info});
-  @override Widget build(BuildContext context)=>AlertDialog(title:const Text('Update Available'),content:Text('A newer version of the Anvi Mitra School App is available${info.latestVersion==null?'':': ${info.latestVersion}'}. Please update to get the latest features and fixes.'),actions:[if(!info.forceUpdate)TextButton(onPressed:()=>Navigator.pop(context),child:const Text('Later')),FilledButton(onPressed:()=>Navigator.pop(context),child:Text(info.forceUpdate?'Update Required':'OK'))]);
+  @override Widget build(BuildContext context)=>AlertDialog(title:Text(info.required?'Update Required':'Update Available'),content:Text('Current version: ${AppVersion.current}\nLatest version: ${info.latestVersion??'new version'}\n\nPlease update the app to continue with the latest features and fixes.'),actions:[if(!info.required)TextButton(onPressed:()=>Navigator.pop(context),child:const Text('Later')),FilledButton(onPressed:()=>Navigator.pop(context),child:const Text('Continue'))]);
 }
