@@ -1,6 +1,8 @@
-const { authenticate } = require('./auth');
+const { authenticate, requireRoles } = require('./auth');
 
 function registerNotificationRoutes(app, pool) {
+  const adminRoles = ['super_admin','principal','admin'];
+
   app.post('/api/notifications/device-token', authenticate, async (req,res,next) => {
     try {
       const { token, platform } = req.body || {};
@@ -25,6 +27,14 @@ function registerNotificationRoutes(app, pool) {
       res.json({ notification: rows[0] });
     } catch (err) { next(err); }
   });
+
+  app.get('/api/notifications/sms-status', authenticate, requireRoles(...adminRoles), async (req,res,next) => {
+    try {
+      const { rows } = await pool.query(`SELECT status,COUNT(*)::int AS count FROM notification_sms_queue WHERE school_id=$1 GROUP BY status ORDER BY status`, [req.auth.schoolId]);
+      const recent = await pool.query(`SELECT id,phone,event_type AS "eventType",status,attempts,last_error AS "lastError",queued_at AS "queuedAt",sent_at AS "sentAt",provider_message_id AS "providerMessageId" FROM notification_sms_queue WHERE school_id=$1 ORDER BY queued_at DESC LIMIT 50`, [req.auth.schoolId]);
+      res.json({ providerConfigured:Boolean(process.env.SMS_API_URL && process.env.SMS_API_KEY), senderConfigured:Boolean(process.env.SMS_SENDER_ID), counts:rows, recent:recent.rows });
+    } catch(err){ next(err); }
+  });
 }
 
 async function queueParentNotifications(client, { schoolId, studentId, type, title, message, data, eventType }) {
@@ -35,9 +45,7 @@ async function queueParentNotifications(client, { schoolId, studentId, type, tit
   }
 }
 
-function phoneForSms(phone) {
-  return String(phone || '').trim();
-}
+function phoneForSms(phone) { return String(phone || '').trim(); }
 
 async function queueFeePaymentNotifications(client, { schoolId, invoiceId, studentId, amount, receiptNo, method, paidAmount, balanceAmount }) {
   const { rows } = await client.query(`SELECT full_name AS "studentName",admission_no AS "admissionNo" FROM students WHERE id=$1 AND school_id=$2 LIMIT 1`, [studentId,schoolId]);
