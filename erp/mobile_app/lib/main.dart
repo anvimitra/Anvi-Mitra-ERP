@@ -101,14 +101,17 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   const Icon(Icons.school, size: 70),
                   const SizedBox(height: 12),
-                  const Text(
-                    'Anvi Mitra School App',
+                  Text(
+                    AppConfig.appName,
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.w800),
+                    style: const TextStyle(
+                      fontSize: 25,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   const Text(
-                    'One app • Every role • One school',
+                    'School Management App',
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 28),
@@ -242,7 +245,7 @@ class _HomePageState extends State<HomePage> {
         const SizedBox(height: 4),
         Center(
           child: Text(
-            '${widget.user['role'] ?? ''} • ${widget.user['schoolName'] ?? ''}',
+            '${widget.user['role'] ?? ''} • ${widget.user['schoolName'] ?? AppConfig.appName}',
           ),
         ),
         const SizedBox(height: 20),
@@ -250,7 +253,7 @@ class _HomePageState extends State<HomePage> {
           child: ListTile(
             leading: const Icon(Icons.school),
             title: const Text('School'),
-            subtitle: Text('${widget.user['schoolName'] ?? '—'}'),
+            subtitle: Text('${widget.user['schoolName'] ?? AppConfig.appName}'),
           ),
         ),
         Card(
@@ -269,9 +272,10 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final role = (widget.user['role'] ?? '').toString().toLowerCase();
+    final schoolName = (widget.user['schoolName'] ?? AppConfig.appName).toString();
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.user['schoolName'] ?? AppConfig.appName),
+        title: Text(schoolName),
         actions: [
           IconButton(onPressed: _logout, icon: const Icon(Icons.logout)),
         ],
