@@ -110,6 +110,35 @@ jobs:
           gradle.write_text(gtext)
           PY
 
+      - name: Install launcher icon tooling
+        run: |
+          flutter pub add --dev flutter_launcher_icons
+
+      - name: Prepare school logo and launcher icon
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "$LOGO_URL" ]]; then
+            echo "No LOGO_URL supplied; keeping the generated Flutter launcher icon."
+            exit 0
+          fi
+          if [[ ! "$LOGO_URL" =~ ^https:// ]]; then
+            echo "LOGO_URL must use HTTPS"
+            exit 1
+          fi
+          mkdir -p assets
+          curl --fail --location --silent --show-error --max-time 30 "$LOGO_URL" -o assets/school_logo.png
+          file assets/school_logo.png
+          cat > flutter_launcher_icons.yaml <<'YAML'
+          flutter_launcher_icons:
+            android: true
+            ios: false
+            image_path: assets/school_logo.png
+            adaptive_icon_background: "#FFFFFF"
+            adaptive_icon_foreground: assets/school_logo.png
+          YAML
+          dart run flutter_launcher_icons
+
       - name: Remove generated sample test
         run: rm -f test/widget_test.dart
 
