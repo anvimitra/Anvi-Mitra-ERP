@@ -6,47 +6,33 @@
 <title>Anvi Mitra ERP — Fee Center</title>
 <style>
 :root{--bg:#f5f7fb;--card:#fff;--text:#172033;--muted:#667085;--primary:#2563eb;--border:#e5e7eb;--shadow:0 10px 30px rgba(16,24,40,.07)}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}.wrap{max-width:1100px;margin:auto;padding:24px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:24px}.brand{font-weight:800;font-size:24px}.sub{color:var(--muted);margin-top:4px}.btn{border:1px solid var(--border);background:#fff;color:var(--text);padding:10px 14px;border-radius:10px;text-decoration:none;cursor:pointer;font-weight:600}.hero{background:linear-gradient(135deg,#1d4ed8,#2563eb);color:#fff;border-radius:18px;padding:26px;box-shadow:var(--shadow);margin-bottom:22px}.hero h1{margin:0 0 8px;font-size:28px}.hero p{margin:0;opacity:.9}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:var(--shadow);text-decoration:none;color:inherit;transition:.15s}.card:hover{transform:translateY(-2px);border-color:#bfdbfe}.icon{font-size:28px;margin-bottom:12px}.card h3{margin:0 0 7px}.card p{margin:0;color:var(--muted);font-size:14px;line-height:1.5}.receipt{margin-top:22px;background:#fff;border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:var(--shadow)}.receipt h2{margin:0 0 8px}.receipt p{color:var(--muted);margin-top:0}.row{display:flex;gap:10px;flex-wrap:wrap}.input{flex:1;min-width:220px;border:1px solid #d0d5dd;border-radius:10px;padding:11px 12px;font-size:15px}.msg{margin-top:10px;color:#b42318;min-height:20px;font-size:14px}.foot{color:var(--muted);font-size:13px;text-align:center;margin-top:28px}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}.wrap{max-width:1100px;margin:auto;padding:24px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:24px}.brand{font-weight:800;font-size:24px}.sub{color:var(--muted);margin-top:4px}.btn{border:1px solid var(--border);background:#fff;color:var(--text);padding:10px 14px;border-radius:10px;text-decoration:none;cursor:pointer;font-weight:600}.primary{background:var(--primary);color:#fff;border-color:var(--primary)}.hero{background:linear-gradient(135deg,#1d4ed8,#2563eb);color:#fff;border-radius:18px;padding:26px;box-shadow:var(--shadow);margin-bottom:22px}.hero h1{margin:0 0 8px;font-size:28px}.hero p{margin:0;opacity:.9}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:var(--shadow);text-decoration:none;color:inherit;transition:.15s}.card:hover{transform:translateY(-2px);border-color:#bfdbfe}.icon{font-size:28px;margin-bottom:12px}.card h3{margin:0 0 7px}.card p{margin:0;color:var(--muted);font-size:14px;line-height:1.5}.receipt,.lookup{margin-top:22px;background:#fff;border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:var(--shadow)}.receipt h2,.lookup h2{margin:0 0 8px}.receipt p,.lookup p{color:var(--muted);margin-top:0}.row{display:flex;gap:10px;flex-wrap:wrap}.input{flex:1;min-width:220px;border:1px solid #d0d5dd;border-radius:10px;padding:11px 12px;font-size:15px}.msg{margin-top:10px;color:#b42318;min-height:20px;font-size:14px}.result{display:none;margin-top:16px;padding:16px;border:1px solid var(--border);border-radius:12px;background:#f8fafc}.result h3{margin:0 0 8px}.result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px}.stat small{display:block;color:var(--muted);font-size:11px}.stat b{font-size:18px}.foot{color:var(--muted);font-size:13px;text-align:center;margin-top:28px}@media(max-width:620px){.wrap{padding:16px}.top{align-items:flex-start;flex-direction:column}.result-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="top">
-    <div><div class="brand">Anvi Mitra ERP</div><div class="sub">Finance • Fee Center</div></div>
-    <a class="btn" href="/erp/web/portal-dashboard.html">← Dashboard</a>
-  </div>
-
-  <section class="hero">
-    <h1>Fee Center</h1>
-    <p>Manage student fees, installments, ledgers and receipts from one place.</p>
-  </section>
-
+  <div class="top"><div><div class="brand">Anvi Mitra ERP</div><div class="sub">Finance • Fee Center</div></div><a class="btn" href="/erp/web/portal-dashboard.html">← Dashboard</a></div>
+  <section class="hero"><h1>Fee Center</h1><p>Manage student fees, installments, ledgers and receipts from one place.</p></section>
   <section class="grid">
     <a class="card" href="/erp/web/fee-management.html"><div class="icon">💳</div><h3>Fees Management</h3><p>Fee heads, structures, invoices, collections and outstanding reports.</p></a>
     <a class="card" href="/erp/web/fee-installments.html"><div class="icon">📅</div><h3>Fee Installments</h3><p>Generate installments, track dues and convert installments into invoices.</p></a>
     <a class="card" href="/erp/web/fee-ledger.html"><div class="icon">📒</div><h3>Student Fee Ledger</h3><p>View invoice ledger, total paid, outstanding balance and payment history.</p></a>
   </section>
-
-  <section class="receipt">
-    <h2>Open Receipt</h2>
-    <p>Enter a receipt number to open its printable receipt.</p>
-    <div class="row">
-      <input id="receiptNo" class="input" placeholder="Receipt number (e.g. RCPT-1001)" autocomplete="off">
-      <button class="btn" onclick="openReceipt()">Open Receipt</button>
-    </div>
-    <div id="msg" class="msg"></div>
-  </section>
-
+  <section class="lookup"><h2>Quick Student Fee Lookup</h2><p>Search a student by admission number or name, then open their complete fee ledger.</p><div class="row"><input id="studentSearch" class="input" placeholder="Admission no. or student name" autocomplete="off"><button class="btn primary" onclick="searchStudent()">Search</button></div><div id="lookupMsg" class="msg"></div><div id="results" class="result"></div></section>
+  <section class="receipt"><h2>Open Receipt</h2><p>Enter a receipt number to open its printable receipt.</p><div class="row"><input id="receiptNo" class="input" placeholder="Receipt number (e.g. RCPT-1001)" autocomplete="off"><button class="btn" onclick="openReceipt()">Open Receipt</button></div><div id="msg" class="msg"></div></section>
   <div class="foot">Finance access is restricted to authorized ERP finance roles.</div>
 </div>
+<script src="/erp/web/api.js"></script>
 <script>
 const allowed=['super_admin','principal','admin','accountant','office_staff'];
-function getUser(){try{return JSON.parse(localStorage.getItem('user')||localStorage.getItem('anvi_user')||'null')}catch{return null}}
 function roleOf(u){return String(u?.role||u?.user?.role||'').toLowerCase()}
-const user=getUser();
+const user=typeof LSKERP!=='undefined'?LSKERP.user():null;
 if(!user||!allowed.includes(roleOf(user))){document.body.innerHTML='<div style="font-family:system-ui;padding:40px;text-align:center"><h2>Access denied</h2><p>Finance access is required to open the Fee Center.</p><a href="/erp/web/portal-dashboard.html">Back to Dashboard</a></div>'}
+async function searchStudent(){const q=document.getElementById('studentSearch').value.trim();const msg=document.getElementById('lookupMsg');const box=document.getElementById('results');if(!q){msg.textContent='Please enter an admission number or student name.';box.style.display='none';return}try{msg.textContent='Searching…';const d=await LSKERP.request('/api/students/search?q='+encodeURIComponent(q));const list=d.students||[];if(!list.length){msg.textContent='No student found.';box.style.display='none';return}if(list.length===1){location.href='/erp/web/fee-ledger.html?studentId='+encodeURIComponent(list[0].id);return}msg.textContent=list.length+' students found. Select one.';box.style.display='block';box.innerHTML='<h3>Select Student</h3>'+list.map(s=>`<div style="padding:12px 0;border-top:1px solid #e5e7eb"><b>${escapeHtml(s.fullName||'Student')}</b><div class="muted">Admission: ${escapeHtml(s.admissionNo||'—')}</div><button class="btn" style="margin-top:8px" onclick="openLedger('${encodeURIComponent(s.id)}')">Open Ledger</button></div>`).join('')}catch(e){msg.textContent=e.message||'Search failed.';box.style.display='none'}}
+function openLedger(id){location.href='/erp/web/fee-ledger.html?studentId='+id}
+function escapeHtml(v){return String(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 function openReceipt(){const input=document.getElementById('receiptNo');const msg=document.getElementById('msg');const value=input.value.trim();if(!value){msg.textContent='Please enter a receipt number.';return}msg.textContent='';location.href='/erp/web/fee-receipt.html?receiptNo='+encodeURIComponent(value)}
-document.getElementById('receiptNo')?.addEventListener('keydown',e=>{if(e.key==='Enter')openReceipt()});
+document.getElementById('studentSearch').addEventListener('keydown',e=>{if(e.key==='Enter')searchStudent()});document.getElementById('receiptNo').addEventListener('keydown',e=>{if(e.key==='Enter')openReceipt()});
 </script>
 </body>
 </html>
