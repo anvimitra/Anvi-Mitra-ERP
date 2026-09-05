@@ -10,8 +10,7 @@ class AppUpdateInfo {
   final String? androidUrl;
   final String? iosUrl;
   final String? releaseNotesUrl;
-  final String? message;
-  AppUpdateInfo({this.latestVersion,this.minimumVersion,this.forceUpdate=false,this.androidUrl,this.iosUrl,this.releaseNotesUrl,this.message});
+  AppUpdateInfo({this.latestVersion,this.minimumVersion,this.forceUpdate=false,this.androidUrl,this.iosUrl,this.releaseNotesUrl});
 }
 
 class UpdateChecker {
@@ -21,14 +20,7 @@ class UpdateChecker {
       if(r.statusCode<200||r.statusCode>=300)return null;
       final root=jsonDecode(r.body) as Map<String,dynamic>;
       final a=Map<String,dynamic>.from(root['app']??{});
-      return AppUpdateInfo(
-        latestVersion:a['latestAppVersion']?.toString(),
-        minimumVersion:a['minAppVersion']?.toString(),
-        forceUpdate:a['forceUpdate']==true,
-        androidUrl:a['androidUpdateUrl']?.toString(),
-        iosUrl:a['iosUpdateUrl']?.toString(),
-        releaseNotesUrl:a['releaseNotesUrl']?.toString(),
-      );
+      return AppUpdateInfo(latestVersion:a['latestAppVersion']?.toString(),minimumVersion:a['minAppVersion']?.toString(),forceUpdate:a['forceUpdate']==true,androidUrl:a['androidUpdateUrl']?.toString(),iosUrl:a['iosUpdateUrl']?.toString(),releaseNotesUrl:a['releaseNotesUrl']?.toString());
     } catch(_){ return null; }
   }
 }
@@ -36,12 +28,5 @@ class UpdateChecker {
 class UpdateDialog extends StatelessWidget {
   final AppUpdateInfo info;
   const UpdateDialog({super.key,required this.info});
-  @override Widget build(BuildContext context)=>AlertDialog(
-    title:const Text('Update Available'),
-    content:Text('A newer version of the Anvi Mitra School App is available${info.latestVersion==null?'':': ${info.latestVersion}'}. Please update to get the latest features and fixes.'),
-    actions:[
-      if(!info.forceUpdate)TextButton(onPressed:()=>Navigator.pop(context),child:const Text('Later')),
-      FilledButton(onPressed:()=>Navigator.pop(context),child:Text(info.forceUpdate?'Update Required':'OK')),
-    ],
-  );
+  @override Widget build(BuildContext context)=>AlertDialog(title:const Text('Update Available'),content:Text('A newer version of the Anvi Mitra School App is available${info.latestVersion==null?'':': ${info.latestVersion}'}. Please update to get the latest features and fixes.'),actions:[if(!info.forceUpdate)TextButton(onPressed:()=>Navigator.pop(context),child:const Text('Later')),FilledButton(onPressed:()=>Navigator.pop(context),child:Text(info.forceUpdate?'Update Required':'OK'))]);
 }
