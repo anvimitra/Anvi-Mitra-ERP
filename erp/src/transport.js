@@ -1,0 +1,29 @@
+const { authenticate, requireRoles } = require('./auth');
+
+function registerTransportRoutes(app, pool) {
+  const staff=['super_admin','principal','admin','office_staff'];
+
+  app.get('/api/transport/driver/overview', authenticate, requireRoles('driver'), async (req,res,next)=>{
+    try {
+      const {rows}=await pool.query(`SELECT d.id,d.full_name AS "fullName",d.phone,d.license_no AS "licenseNo",v.id AS "vehicleId",v.registration_no AS "registrationNo",v.vehicle_type AS "vehicleType",r.id AS "routeId",r.name AS "routeName",r.code AS "routeCode",t.id AS "tripId",t.trip_date AS "tripDate",t.direction,t.status AS "tripStatus",t.started_at AS "startedAt",t.completed_at AS "completedAt",(SELECT COUNT(*)::int FROM transport_student_assignments a WHERE a.route_id=r.id AND a.status='active' AND a.school_id=$1) AS "studentCount" FROM driver_profiles d LEFT JOIN transport_vehicles v ON v.driver_id=d.id AND v.school_id=d.school_id AND v.status<>'inactive' LEFT JOIN transport_routes r ON r.vehicle_id=v.id AND r.school_id=v.school_id AND r.status='active' LEFT JOIN LATERAL(SELECT * FROM transport_trips t WHERE t.route_id=r.id AND t.school_id=$1 AND t.trip_date=CURRENT_DATE ORDER BY t.created_at DESC LIMIT 1)t ON true WHERE d.school_id=$1 AND d.user_id=$2 AND d.status='active' LIMIT 1`,[req.auth.schoolId,req.auth.sub]);
+      if(!rows.length)return res.status(404).json({error:'Driver profile not configured'});
+      res.json({driver:rows[0]});
+    } catch(err){next(err);}
+  });
+
+  app.get('/api/transport/routes', authenticate, requireRoles(...staff,'driver'), async (req,res,next)=>{
+    try {const {rows}=await pool.query(`SELECT r.id,r.name,r.code,r.status,v.registration_no AS "registrationNo",COUNT(a.id)::int AS "studentCount" FROM transport_routes r LEFT JOIN transport_vehicles v ON v.id=r.vehicle_id LEFT JOIN transport_student_assignments a ON a.route_id=r.id AND a.status='active' WHERE r.school_id=$1 AND ($2::uuid IS NULL OR r.branch_id=$2) GROUP BY r.id,r.name,r.code,r.status,v.registration_no ORDER BY r.name`,[req.auth.schoolId,req.auth.branchId||null]);res.json({routes:rows});}
+    catch(err){next(err);}
+  });
+
+  app.post('/api/transport/trips', authenticate, requireRoles(...staff,'driver'), async (req,res,next)=>{
+    try {const {routeId,direction,tripDate=null,notes=null}=req.body||{};if(!routeId||!['pickup','drop'].includes(direction))return res.status(400).json({error:'routeId and direction are required'});const driver=await pool.query(`SELECT id FROM driver_profiles WHERE school_id=$1 AND user_id=$2 AND status='active' LIMIT 1`,[req.auth.schoolId,req.auth.sub]);const driverId=driver.rows[0]?.id||null;const {rows}=await pool.query(`INSERT INTO transport_trips(school_id,route_id,driver_id,trip_date,direction,notes) SELECT $1,$2,$3,COALESCE($4::date,CURRENT_DATE),$5,$6 WHERE EXISTS(SELECT 1 FROM transport_routes WHERE id=$2 AND school_id=$1 AND status='active') ON CONFLICT(route_id,trip_date,direction) DO UPDATE SET notes=EXCLUDED.notes,driver_id=COALESCE(EXCLUDED.driver_id,transport_trips.driver_id) RETURNING id,route_id AS "routeId",trip_date AS "tripDate",direction,status,started_at AS "startedAt",completed_at AS "completedAt"`,[req.auth.schoolId,routeId,driverId,tripDate,direction,notes]);res.status(201).json({trip:rows[0]});}
+    catch(err){next(err);}
+  });
+
+  app.get('/api/transport/trips/:tripId/students', authenticate, requireRoles(...staff,'driver'), async (req,res,next)=>{
+    try {const {rows}=await pool.query(`SELECT a.id AS "assignmentId",s.id AS "studentId",s.admission_no AS "admissionNo",s.full_name AS "fullName",a.pickup_required AS "pickupRequired",a.drop_required AS "dropRequired",st.stop_name AS "stopName",st.stop_order AS "stopOrder",e.event_type AS "lastEvent",e.event_at AS "lastEventAt" FROM transport_trips t JOIN transport_student_assignments a ON a.route_id=t.route_id AND a.school_id=t.school_id AND a.status='active' JOIN students s ON s.id=a.student_id AND s.school_id=t.school_id LEFT JOIN transport_route_stops st ON st.id=a.stop_id LEFT JOIN LATERAL(SELECT event_type,event_at FROM transport_trip_events WHERE trip_id=t.id AND student_id=s.id ORDER BY event_at DESC LIMIT 1)e ON true WHERE t.id=$1 AND t.school_id=$2 ORDER BY st.stop_order NULLS LAST,s.full_name`,[req.params.tripId,req.auth.schoolId]);res.json({students:rows});}
+    catch(err){next(err);}
+  });
+}
+module.exports={registerTransportRoutes};
