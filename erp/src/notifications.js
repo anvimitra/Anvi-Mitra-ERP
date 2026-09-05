@@ -55,4 +55,13 @@ async function queueFeeInvoiceNotifications(client, { schoolId, invoiceId, stude
   await queueParentNotifications(client,{schoolId,studentId,type:'fee_invoice',title:'Fee Invoice Generated',message,data:{event:'fee_invoice',invoiceId,studentId,studentName:student.studentName||null,admissionNo:student.admissionNo||null,invoiceNo,amount:Number(amount),dueDate},eventType:'fee_invoice'});
 }
 
-module.exports = { registerNotificationRoutes, queueFeePaymentNotifications, queueFeeInvoiceNotifications };
+async function queueAttendanceNotifications(client, { schoolId, studentId, date, status, note=null }) {
+  const { rows } = await client.query(`SELECT full_name AS "studentName",admission_no AS "admissionNo" FROM students WHERE id=$1 AND school_id=$2 LIMIT 1`, [studentId,schoolId]);
+  const student = rows[0] || {};
+  const label = student.studentName ? `${student.studentName}${student.admissionNo ? ` (${student.admissionNo})` : ''}` : 'student';
+  const pretty = {present:'Present',absent:'Absent',late:'Late',half_day:'Half Day',leave:'Leave'}[status] || status;
+  const message = `Attendance update: ${label} was marked ${pretty} on ${date}.${note ? ` Note: ${note}` : ''}`;
+  await queueParentNotifications(client,{schoolId,studentId,type:'attendance',title:`Attendance: ${pretty}`,message,data:{event:'attendance',studentId,date,status,note},eventType:'attendance'});
+}
+
+module.exports = { registerNotificationRoutes, queueFeePaymentNotifications, queueFeeInvoiceNotifications, queueAttendanceNotifications };
