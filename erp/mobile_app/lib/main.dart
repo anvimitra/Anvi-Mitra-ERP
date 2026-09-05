@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'app_config.dart';
@@ -96,27 +97,40 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  bool get _hasBundledLogo => AppConfig.schoolSlug == 'lsk-academy';
+
   Widget _brandLogo({double size = 84}) {
-    if (AppConfig.logoUrl.isEmpty) {
-      return CircleAvatar(
-        radius: size / 2,
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-        child: Icon(Icons.school, size: size * 0.55),
+    if (AppConfig.logoUrl.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(size * 0.18),
+        child: Image.network(
+          AppConfig.logoUrl,
+          width: size,
+          height: size,
+          fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) => _fallbackLogo(size),
+        ),
       );
     }
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(size * 0.18),
-      child: Image.network(
-        AppConfig.logoUrl,
-        width: size,
-        height: size,
-        fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) => CircleAvatar(
-          radius: size / 2,
-          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          child: Icon(Icons.school, size: size * 0.55),
+    if (_hasBundledLogo) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(size * 0.18),
+        child: SvgPicture.asset(
+          'branding/lsk-academy-logo.svg',
+          width: size,
+          height: size,
+          fit: BoxFit.contain,
         ),
-      ),
+      );
+    }
+    return _fallbackLogo(size);
+  }
+
+  Widget _fallbackLogo(double size) {
+    return CircleAvatar(
+      radius: size / 2,
+      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+      child: Icon(Icons.school, size: size * 0.55),
     );
   }
 
@@ -264,26 +278,37 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _profileLogo() {
-    if (AppConfig.logoUrl.isEmpty) {
-      return CircleAvatar(
-        radius: 38,
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-        child: const Icon(Icons.school, size: 40),
+    if (AppConfig.logoUrl.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Image.network(
+          AppConfig.logoUrl,
+          width: 76,
+          height: 76,
+          fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) => _fallbackProfileLogo(),
+        ),
       );
     }
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: Image.network(
-        AppConfig.logoUrl,
-        width: 76,
-        height: 76,
-        fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) => CircleAvatar(
-          radius: 38,
-          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          child: const Icon(Icons.school, size: 40),
+    if (AppConfig.schoolSlug == 'lsk-academy') {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: SvgPicture.asset(
+          'branding/lsk-academy-logo.svg',
+          width: 76,
+          height: 76,
+          fit: BoxFit.contain,
         ),
-      ),
+      );
+    }
+    return _fallbackProfileLogo();
+  }
+
+  Widget _fallbackProfileLogo() {
+    return CircleAvatar(
+      radius: 38,
+      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+      child: const Icon(Icons.school, size: 40),
     );
   }
 
@@ -345,6 +370,19 @@ class _HomePageState extends State<HomePage> {
                     height: 34,
                     fit: BoxFit.contain,
                     errorBuilder: (_, __, ___) => const Icon(Icons.school),
+                  ),
+                ),
+              )
+            else if (AppConfig.schoolSlug == 'lsk-academy')
+              Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: SvgPicture.asset(
+                    'branding/lsk-academy-logo.svg',
+                    width: 34,
+                    height: 34,
+                    fit: BoxFit.contain,
                   ),
                 ),
               ),
