@@ -11,4 +11,5 @@ class DashboardService {
   Future<Map<String,dynamic>> teacherOverview()=>_get('/api/portal/me/teacher-overview');
   Future<Map<String,dynamic>> adminOverview()=>_get('/api/portal/me/admin-overview');
   Future<Map<String,dynamic>> studentOverview()=>_get('/api/portal/me/student-overview');
+  Future<Map<String,dynamic>> driverOverview()=>_get('/api/transport/driver/overview');
 }
