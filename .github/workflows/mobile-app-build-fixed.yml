@@ -31,6 +31,9 @@ jobs:
       - name: Generate Android platform project
         run: flutter create . --platforms=android --project-name anvi_mitra_school_app
 
+      - name: Remove generated sample test
+        run: rm -f test/widget_test.dart
+
       - name: Get dependencies
         run: flutter pub get
 
