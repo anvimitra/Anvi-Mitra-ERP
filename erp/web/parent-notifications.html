@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Anvi Mitra ERP — Parent Notifications</title>
+<style>
+body{margin:0;background:#f5f7fb;color:#172033;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}.wrap{max-width:900px;margin:auto;padding:24px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:22px}.brand{font-size:22px;font-weight:800}.muted{color:#667085}.btn{border:1px solid #e5e7eb;background:#fff;color:#172033;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:700}.list{display:grid;gap:12px}.item{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:16px}.item.unread{border-left:4px solid #2563eb}.title{font-weight:800}.meta{font-size:12px;color:#667085;margin:5px 0 9px}.message{line-height:1.55}.actions{margin-top:12px}.status{margin:10px 0;color:#b42318;min-height:20px}
+</style></head><body><div class="wrap"><div class="top"><div><div class="brand">Anvi Mitra ERP</div><div class="muted">Parent Notification Inbox</div></div><a class="btn" href="/erp/web/portal-dashboard.html">← Dashboard</a></div><div id="status" class="status"></div><div id="list" class="list"></div></div>
+<script src="/erp/web/api.js"></script><script>
+async function load(){const status=document.getElementById('status'),list=document.getElementById('list');try{status.textContent='Loading notifications…';const d=await LSKERP.request('/api/notifications/me?limit=100');const rows=d.notifications||[];if(!rows.length){status.textContent='No notifications yet.';list.innerHTML='';return}status.textContent=rows.length+' notification'+(rows.length===1?'':'s');list.innerHTML=rows.map(n=>`<article class="item ${n.readAt?'':'unread'}"><div class="title">${esc(n.title||'Notification')}</div><div class="meta">${new Date(n.createdAt).toLocaleString()}${n.readAt?'':' • Unread'}</div><div class="message">${esc(n.message||'')}</div>${n.readAt?'':'<div class="actions"><button class="btn" onclick="markRead(\''+escAttr(n.id)+'\')">Mark as read</button></div>'}</article>`).join('')}catch(e){status.textContent=e.message||'Unable to load notifications.';list.innerHTML=''}}
+async function markRead(id){try{await LSKERP.request('/api/notifications/'+encodeURIComponent(id)+'/read',{method:'POST'});load()}catch(e){document.getElementById('status').textContent=e.message||'Unable to update notification.'}}
+function esc(v){return String(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}function escAttr(v){return String(v).replace(/['\\]/g,'\\$&')}
+load();
+</script></body></html>
