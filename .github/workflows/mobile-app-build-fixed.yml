@@ -12,6 +12,10 @@ on:
         description: 'School name shown in the app'
         required: true
         default: 'LSK Academy'
+      school_slug:
+        description: 'Stable school slug, e.g. lsk-academy'
+        required: true
+        default: 'lsk-academy'
       application_id:
         description: 'Unique Android application ID, e.g. in.anvimitra.lskacademy'
         required: true
@@ -20,6 +24,18 @@ on:
         description: 'APK artifact name'
         required: true
         default: 'lsk-academy-school-app-apk'
+      primary_color:
+        description: 'Primary brand color without #, e.g. 4F46E5'
+        required: true
+        default: '4F46E5'
+      secondary_color:
+        description: 'Secondary brand color without #, e.g. 0F172A'
+        required: true
+        default: '0F172A'
+      logo_url:
+        description: 'Optional public HTTPS school logo URL'
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -32,8 +48,12 @@ jobs:
         working-directory: erp/mobile_app
     env:
       SCHOOL_NAME: ${{ inputs.school_name || 'Anvi Mitra School App' }}
+      SCHOOL_SLUG: ${{ inputs.school_slug || 'anvi-mitra' }}
       APPLICATION_ID: ${{ inputs.application_id || 'in.anvimitra.schoolapp' }}
       ARTIFACT_NAME: ${{ inputs.artifact_name || 'anvi-mitra-school-app-apk' }}
+      PRIMARY_COLOR: ${{ inputs.primary_color || '4F46E5' }}
+      SECONDARY_COLOR: ${{ inputs.secondary_color || '0F172A' }}
+      LOGO_URL: ${{ inputs.logo_url || '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -56,19 +76,37 @@ jobs:
             echo "Invalid Android application ID: $APPLICATION_ID"
             exit 1
           fi
+          if [[ ! "$PRIMARY_COLOR" =~ ^[0-9A-Fa-f]{6}$ ]]; then
+            echo "Invalid primary color: $PRIMARY_COLOR"
+            exit 1
+          fi
+          if [[ ! "$SECONDARY_COLOR" =~ ^[0-9A-Fa-f]{6}$ ]]; then
+            echo "Invalid secondary color: $SECONDARY_COLOR"
+            exit 1
+          fi
           python - <<'PY'
           from pathlib import Path
           import os
+          import re
+
           manifest = Path('android/app/src/main/AndroidManifest.xml')
           text = manifest.read_text()
-          text = text.replace('android:label="anvi_mitra_school_app"', 'android:label="' + os.environ['SCHOOL_NAME'] + '"')
+          text = text.replace(
+              'android:label="anvi_mitra_school_app"',
+              'android:label="' + os.environ['SCHOOL_NAME'] + '"'
+          )
           manifest.write_text(text)
+
           gradle = Path('android/app/build.gradle.kts')
           gtext = gradle.read_text()
-          import re
-          gtext, count = re.subn(r'applicationId\s*=\s*"[^"]+"', 'applicationId = "' + os.environ['APPLICATION_ID'] + '"', gtext, count=1)
+          gtext, count = re.subn(
+              r'applicationId\s*=\s*"[^"]+"',
+              'applicationId = "' + os.environ['APPLICATION_ID'] + '"',
+              gtext,
+              count=1,
+          )
           if count != 1:
-            raise SystemExit('Could not locate Android applicationId')
+              raise SystemExit('Could not locate Android applicationId')
           gradle.write_text(gtext)
           PY
 
@@ -82,7 +120,15 @@ jobs:
         run: flutter analyze --no-fatal-infos
 
       - name: Build APK
-        run: flutter build apk --release --dart-define=API_BASE_URL=${{ vars.ERP_API_BASE_URL }} --dart-define=APP_NAME="$SCHOOL_NAME" --dart-define=APP_VERSION=0.3.0
+        run: >-
+          flutter build apk --release
+          --dart-define=API_BASE_URL=${{ vars.ERP_API_BASE_URL }}
+          --dart-define=APP_NAME="$SCHOOL_NAME"
+          --dart-define=SCHOOL_SLUG="$SCHOOL_SLUG"
+          --dart-define=PRIMARY_COLOR="$PRIMARY_COLOR"
+          --dart-define=SECONDARY_COLOR="$SECONDARY_COLOR"
+          --dart-define=LOGO_URL="$LOGO_URL"
+          --dart-define=APP_VERSION=0.3.0
 
       - name: Prepare named APK
         run: cp build/app/outputs/flutter-apk/app-release.apk "build/app/outputs/flutter-apk/${ARTIFACT_NAME}.apk"
