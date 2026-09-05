@@ -9,6 +9,7 @@ Future<void> firebaseBackgroundHandler(RemoteMessage message) async {}
 
 class PushNotifications {
   final FirebaseMessaging messaging = FirebaseMessaging.instance;
+  Map<String,dynamic>? pendingAction;
   Future<void> initialize() async {
     FirebaseMessaging.onBackgroundMessage(firebaseBackgroundHandler);
     await messaging.setAutoInitEnabled(true);
@@ -22,8 +23,13 @@ class PushNotifications {
     final initial=await messaging.getInitialMessage();
     if(initial!=null)_handleOpened(initial);
   }
-  void _handleForeground(RemoteMessage message) {}
-  void _handleOpened(RemoteMessage message) {}
+  void _handleForeground(RemoteMessage message){pendingAction=_actionFrom(message);}
+  void _handleOpened(RemoteMessage message){pendingAction=_actionFrom(message);}
+  Map<String,dynamic> _actionFrom(RemoteMessage message){
+    final data=<String,dynamic>{}; data.addAll(message.data);
+    return {'event':(data['event']??data['type']??'notifications').toString(),'studentId':data['studentId'],'invoiceId':data['invoiceId'],'receiptNo':data['receiptNo'],'data':data};
+  }
+  Map<String,dynamic>? consumePendingAction(){final action=pendingAction;pendingAction=null;return action;}
   Future<void> registerToken(String token) async {
     final p=await SharedPreferences.getInstance(); final access=p.getString('accessToken'); if(access==null)return;
     final r=await http.post(Uri.parse('${AppConfig.apiBaseUrl}/api/notifications/device-token'),headers:{'Authorization':'Bearer $access','Content-Type':'application/json'},body:jsonEncode({'token':token,'platform':'android'}));
