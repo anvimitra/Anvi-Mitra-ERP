@@ -12,11 +12,12 @@
 <body>
 <div class="wrap">
   <div class="top"><div><div class="brand">Anvi Mitra ERP</div><div class="sub">Finance • Fee Center</div></div><a class="btn" href="/erp/web/portal-dashboard.html">← Dashboard</a></div>
-  <section class="hero"><h1>Fee Center</h1><p>Manage student fees, assignments, installments, ledgers and receipts from one place.</p></section>
+  <section class="hero"><h1>Fee Center</h1><p>Manage student fees, assignments, installments, invoices, ledgers and receipts from one place.</p></section>
   <section class="grid">
     <a class="card" href="/erp/web/fee-management.html"><div class="icon">💳</div><h3>Fees Management</h3><p>Fee heads, structures, invoices, collections and outstanding reports.</p></a>
     <a class="card" href="/erp/web/student-fee-assignment.html"><div class="icon">🧾</div><h3>Student Fee Assignment</h3><p>Assign a fee to an individual student and generate installments for the selected period.</p></a>
-    <a class="card" href="/erp/web/fee-installments.html"><div class="icon">📅</div><h3>Fee Installments</h3><p>Generate installments, track dues and convert installments into invoices.</p></a>
+    <a class="card" href="/erp/web/fee-installments.html"><div class="icon">📅</div><h3>Fee Installments</h3><p>Generate installments and track installment dues.</p></a>
+    <a class="card" href="/erp/web/fee-invoice-center.html"><div class="icon">🧮</div><h3>Fee Invoice Center</h3><p>Select due installments and convert them into student-wise invoices.</p></a>
     <a class="card" href="/erp/web/fee-ledger.html"><div class="icon">📒</div><h3>Student Fee Ledger</h3><p>View invoice ledger, total paid, outstanding balance and payment history.</p></a>
   </section>
   <section class="lookup"><h2>Quick Student Fee Lookup</h2><p>Search a student by admission number or name, then open their complete fee ledger.</p><div class="row"><input id="studentSearch" class="input" placeholder="Admission no. or student name" autocomplete="off"><button class="btn primary" onclick="searchStudent()">Search</button></div><div id="lookupMsg" class="msg"></div><div id="results" class="result"></div></section>
