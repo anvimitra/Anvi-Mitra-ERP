@@ -38,5 +38,20 @@ function registerPortalRoutes(app, pool) {
       res.json({students:overview});
     } catch(err){ next(err); }
   });
+
+  app.get('/api/portal/me/student/:studentId/attendance', authenticate, requireRoles(...parentRoles), async (req,res,next) => {
+    try {
+      const { studentId } = req.params;
+      const from = req.query.from;
+      const to = req.query.to || from;
+      if (!from || !/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) return res.status(400).json({ error:'from and to must be YYYY-MM-DD' });
+      const link = await pool.query(`SELECT 1 FROM student_portal_profiles WHERE school_id=$1 AND user_id=$2 AND student_id=$3 AND status='active' LIMIT 1`, [req.auth.schoolId,req.auth.sub,studentId]);
+      if (!link.rows.length) return res.status(403).json({ error:'Student is not linked to this parent' });
+      const { rows } = await pool.query(`SELECT a.attendance_date AS date,a.status,a.note FROM attendance_records a WHERE a.school_id=$1 AND a.student_id=$2 AND a.attendance_date BETWEEN $3::date AND $4::date AND ($5::uuid IS NULL OR a.branch_id=$5 OR a.branch_id IS NULL) ORDER BY a.attendance_date`, [req.auth.schoolId,studentId,from,to,req.auth.branchId||null]);
+      const s = rows.reduce((x,r)=>{x.total++; if(x[r.status]!==undefined)x[r.status]++; return x},{total:0,present:0,absent:0,late:0,half_day:0,leave:0});
+      const attendancePercent=s.total?Number(((s.present+s.late*0.5+s.half_day*0.5)/s.total*100).toFixed(2)):0;
+      res.json({studentId,from,to,summary:{...s,attendancePercent},attendance:rows});
+    } catch(err){ next(err); }
+  });
 }
 module.exports = { registerPortalRoutes };
