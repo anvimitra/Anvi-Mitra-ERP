@@ -63,39 +63,141 @@ function getFirebaseApp(schoolId) {
   return app;
 }
 
-async function processPushQueue(pool, batchSize=20) {
-  const client=await pool.connect();
-  try{
-    await client.query('BEGIN');
-    const { rows }=await client.query(`SELECT q.id,q.school_id AS "schoolId",q.device_token_id AS "deviceTokenId",q.title,q.message,q.data_json AS "data",d.token FROM parent_push_queue q JOIN parent_device_tokens d ON d.id=q.device_token_id WHERE q.status='pending' AND d.is_active=true ORDER BY q.queued_at FOR UPDATE OF q SKIP LOCKED LIMIT $1`,[batchSize]);
-    for(const row of rows){
-      await client.query(`UPDATE parent_push_queue SET status='processing',attempts=attempts+1 WHERE id=$1`,[row.id]);
-    }
-    await client.query('COMMIT');
-    for(const row of rows){
-      try{
-        const app = getFirebaseApp(row.schoolId);
-        if (!app) {
-          await pool.query(`UPDATE parent_push_queue SET status='pending',last_error=$2 WHERE id=$1`,[row.id,'firebase-not-configured']);
-          continue;
-        }
-        const response=await admin.messaging(app).send({token:row.token,notification:{title:row.title,body:row.message},data:Object.fromEntries(Object.entries(row.data||{}).map(([k,v])=>[k,String(v??'')]))});
-        await pool.query(`UPDATE parent_push_queue SET status='sent',provider_message_id=$2,sent_at=now(),last_error=NULL WHERE id=$1`,[row.id,response]);
-      }catch(err){
-        const terminal = row.attempts >= 5;
-        await pool.query(`UPDATE parent_push_queue SET status=$2,last_error=$3 WHERE id=$1`,[row.id,terminal?'failed':'pending',String(err.message||err).slice(0,1000)]);
-      }
-    }
-    return { processed:rows.length };
-  }catch(err){ await client.query('ROLLBACK'); throw err; } finally { client.release(); }
+async function recoverStalePushes(pool, staleMinutes = 10) {
+  const { rows } = await pool.query(
+    `UPDATE parent_push_queue
+        SET status = CASE WHEN attempts >= 5 THEN 'failed' ELSE 'pending' END,
+            last_error = CASE WHEN attempts >= 5 THEN 'worker-timeout' ELSE 'worker-recovered-stale-processing' END
+      WHERE status = 'processing'
+        AND queued_at < now() - ($1::int * interval '1 minute')
+      RETURNING id, status`,
+    [staleMinutes]
+  );
+  if (rows.length) {
+    console.warn(`[push-worker] recovered ${rows.length} stale processing job(s)`);
+  }
+  return rows.length;
 }
 
-function startPushWorker(pool){
-  const intervalMs=Number(process.env.PUSH_WORKER_INTERVAL_MS||30000);
-  let running=false;
-  const tick=async()=>{ if(running)return; running=true; try{await processPushQueue(pool);}catch(err){console.error('[push-worker]',err.message||err)}finally{running=false} };
-  setInterval(tick,intervalMs);
+function isInvalidTokenError(err) {
+  const code = err?.code || err?.errorInfo?.code;
+  return code === 'messaging/registration-token-not-registered' ||
+    code === 'messaging/invalid-registration-token';
+}
+
+async function processPushQueue(pool, batchSize = 20) {
+  await recoverStalePushes(pool);
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const { rows } = await client.query(
+      `SELECT q.id,
+              q.school_id AS "schoolId",
+              q.device_token_id AS "deviceTokenId",
+              q.title,
+              q.message,
+              q.data_json AS "data",
+              d.token
+         FROM parent_push_queue q
+         JOIN parent_device_tokens d ON d.id = q.device_token_id
+        WHERE q.status = 'pending'
+          AND q.attempts < 5
+          AND d.is_active = true
+        ORDER BY q.queued_at
+        FOR UPDATE OF q SKIP LOCKED
+        LIMIT $1`,
+      [batchSize]
+    );
+
+    for (const row of rows) {
+      await client.query(
+        `UPDATE parent_push_queue
+            SET status = 'processing', attempts = attempts + 1
+          WHERE id = $1`,
+        [row.id]
+      );
+    }
+    await client.query('COMMIT');
+
+    for (const row of rows) {
+      try {
+        const app = getFirebaseApp(row.schoolId);
+        if (!app) {
+          await pool.query(
+            `UPDATE parent_push_queue
+                SET status = CASE WHEN attempts >= 5 THEN 'failed' ELSE 'pending' END,
+                    last_error = $2
+              WHERE id = $1`,
+            [row.id, 'firebase-not-configured']
+          );
+          continue;
+        }
+
+        const response = await admin.messaging(app).send({
+          token: row.token,
+          notification: { title: row.title, body: row.message },
+          data: Object.fromEntries(
+            Object.entries(row.data || {}).map(([k, v]) => [k, String(v ?? '')])
+          ),
+        });
+
+        await pool.query(
+          `UPDATE parent_push_queue
+              SET status = 'sent', provider_message_id = $2, sent_at = now(), last_error = NULL
+            WHERE id = $1`,
+          [row.id, response]
+        );
+      } catch (err) {
+        if (isInvalidTokenError(err)) {
+          await pool.query(
+            `UPDATE parent_device_tokens
+                SET is_active = false
+              WHERE id = $1`,
+            [row.deviceTokenId]
+          );
+          await pool.query(
+            `UPDATE parent_push_queue
+                SET status = 'failed', last_error = $2
+              WHERE id = $1`,
+            [row.id, 'invalid-fcm-token']
+          );
+          continue;
+        }
+
+        const terminal = row.attempts >= 5;
+        await pool.query(
+          `UPDATE parent_push_queue
+              SET status = $2, last_error = $3
+            WHERE id = $1`,
+          [row.id, terminal ? 'failed' : 'pending', String(err.message || err).slice(0, 1000)]
+        );
+      }
+    }
+    return { processed: rows.length };
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+function startPushWorker(pool) {
+  const intervalMs = Number(process.env.PUSH_WORKER_INTERVAL_MS || 30000);
+  let running = false;
+  const tick = async () => {
+    if (running) return;
+    running = true;
+    try {
+      await processPushQueue(pool);
+    } catch (err) {
+      console.error('[push-worker]', err.message || err);
+    } finally {
+      running = false;
+    }
+  };
+  setInterval(tick, intervalMs);
   tick();
 }
 
-module.exports={startPushWorker,processPushQueue};
+module.exports = { startPushWorker, processPushQueue, recoverStalePushes };
