@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+<defs>
+ <radialGradient id="navy"><stop offset="0" stop-color="#173d78"/><stop offset="1" stop-color="#061a3d"/></radialGradient>
+ <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffd51a"/><stop offset="1" stop-color="#f2a800"/></linearGradient>
+ <linearGradient id="pink" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ff8db0"/><stop offset="1" stop-color="#e94387"/></linearGradient>
+</defs>
+<rect width="1024" height="1024" fill="white"/>
+<circle cx="512" cy="512" r="486" fill="url(#navy)" stroke="#102b55" stroke-width="12"/>
+<circle cx="512" cy="512" r="355" fill="url(#gold)" stroke="#e7a600" stroke-width="12"/>
+<circle cx="512" cy="512" r="294" fill="#faf9f5" stroke="#d9b14a" stroke-width="8"/>
+<g fill="#fffaf0" stroke="#101010" stroke-width="8" font-family="Arial, sans-serif" font-weight="900" font-size="92" text-anchor="middle"><text x="512" y="155">ACADEMY</text></g>
+<g fill="#fffaf0" stroke="#101010" stroke-width="7" font-family="Arial, sans-serif" font-weight="900" font-size="78" text-anchor="middle"><text x="245" y="865" transform="rotate(18 245 865)">CHECHAT</text><text x="780" y="865" transform="rotate(-18 780 865)">S</text></g>
+<circle cx="115" cy="525" r="38" fill="#ffd21a" stroke="#a86f00" stroke-width="7"/><circle cx="909" cy="525" r="38" fill="#ffd21a" stroke="#a86f00" stroke-width="7"/>
+<path d="M512 570 C465 520 501 458 530 405 C556 358 548 326 548 326 C600 382 616 431 597 477 C588 499 573 519 563 540 C551 564 552 592 560 615 Z" fill="#ef171e" stroke="#111" stroke-width="9"/>
+<path d="M518 571 C505 536 526 502 548 474 C565 452 564 427 560 410 C586 454 582 486 565 511 C548 536 538 558 542 581" fill="none" stroke="#111" stroke-width="8"/>
+<path d="M365 592 Q512 535 659 592 Q632 657 512 674 Q392 657 365 592 Z" fill="#b536a5" stroke="#111" stroke-width="10"/><path d="M382 603 Q512 650 642 603" fill="none" stroke="#111" stroke-width="8"/>
+<g fill="url(#pink)" stroke="#111" stroke-width="9">
+<path d="M512 744 C450 710 445 647 512 610 C579 647 574 710 512 744Z"/><path d="M470 748 C405 732 372 686 399 647 C449 659 482 698 470 748Z"/><path d="M554 748 C619 732 652 686 625 647 C575 659 542 698 554 748Z"/><path d="M420 744 C361 731 333 698 344 671 C389 676 422 704 420 744Z"/><path d="M604 744 C663 731 691 698 680 671 C635 676 602 704 604 744Z"/><path d="M512 788 C470 777 438 754 420 729 C467 723 498 741 512 788Z"/><path d="M512 788 C554 777 586 754 604 729 C557 723 526 741 512 788Z"/><path d="M512 816 C487 809 468 795 454 776 C481 775 501 786 512 816Z"/><path d="M512 816 C537 809 556 795 570 776 C543 775 523 786 512 816Z"/>
+</g>
+<g stroke="#d11b24" stroke-width="10" stroke-linecap="round"><path d="M512 350v35"/><path d="M450 359l12 33"/><path d="M397 384l20 29"/><path d="M355 423l27 20"/><path d="M326 471l32 12"/><path d="M314 525h35"/><path d="M574 359l-12 33"/><path d="M627 384l-20 29"/><path d="M669 423l-27 20"/><path d="M698 471l-32 12"/><path d="M710 525h-35"/></g>
+</svg>
