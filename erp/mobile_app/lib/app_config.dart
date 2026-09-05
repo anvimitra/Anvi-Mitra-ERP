@@ -11,7 +11,7 @@ class AppConfig {
 
   static const String schoolSlug = String.fromEnvironment(
     'SCHOOL_SLUG',
-    defaultValue: 'anvi-mitra',
+    defaultValue: 'lsk-academy',
   );
 
   static const String logoUrl = String.fromEnvironment(
