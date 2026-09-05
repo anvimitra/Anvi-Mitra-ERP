@@ -20,11 +20,20 @@ class AnviMitraApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primary = Color(AppConfig.primaryColorValue | 0xFF000000);
+    final secondary = Color(AppConfig.secondaryColorValue | 0xFF000000);
+
     return MaterialApp(
       title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorSchemeSeed: Colors.indigo,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: primary,
+          brightness: Brightness.light,
+        ).copyWith(
+          primary: primary,
+          secondary: secondary,
+        ),
         useMaterial3: true,
       ),
       home: const LoginPage(),
@@ -87,6 +96,30 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  Widget _brandLogo({double size = 84}) {
+    if (AppConfig.logoUrl.isEmpty) {
+      return CircleAvatar(
+        radius: size / 2,
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        child: Icon(Icons.school, size: size * 0.55),
+      );
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(size * 0.18),
+      child: Image.network(
+        AppConfig.logoUrl,
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        errorBuilder: (_, __, ___) => CircleAvatar(
+          radius: size / 2,
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          child: Icon(Icons.school, size: size * 0.55),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,7 +132,7 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Icon(Icons.school, size: 70),
+                  Center(child: _brandLogo()),
                   const SizedBox(height: 12),
                   Text(
                     AppConfig.appName,
@@ -230,11 +263,35 @@ class _HomePageState extends State<HomePage> {
     return _home(role);
   }
 
+  Widget _profileLogo() {
+    if (AppConfig.logoUrl.isEmpty) {
+      return CircleAvatar(
+        radius: 38,
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        child: const Icon(Icons.school, size: 40),
+      );
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: Image.network(
+        AppConfig.logoUrl,
+        width: 76,
+        height: 76,
+        fit: BoxFit.contain,
+        errorBuilder: (_, __, ___) => CircleAvatar(
+          radius: 38,
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          child: const Icon(Icons.school, size: 40),
+        ),
+      ),
+    );
+  }
+
   Widget _profile() {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        const CircleAvatar(radius: 38, child: Icon(Icons.person, size: 40)),
+        Center(child: _profileLogo()),
         const SizedBox(height: 12),
         Center(
           child: Text(
@@ -275,7 +332,25 @@ class _HomePageState extends State<HomePage> {
     final schoolName = (widget.user['schoolName'] ?? AppConfig.appName).toString();
     return Scaffold(
       appBar: AppBar(
-        title: Text(schoolName),
+        title: Row(
+          children: [
+            if (AppConfig.logoUrl.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    AppConfig.logoUrl,
+                    width: 34,
+                    height: 34,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => const Icon(Icons.school),
+                  ),
+                ),
+              ),
+            Expanded(child: Text(schoolName)),
+          ],
+        ),
         actions: [
           IconButton(onPressed: _logout, icon: const Icon(Icons.logout)),
         ],
