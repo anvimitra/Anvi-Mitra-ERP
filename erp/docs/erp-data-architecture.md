@@ -2,7 +2,7 @@
 
 ## 1. One ERP, many schools
 
-The ERP is multi-school from the foundation. Every school is isolated by `school_id`; branches add a second scope with `branch_id`. The existing schema already has schools, school settings, branches and per-school mobile-app configuration. cite-placeholder
+The ERP is multi-school from the foundation. Every school is isolated by `school_id`; branches add a second scope with `branch_id`. The database already has schools, school settings, branches and per-school mobile-app configuration.
 
 Super Admin creates a school from the platform UI. School provisioning creates:
 - school record and unique school code
