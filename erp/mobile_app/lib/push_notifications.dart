@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -17,10 +18,15 @@ Future<void> firebaseBackgroundHandler(RemoteMessage message) async {
 }
 
 class PushNotifications {
+  PushNotifications._();
+  static final PushNotifications instance = PushNotifications._();
+
   final FirebaseMessaging messaging = FirebaseMessaging.instance;
-  Map<String, dynamic>? pendingAction;
+  final ValueNotifier<Map<String, dynamic>?> pendingAction = ValueNotifier(null);
+  bool _initialized = false;
 
   Future<void> initialize() async {
+    if (_initialized) return;
     try {
       await Firebase.initializeApp();
       FirebaseMessaging.onBackgroundMessage(firebaseBackgroundHandler);
@@ -36,7 +42,6 @@ class PushNotifications {
 
       final token = await messaging.getToken();
       if (token != null) await registerToken(token);
-
       messaging.onTokenRefresh.listen((token) async {
         try {
           await registerToken(token);
@@ -50,6 +55,7 @@ class PushNotifications {
 
       final initial = await messaging.getInitialMessage();
       if (initial != null) _handleOpened(initial);
+      _initialized = true;
     } catch (_) {
       // Firebase native configuration is intentionally optional until the
       // school's Firebase project is connected. Login must still work.
@@ -57,11 +63,11 @@ class PushNotifications {
   }
 
   void _handleForeground(RemoteMessage message) {
-    pendingAction = _actionFrom(message);
+    pendingAction.value = _actionFrom(message);
   }
 
   void _handleOpened(RemoteMessage message) {
-    pendingAction = _actionFrom(message);
+    pendingAction.value = _actionFrom(message);
   }
 
   Map<String, dynamic> _actionFrom(RemoteMessage message) {
@@ -77,8 +83,8 @@ class PushNotifications {
   }
 
   Map<String, dynamic>? consumePendingAction() {
-    final action = pendingAction;
-    pendingAction = null;
+    final action = pendingAction.value;
+    pendingAction.value = null;
     return action;
   }
 
@@ -93,10 +99,7 @@ class PushNotifications {
         'Authorization': 'Bearer $access',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({
-        'token': token,
-        'platform': 'android',
-      }),
+      body: jsonEncode({'token': token, 'platform': 'android'}),
     );
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
