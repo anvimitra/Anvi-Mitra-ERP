@@ -13,6 +13,7 @@ import 'updates_page.dart';
 import 'update_checker.dart';
 import 'update_launcher.dart';
 import 'push_notifications.dart';
+import 'notification_action.dart';
 
 void main() => runApp(const AnviMitraApp());
 
@@ -84,7 +85,7 @@ class _LoginPageState extends State<LoginPage> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('accessToken', data['accessToken']);
       await prefs.setString('user', jsonEncode(data['user']));
-      await PushNotifications().initialize();
+      await PushNotifications.instance.initialize();
       if (mounted) {
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomePage(user: Map<String, dynamic>.from(data['user']))));
       }
@@ -136,8 +137,35 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   AppUpdateInfo? update;
   int index = 0;
+  final PushNotifications _push = PushNotifications.instance;
+
   @override
-  void initState() { super.initState(); _check(); }
+  void initState() {
+    super.initState();
+    _push.pendingAction.addListener(_onPendingNotification);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _openNotification(_push.consumePendingAction());
+    });
+    _check();
+  }
+
+  @override
+  void dispose() {
+    _push.pendingAction.removeListener(_onPendingNotification);
+    super.dispose();
+  }
+
+  void _onPendingNotification() {
+    final action = _push.consumePendingAction();
+    if (action == null || !mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _openNotification(action));
+  }
+
+  void _openNotification(Map<String, dynamic>? action) {
+    if (!mounted || action == null) return;
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => NotificationActionPage(action: action)));
+  }
+
   Future<void> _check() async {
     final latest = await UpdateChecker().check();
     if (!mounted || latest == null || (!latest.available && !latest.required)) return;
@@ -150,6 +178,7 @@ class _HomePageState extends State<HomePage> {
       )));
     }
   }
+
   Widget _home(String role) {
     if (role == 'teacher') return const TeacherDashboard();
     if (role == 'admin' || role == 'principal' || role == 'super_admin') return AdminDashboard(role: role);
