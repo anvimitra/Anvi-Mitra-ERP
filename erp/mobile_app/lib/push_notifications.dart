@@ -63,7 +63,8 @@ class PushNotifications {
   }
 
   void _handleForeground(RemoteMessage message) {
-    pendingAction.value = _actionFrom(message);
+    // Foreground delivery should not navigate the user automatically.
+    // The Updates tab remains the in-app place to review new notifications.
   }
 
   void _handleOpened(RemoteMessage message) {
