@@ -1,4 +1,5 @@
 const { hashPassword, verifyPassword, signAccessToken, verifyAccessToken } = require('./security');
+const { rateLimitAuth } = require('./security_hardening');
 function normalizeLogin(value) { return String(value || '').trim().toLowerCase(); }
 
 async function resolveBranch(pool, schoolId, requestedBranchId, userBranchId, role) {
@@ -13,7 +14,7 @@ async function resolveBranch(pool, schoolId, requestedBranchId, userBranchId, ro
 }
 
 function registerAuthRoutes(app, pool) {
-  app.post('/api/auth/login', async (req,res,next)=>{
+  app.post('/api/auth/login', rateLimitAuth, async (req,res,next)=>{
     try {
       if(!pool) return res.status(503).json({error:'Database is not configured'});
       const {login,password,schoolCode,branchId=null}=req.body||{};
