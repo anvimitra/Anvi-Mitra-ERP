@@ -1,12 +1,13 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'app_config.dart';
 
-/// Lightweight offline-first outbox/cache for the unified school app.
-/// PostgreSQL remains the source of truth; this class only stores pending
-/// changes locally and synchronizes them when the app gets a network response.
+/// Offline-first cache/outbox for the unified school app.
+/// PostgreSQL remains the source of truth. Local data can be queued while
+/// offline and is synchronized automatically when the network is available.
 class OfflineSyncService {
   OfflineSyncService._();
   static final OfflineSyncService instance = OfflineSyncService._();
@@ -18,11 +19,24 @@ class OfflineSyncService {
 
   SharedPreferences? _prefs;
   String? _accessToken;
+  Timer? _autoSyncTimer;
+  bool _syncing = false;
 
   Future<void> initialize({required String accessToken}) async {
     _prefs ??= await SharedPreferences.getInstance();
     _accessToken = accessToken;
-    await _ensureDevice();
+    // Device registration is best-effort: login/use of the app must remain
+    // possible when the first launch happens without internet.
+    await _ensureDevice().catchError((_) {});
+    _autoSyncTimer?.cancel();
+    _autoSyncTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      syncNow().catchError((_) {});
+    });
+  }
+
+  void dispose() {
+    _autoSyncTimer?.cancel();
+    _autoSyncTimer = null;
   }
 
   Future<String> _deviceKey() async {
@@ -100,9 +114,16 @@ class OfflineSyncService {
   Future<int> pendingCount() async => (await _outbox()).length;
 
   Future<void> syncNow() async {
-    await _ensureDevice();
-    await _pushOutbox();
-    await _pullChanges();
+    if (_syncing) return;
+    if (_accessToken == null || _accessToken!.isEmpty) return;
+    _syncing = true;
+    try {
+      await _ensureDevice();
+      await _pushOutbox();
+      await _pullChanges();
+    } finally {
+      _syncing = false;
+    }
   }
 
   Future<void> _pushOutbox() async {
@@ -111,7 +132,7 @@ class OfflineSyncService {
     final key = await _deviceKey();
     final result = await _request('/api/sync/push', method: 'POST', body: {
       'deviceKey': key,
-      'changes': items,
+      'changes': items.take(200).toList(),
     });
     final accepted = (result['accepted'] as List? ?? const [])
         .map((e) => Map<String, dynamic>.from(e as Map))
@@ -142,7 +163,13 @@ class OfflineSyncService {
       final type = change['entity_type'] ?? change['entityType'];
       final id = change['entity_id'] ?? change['entityId'];
       if (type == null || id == null) continue;
-      await prefs.setString('$_cachePrefix$type:$id', jsonEncode(change['payload'] ?? {}));
+      final operation = change['operation']?.toString();
+      final keyName = '$_cachePrefix$type:$id';
+      if (operation == 'delete') {
+        await prefs.remove(keyName);
+      } else {
+        await prefs.setString(keyName, jsonEncode(change['payload'] ?? {}));
+      }
     }
     final next = int.tryParse('${result['cursor'] ?? cursor}') ?? cursor;
     if (next >= cursor) await prefs.setInt(_cursorPref, next);
