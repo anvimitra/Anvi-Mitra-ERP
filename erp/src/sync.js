@@ -10,6 +10,16 @@ function registerSyncRoutes(app,pool){
     res.json({device:r.rows[0]});
   }catch(e){next(e)}});
 
+  app.get('/api/sync/status',authenticate,requireSchool,async(req,res,next)=>{try{
+    const [devices,changes,conflicts,latest]=await Promise.all([
+      pool.query(`SELECT COUNT(*)::int AS total,COUNT(*) FILTER(WHERE status='active')::int AS active,MAX(last_seen_at) AS last_seen_at FROM sync_devices WHERE school_id=$1`,[req.auth.schoolId]),
+      pool.query(`SELECT COUNT(*)::int AS count FROM sync_changes WHERE school_id=$1 AND changed_at>now()-interval '24 hours'`,[req.auth.schoolId]),
+      pool.query(`SELECT COUNT(*)::int AS count FROM sync_conflicts WHERE school_id=$1 AND resolution='pending'`,[req.auth.schoolId]),
+      pool.query(`SELECT MAX(changed_at) AS changed_at,MAX(cursor) AS cursor FROM sync_changes WHERE school_id=$1`,[req.auth.schoolId])
+    ]);
+    res.json({deviceCount:devices.rows[0],changesLast24h:changes.rows[0].count,pendingConflicts:conflicts.rows[0].count,latestChange:latest.rows[0],onlineSourceOfTruth:'postgresql'});
+  }catch(e){next(e)}});
+
   app.get('/api/sync/changes',authenticate,requireSchool,async(req,res,next)=>{try{
     const cursor=Math.max(0,Number(req.query.cursor||0)); const limit=Math.min(500,Math.max(1,Number(req.query.limit||200)));
     const r=await pool.query(`SELECT cursor,entity_type,entity_id,operation,payload,changed_at FROM sync_changes WHERE school_id=$1 AND cursor>$2 ORDER BY cursor ASC LIMIT $3`,[req.auth.schoolId,Number.isFinite(cursor)?cursor:0,limit]);
@@ -70,6 +80,9 @@ function registerSyncRoutes(app,pool){
     if(!r.rows.length)return res.status(404).json({error:'Conflict not found'});
     res.json({conflict:r.rows[0]});
   }catch(e){next(e)}});
+
+  app.get('/api/sync/devices',authenticate,requireSchool,requireConnectorAdmin('super_admin','principal','admin'),async(req,res,next)=>{try{const r=await pool.query(`SELECT id,device_key,device_name,platform,last_cursor,last_seen_at,status,created_at FROM sync_devices WHERE school_id=$1 ORDER BY last_seen_at DESC NULLS LAST`,[req.auth.schoolId]);res.json({devices:r.rows})}catch(e){next(e)}});
+  app.patch('/api/sync/devices/:id/revoke',authenticate,requireSchool,requireConnectorAdmin('super_admin','principal','admin'),async(req,res,next)=>{try{const r=await pool.query(`UPDATE sync_devices SET status='revoked' WHERE id=$1 AND school_id=$2 RETURNING id,device_key,device_name,platform,status`,[req.params.id,req.auth.schoolId]);if(!r.rows.length)return res.status(404).json({error:'Sync device not found'});res.json({device:r.rows[0]})}catch(e){next(e)}});
 
   app.get('/api/sync/local-connectors',authenticate,requireSchool,requireConnectorAdmin('super_admin','principal','admin'),async(req,res,next)=>{try{const r=await pool.query(`SELECT id,connector_type,display_name,enabled,permission_mode,selected_path,last_sync_at,last_error,created_at,updated_at FROM local_storage_connectors WHERE school_id=$1 ORDER BY created_at DESC`,[req.auth.schoolId]);res.json({connectors:r.rows})}catch(e){next(e)}});
   app.post('/api/sync/local-connectors',authenticate,requireSchool,requireConnectorAdmin('super_admin','principal','admin'),async(req,res,next)=>{try{const {deviceId=null,connectorType='desktop_folder',displayName,permissionMode='read_write',selectedPath=null}=req.body||{};if(!displayName)return res.status(400).json({error:'displayName is required'});if(!['desktop_folder','nas_folder','external_drive'].includes(connectorType))return res.status(400).json({error:'Invalid connector type'});if(!['read_only','read_write'].includes(permissionMode))return res.status(400).json({error:'Invalid permission mode'});if(deviceId){const d=await pool.query('SELECT id FROM sync_devices WHERE id=$1 AND school_id=$2 AND status=\'active\'',[deviceId,req.auth.schoolId]);if(!d.rows.length)return res.status(400).json({error:'Device is not registered for this school'});}const r=await pool.query(`INSERT INTO local_storage_connectors(school_id,device_id,connector_type,display_name,permission_mode,selected_path) VALUES($1,$2,$3,$4,$5,$6) RETURNING *`,[req.auth.schoolId,deviceId,connectorType,String(displayName).trim().slice(0,200),permissionMode,selectedPath]);res.status(201).json({connector:r.rows[0]})}catch(e){next(e)}});
