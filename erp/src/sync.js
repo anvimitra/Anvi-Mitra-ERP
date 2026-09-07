@@ -23,9 +23,35 @@ function registerSyncRoutes(app,pool){
     if(!Array.isArray(changes)||changes.length>200)return res.status(400).json({error:'changes must be an array with at most 200 items'});
     const d=await client.query(`SELECT id,status FROM sync_devices WHERE school_id=$1 AND device_key=$2`,[req.auth.schoolId,String(deviceKey).trim()]);
     if(!d.rows.length)return res.status(400).json({error:'Sync device is not registered'}); if(d.rows[0].status!=='active')return res.status(403).json({error:'Sync device is revoked'});
-    await client.query('BEGIN'); const accepted=[];
-    for(const item of changes){const entityType=String(item?.entityType||'').trim().slice(0,100);const operation=String(item?.operation||'').trim().toLowerCase();if(!entityType||!['create','update','delete'].includes(operation))continue;let entityId=null;if(item?.entityId){const parsed=String(item.entityId).trim();if(/^[0-9a-f-]{36}$/i.test(parsed))entityId=parsed;}const r=await client.query(`INSERT INTO sync_changes(school_id,entity_type,entity_id,operation,payload,changed_by) VALUES($1,$2,$3,$4,$5::jsonb,$6) RETURNING cursor`,[req.auth.schoolId,entityType,entityId,operation,JSON.stringify(item?.payload||{}),req.auth.sub]);accepted.push({clientId:item?.clientId||null,cursor:Number(r.rows[0].cursor)});}
-    await client.query(`UPDATE sync_devices SET last_seen_at=now() WHERE id=$1`,[d.rows[0].id]); await client.query('COMMIT'); res.json({accepted});
+    await client.query('BEGIN'); const accepted=[]; const conflicts=[];
+    for(const item of changes){
+      const entityType=String(item?.entityType||'').trim().slice(0,100);
+      const operation=String(item?.operation||'').trim().toLowerCase();
+      if(!entityType||!['create','update','delete'].includes(operation))continue;
+      let entityId=null;
+      if(item?.entityId){const parsed=String(item.entityId).trim();if(/^[0-9a-f-]{36}$/i.test(parsed))entityId=parsed;}
+      const clientId=String(item?.clientId||'').trim().slice(0,200)||null;
+      const payload=JSON.stringify(item?.payload||{});
+      const baseCursor=Math.max(0,Number(item?.baseCursor||0));
+      if(entityId && Number.isFinite(baseCursor) && baseCursor>0){
+        const newer=await client.query(`SELECT cursor,payload FROM sync_changes WHERE school_id=$1 AND entity_type=$2 AND entity_id=$3 AND cursor>$4 ORDER BY cursor DESC LIMIT 1`,[req.auth.schoolId,entityType,entityId,baseCursor]);
+        if(newer.rows.length){
+          const c=await client.query(`INSERT INTO sync_conflicts(school_id,device_id,entity_type,entity_id,local_payload,server_payload) VALUES($1,$2,$3,$4,$5::jsonb,$6::jsonb) RETURNING id`,[req.auth.schoolId,d.rows[0].id,entityType,entityId,payload,JSON.stringify(newer.rows[0].payload||{})]);
+          conflicts.push({clientId,conflictId:c.rows[0].id});
+          continue;
+        }
+      }
+      let r;
+      if(clientId){
+        r=await client.query(`INSERT INTO sync_changes(school_id,entity_type,entity_id,operation,payload,changed_by,client_change_id) VALUES($1,$2,$3,$4,$5::jsonb,$6,$7) ON CONFLICT DO NOTHING RETURNING cursor`,[req.auth.schoolId,entityType,entityId,operation,payload,req.auth.sub,clientId]);
+        if(!r.rows.length){const existing=await client.query(`SELECT cursor FROM sync_changes WHERE school_id=$1 AND client_change_id=$2 LIMIT 1`,[req.auth.schoolId,clientId]);if(existing.rows.length)r=existing;}
+      }else{
+        r=await client.query(`INSERT INTO sync_changes(school_id,entity_type,entity_id,operation,payload,changed_by) VALUES($1,$2,$3,$4,$5::jsonb,$6) RETURNING cursor`,[req.auth.schoolId,entityType,entityId,operation,payload,req.auth.sub]);
+      }
+      if(r?.rows?.length)accepted.push({clientId,cursor:Number(r.rows[0].cursor)});
+    }
+    await client.query(`UPDATE sync_devices SET last_seen_at=now() WHERE id=$1`,[d.rows[0].id]);
+    await client.query('COMMIT'); res.json({accepted,conflicts});
   }catch(e){await client.query('ROLLBACK').catch(()=>{});next(e)}finally{client.release()}});
 
   app.get('/api/sync/conflicts',authenticate,requireSchool,async(req,res,next)=>{try{
