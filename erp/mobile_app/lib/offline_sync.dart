@@ -36,7 +36,7 @@ class OfflineSyncService {
 
   Future<Map<String, dynamic>> _request(String path, {String method = 'GET', Map<String, dynamic>? body}) async {
     final token = _accessToken;
-    if (token == null || token!.isEmpty) throw StateError('Offline sync is not initialized');
+    if (token == null || token.isEmpty) throw StateError('Offline sync is not initialized');
     final uri = Uri.parse('${AppConfig.apiBaseUrl}$path');
     final response = await (method == 'POST'
         ? http.post(uri, headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'}, body: jsonEncode(body ?? {}))
@@ -50,10 +50,11 @@ class OfflineSyncService {
 
   Future<void> _ensureDevice() async {
     final key = await _deviceKey();
+    final platform = defaultTargetPlatform.toString().split('.').last;
     await _request('/api/sync/device', method: 'POST', body: {
       'deviceKey': key,
-      'deviceName': defaultTargetPlatform.name,
-      'platform': defaultTargetPlatform.name,
+      'deviceName': platform,
+      'platform': platform,
     });
   }
 
@@ -82,7 +83,8 @@ class OfflineSyncService {
     }
     final items = await _outbox();
     final clientId = '${DateTime.now().microsecondsSinceEpoch}-${items.length}';
-    final cursor = (_prefs ??= await SharedPreferences.getInstance()).getInt(_cursorPref) ?? 0;
+    final prefs = _prefs ??= await SharedPreferences.getInstance();
+    final cursor = prefs.getInt(_cursorPref) ?? 0;
     items.add({
       'clientId': clientId,
       'entityType': entityType,
