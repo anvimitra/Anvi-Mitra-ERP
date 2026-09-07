@@ -10,7 +10,7 @@ function registerPeopleRoutes(app, pool) {
   });
   app.get('/api/teachers', authenticate, requireRoles(...staff), async (req,res,next)=>{
     try {
-      const { rows } = await pool.query(`SELECT t.id,t.employee_code AS "employeeCode",t.full_name AS "fullName",t.phone,t.joining_date AS "joiningDate",t.status,t.branch_id AS "branchId",b.name AS "branchName" FROM teachers t LEFT JOIN branches b ON b.id=t.branch_id WHERE t.school_id=$1 AND ($2::uuid IS NULL OR t.branch_id=$2) ORDER BY t.full_name`, [req.auth.schoolId, req.auth.branchId || null]);
+      const { rows } = await pool.query(`SELECT t.id,t.user_id AS "userId",t.employee_code AS "employeeCode",t.full_name AS "fullName",t.phone,t.joining_date AS "joiningDate",t.status,t.branch_id AS "branchId",b.name AS "branchName" FROM teachers t LEFT JOIN branches b ON b.id=t.branch_id WHERE t.school_id=$1 AND ($2::uuid IS NULL OR t.branch_id=$2) ORDER BY t.full_name`, [req.auth.schoolId, req.auth.branchId || null]);
       res.json({ teachers: rows });
     } catch(err){ next(err); }
   });
