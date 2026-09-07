@@ -30,13 +30,23 @@ function registerNotificationRoutes(app, pool) {
 async function queueParentNotifications(client, { schoolId, studentId, type, title, message, data, eventType }) {
   const { rows: parents } = await client.query(`SELECT DISTINCT p.user_id AS "userId",pr.phone,s.full_name AS "studentName",s.admission_no AS "admissionNo" FROM student_portal_profiles p JOIN students s ON s.id=p.student_id AND s.school_id=p.school_id LEFT JOIN parents pr ON pr.user_id=p.user_id AND pr.school_id=p.school_id WHERE p.school_id=$1 AND p.student_id=$2 AND p.status='active' AND p.user_id IS NOT NULL`, [schoolId,studentId]);
   for (const parent of parents) {
-    await client.query(`INSERT INTO parent_notifications (school_id,user_id,student_id,type,title,message,data_json) VALUES ($1,$2,$3,$4,$5,$6,$7)`, [schoolId,parent.userId,studentId,type,title,message,JSON.stringify({...data||{},studentName:parent.studentName,admissionNo:parent.admissionNo})]);
+    const payload={...data||{},studentName:parent.studentName,admissionNo:parent.admissionNo};
+    await client.query(`INSERT INTO parent_notifications (school_id,user_id,student_id,type,title,message,data_json) VALUES ($1,$2,$3,$4,$5,$6,$7)`, [schoolId,parent.userId,studentId,type,title,message,JSON.stringify(payload)]);
     if (parent.phone) await client.query(`INSERT INTO notification_sms_queue (school_id,user_id,student_id,phone,message,event_type) VALUES ($1,$2,$3,$4,$5,$6)`, [schoolId,parent.userId,studentId,phoneForSms(parent.phone),message,eventType||type]);
+    await client.query(`INSERT INTO parent_push_queue (school_id,device_token_id,student_id,title,message,data_json) SELECT $1,id,$2,$3,$4,$5 FROM parent_device_tokens WHERE school_id=$1 AND user_id=$6 AND is_active=true`, [schoolId,studentId,title,message,JSON.stringify(payload),parent.userId]);
   }
 }
 
 function phoneForSms(phone) {
   return String(phone || '').trim();
+}
+
+async function queueAttendanceNotifications(client, { schoolId, studentId, attendanceId, date, status, note = null }) {
+  const { rows } = await client.query(`SELECT full_name AS "studentName",admission_no AS "admissionNo" FROM students WHERE id=$1 AND school_id=$2 LIMIT 1`, [studentId,schoolId]);
+  const student=rows[0]||{};
+  const label=student.studentName ? `${student.studentName}${student.admissionNo ? ` (${student.admissionNo})` : ''}` : 'student';
+  const message=`Attendance update: ${label} is ${String(status).replace(/_/g,' ')} on ${date}.`;
+  await queueParentNotifications(client,{schoolId,studentId,type:'attendance',title:'Attendance Update',message,data:{event:'attendance',studentId,attendanceId,date,status,note},eventType:'attendance'});
 }
 
 async function queueFeePaymentNotifications(client, { schoolId, invoiceId, studentId, amount, receiptNo, method, paidAmount, balanceAmount }) {
@@ -55,4 +65,4 @@ async function queueFeeInvoiceNotifications(client, { schoolId, invoiceId, stude
   await queueParentNotifications(client,{schoolId,studentId,type:'fee_invoice',title:'Fee Invoice Generated',message,data:{event:'fee_invoice',invoiceId,studentId,studentName:student.studentName||null,admissionNo:student.admissionNo||null,invoiceNo,amount:Number(amount),dueDate},eventType:'fee_invoice'});
 }
 
-module.exports = { registerNotificationRoutes, queueFeePaymentNotifications, queueFeeInvoiceNotifications };
+module.exports = { registerNotificationRoutes, queueParentNotifications, queueAttendanceNotifications, queueFeePaymentNotifications, queueFeeInvoiceNotifications };
