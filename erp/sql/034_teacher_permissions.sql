@@ -20,7 +20,3 @@ CREATE INDEX IF NOT EXISTS teacher_permissions_teacher_idx
   ON teacher_class_subject_permissions(school_id, teacher_user_id, session_id);
 CREATE INDEX IF NOT EXISTS teacher_permissions_scope_idx
   ON teacher_class_subject_permissions(school_id, class_id, section_id, subject_id, session_id);
-
-ALTER TABLE teacher_class_subject_permissions
-  ADD CONSTRAINT teacher_permissions_section_class_fk
-  FOREIGN KEY (section_id) REFERENCES sections(id) ON DELETE CASCADE;
