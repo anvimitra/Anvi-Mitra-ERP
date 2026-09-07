@@ -23,8 +23,12 @@ CREATE TABLE IF NOT EXISTS sync_changes (
   operation VARCHAR(20) NOT NULL CHECK (operation IN ('create','update','delete')),
   payload JSONB NOT NULL DEFAULT '{}'::jsonb,
   changed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  client_change_id VARCHAR(200),
   changed_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+ALTER TABLE sync_changes ADD COLUMN IF NOT EXISTS client_change_id VARCHAR(200);
+CREATE UNIQUE INDEX IF NOT EXISTS sync_changes_school_client_change_idx
+  ON sync_changes(school_id,client_change_id) WHERE client_change_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS sync_changes_school_cursor_idx ON sync_changes(school_id,cursor);
 CREATE INDEX IF NOT EXISTS sync_changes_school_entity_idx ON sync_changes(school_id,entity_type,entity_id,cursor);
 
