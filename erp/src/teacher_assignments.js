@@ -27,6 +27,7 @@ function registerTeacherAssignmentRoutes(app, pool) {
   app.get('/api/class-teacher-assignments', authenticate, requireRoles(...staff,'teacher'), async (req,res,next) => {
     try {
       const sessionId=req.query.sessionId ? String(req.query.sessionId) : null;
+      const teacherUserId=req.auth.role==='teacher' ? req.auth.sub : null;
       const { rows } = await pool.query(`
         SELECT cta.id,cta.teacher_id AS "teacherId",t.full_name AS "teacherName",
                cta.section_id AS "sectionId",sec.name AS "sectionName",
@@ -40,9 +41,9 @@ function registerTeacherAssignmentRoutes(app, pool) {
         WHERE cta.school_id=$1
           AND ($2::uuid IS NULL OR cta.session_id=$2)
           AND ($3::uuid IS NULL OR cta.branch_id=$3)
-          AND ($4::uuid IS NULL OR cta.teacher_id=(SELECT teacher_id FROM users WHERE id=$4 AND school_id=$1))
+          AND ($4::uuid IS NULL OR t.user_id=$4)
         ORDER BY a.starts_on DESC,c.name,sec.name`,
-        [req.auth.schoolId,sessionId,req.auth.branchId || null,req.auth.role==='teacher'?req.auth.sub:null]);
+        [req.auth.schoolId,sessionId,req.auth.branchId || null,teacherUserId]);
       res.json({ assignments: rows });
     } catch (err) { next(err); }
   });
@@ -52,7 +53,7 @@ function registerTeacherAssignmentRoutes(app, pool) {
       const { teacherId, sectionId, sessionId } = req.body || {};
       if (!teacherId || !sectionId || !sessionId) return res.status(400).json({ error:'teacherId, sectionId and sessionId are required' });
       const { rows } = await pool.query(`
-        SELECT t.branch_id AS "teacherBranchId",c.branch_id AS "classBranchId",s.class_id AS "classId"
+        SELECT t.branch_id AS "teacherBranchId",c.branch_id AS "classBranchId"
         FROM teachers t
         JOIN sections s ON s.id=$2 AND s.school_id=t.school_id
         JOIN classes c ON c.id=s.class_id AND c.school_id=t.school_id
