@@ -1,0 +1,1 @@
+Next logical implementation: connect the existing multi-school/branch UI to the offline-first sync protocol and local storage connector.
