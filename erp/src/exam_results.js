@@ -54,6 +54,7 @@ function registerExamResultRoutes(app, pool) {
       if(!enrolled.rows.length)return res.status(400).json({error:'Student is not enrolled in the selected class/section/session'});
       let value=null;if(marks!==null&&marks!==undefined&&marks!==''){value=Number(marks);if(!Number.isFinite(value)||value<0||value>Number(es.maxMarks))return res.status(400).json({error:`Marks must be between 0 and ${es.maxMarks}`})}
       const r=await client.query(`INSERT INTO exam_marks(school_id,branch_id,exam_subject_id,student_id,marks,remarks,entered_by) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(exam_subject_id,student_id) DO UPDATE SET branch_id=EXCLUDED.branch_id,marks=EXCLUDED.marks,remarks=EXCLUDED.remarks,entered_by=EXCLUDED.entered_by,updated_at=now() RETURNING id,marks,remarks,entered_by AS "enteredBy",branch_id AS "branchId"`,[req.auth.schoolId,req.auth.branchId||es.branchId||null,es.examSubjectId,studentId,value,String(remarks||'').slice(0,500),req.auth.sub]);
+      await pool.query(`INSERT INTO sync_changes(school_id,entity_type,entity_id,operation,payload,changed_by) VALUES($1,'exam_mark',$2,'update',$3::jsonb,$4)`,[req.auth.schoolId,r.rows[0].id,JSON.stringify({...r.rows[0],examSubjectId:es.examSubjectId,studentId}),req.auth.sub]);
       res.status(201).json({mark:r.rows[0]});
     }catch(e){next(e)}finally{client.release()}
   });
