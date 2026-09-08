@@ -1,0 +1,59 @@
+name: ERP Backend Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'erp/src/**'
+      - 'erp/sql/**'
+      - 'erp/package.json'
+      - '.github/workflows/erp-backend-check.yml'
+  pull_request:
+    paths:
+      - 'erp/src/**'
+      - 'erp/sql/**'
+      - 'erp/package.json'
+      - '.github/workflows/erp-backend-check.yml'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: erp
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Syntax check server files
+        run: |
+          set -e
+          for file in src/*.js; do
+            node --check "$file"
+          done
+      - name: Validate migration filenames
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const files = fs.readdirSync('sql').filter(f => /^\d+_.+\.sql$/.test(f)).sort();
+          if (!files.length) throw new Error('No SQL migrations found');
+          for (const file of files) {
+            const text = fs.readFileSync(`sql/${file}`, 'utf8');
+            if (!text.trim()) throw new Error(`Empty migration: ${file}`);
+          }
+          console.log(`Validated ${files.length} SQL migration files.`);
+          NODE
+      - name: Check critical modules exist
+        run: |
+          test -f src/sync.js
+          test -f src/teacher_permissions.js
+          test -f src/security_hardening.js
+          test -f sql/036_teacher_marks_guard.sql
+          test -f local_connector/server.js
+          test -f mobile_app/lib/offline_sync.dart
