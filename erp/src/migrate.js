@@ -12,14 +12,7 @@ async function main() {
     const files = fs.readdirSync(dir).filter(f => /^\d+_.+\.sql$/.test(f)).sort();
     for (const file of files) {
       const version = file.replace(/\.sql$/, '');
-      const legacyVersion = version.split('_')[0];
-      const exists = await pool.query(`
-        SELECT 1 FROM schema_migrations
-        WHERE version=$1
-           OR (version=$2 AND NOT EXISTS (
-             SELECT 1 FROM schema_migrations WHERE version LIKE $2 || '\\_%'
-           ))
-        LIMIT 1`, [version, legacyVersion]);
+      const exists = await pool.query('SELECT 1 FROM schema_migrations WHERE version=$1 LIMIT 1', [version]);
       if (exists.rowCount) continue;
       const sql = fs.readFileSync(path.join(dir, file), 'utf8');
       await pool.query('BEGIN');
