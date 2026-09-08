@@ -53,7 +53,7 @@ function registerExamResultRoutes(app, pool) {
       const enrolled=await client.query(`SELECT 1 FROM enrollments WHERE school_id=$1 AND student_id=$2 AND session_id=$3 AND class_id=$4 AND section_id=$5 AND status='active' AND ($6::uuid IS NULL OR branch_id=$6 OR branch_id IS NULL) LIMIT 1`,[req.auth.schoolId,studentId,sessionId,classId,sectionId,req.auth.branchId||null]);
       if(!enrolled.rows.length)return res.status(400).json({error:'Student is not enrolled in the selected class/section/session'});
       let value=null;if(marks!==null&&marks!==undefined&&marks!==''){value=Number(marks);if(!Number.isFinite(value)||value<0||value>Number(es.maxMarks))return res.status(400).json({error:`Marks must be between 0 and ${es.maxMarks}`})}
-      const r=await client.query(`INSERT INTO exam_marks(school_id,exam_subject_id,student_id,marks,remarks) VALUES($1,$2,$3,$4,$5) ON CONFLICT(school_id,exam_subject_id,student_id) DO UPDATE SET marks=EXCLUDED.marks,remarks=EXCLUDED.remarks,updated_at=now() RETURNING id,marks,remarks`,[req.auth.schoolId,es.examSubjectId,studentId,value,String(remarks||'').slice(0,500)]);
+      const r=await client.query(`INSERT INTO exam_marks(school_id,branch_id,exam_subject_id,student_id,marks,remarks,entered_by) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(exam_subject_id,student_id) DO UPDATE SET branch_id=EXCLUDED.branch_id,marks=EXCLUDED.marks,remarks=EXCLUDED.remarks,entered_by=EXCLUDED.entered_by,updated_at=now() RETURNING id,marks,remarks,entered_by AS "enteredBy",branch_id AS "branchId"`,[req.auth.schoolId,req.auth.branchId||es.branchId||null,es.examSubjectId,studentId,value,String(remarks||'').slice(0,500),req.auth.sub]);
       res.status(201).json({mark:r.rows[0]});
     }catch(e){next(e)}finally{client.release()}
   });
