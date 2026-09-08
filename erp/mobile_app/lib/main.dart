@@ -1,183 +1,19 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'app_config.dart';
 import 'offline_sync.dart';
 
-void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  runApp(const AnviMitraApp());
+void main(){WidgetsFlutterBinding.ensureInitialized();runApp(const AnviMitraApp());}
+class AnviMitraApp extends StatelessWidget{const AnviMitraApp({super.key});@override Widget build(BuildContext context)=>MaterialApp(title:AppConfig.appName,debugShowCheckedModeBanner:false,theme:ThemeData(colorScheme:ColorScheme.fromSeed(seedColor:const Color(0xFF4F46E5)),useMaterial3:true),home:const LoginPage());}
+class LoginPage extends StatefulWidget{const LoginPage({super.key});@override State<LoginPage> createState()=>_LoginPageState();}
+class _LoginPageState extends State<LoginPage>{
+ final school=TextEditingController(text:AppConfig.schoolCode),login=TextEditingController(),password=TextEditingController(); bool busy=false; String? error;
+ @override void dispose(){school.dispose();login.dispose();password.dispose();super.dispose();}
+ Future<void> submit() async{setState((){busy=true;error=null;});try{if(school.text.trim().isEmpty||login.text.trim().isEmpty||password.text.isEmpty)throw Exception('School code, login and password are required');final r=await http.post(Uri.parse('${AppConfig.apiBaseUrl}/api/auth/login'),headers:{'Content-Type':'application/json','Accept':'application/json'},body:jsonEncode({'schoolCode':school.text.trim(),'login':login.text.trim(),'password':password.text}));final d=jsonDecode(r.body.isEmpty?'{}':r.body);if(r.statusCode<200||r.statusCode>=300)throw Exception(d is Map&&d['error']!=null?d['error']:'Login failed (${r.statusCode})');final token=d['accessToken']?.toString();if(token==null||token.isEmpty)throw Exception('Login response did not contain an access token');final prefs=await SharedPreferences.getInstance();await prefs.setString('erp_access_token',token);await prefs.setString('erp_user',jsonEncode(d['user']??{}));await OfflineSyncService.instance.initialize(accessToken:token);if(!mounted)return;Navigator.of(context).pushReplacement(MaterialPageRoute(builder:(_)=>const HomePage()));}catch(e){if(mounted)setState(()=>error=e.toString().replaceFirst('Exception: ',''));}finally{if(mounted)setState(()=>busy=false);}}
+ @override Widget build(BuildContext context)=>Scaffold(body:Center(child:SingleChildScrollView(padding:const EdgeInsets.all(24),child:ConstrainedBox(constraints:const BoxConstraints(maxWidth:430),child:Card(child:Padding(padding:const EdgeInsets.all(24),child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[const Icon(Icons.school_rounded,size:58),const SizedBox(height:14),Text(AppConfig.appName,textAlign:TextAlign.center,style:TextStyle(fontSize:24,fontWeight:FontWeight.w800)),const SizedBox(height:6),const Text('One app for school staff, parents, students and drivers',textAlign:TextAlign.center),const SizedBox(height:24),TextField(controller:school,decoration:const InputDecoration(labelText:'School Code',border:OutlineInputBorder())),const SizedBox(height:12),TextField(controller:login,decoration:const InputDecoration(labelText:'Email / Phone',border:OutlineInputBorder())),const SizedBox(height:12),TextField(controller:password,obscureText:true,decoration:const InputDecoration(labelText:'Password',border:OutlineInputBorder())),if(error!=null)Padding(padding:const EdgeInsets.only(top:12),child:Text(error!,style:TextStyle(color:Theme.of(context).colorScheme.error))),const SizedBox(height:18),FilledButton(onPressed:busy?null:submit,child:Text(busy?'Signing in…':'Sign in')),const SizedBox(height:10),Text('API: ${AppConfig.apiBaseUrl}',textAlign:TextAlign.center,style:Theme.of(context).textTheme.bodySmall)]))))))));}
 }
-
-class AnviMitraApp extends StatelessWidget {
-  const AnviMitraApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: AppConfig.appName,
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF4F46E5)),
-        useMaterial3: true,
-      ),
-      home: const LoginPage(),
-    );
-  }
-}
-
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
-
-  @override
-  State<LoginPage> createState() => _LoginPageState();
-}
-
-class _LoginPageState extends State<LoginPage> {
-  final _school = TextEditingController(text: AppConfig.schoolCode);
-  final _login = TextEditingController();
-  final _password = TextEditingController();
-  bool _busy = false;
-  String? _error;
-
-  @override
-  void dispose() {
-    _school.dispose();
-    _login.dispose();
-    _password.dispose();
-    super.dispose();
-  }
-
-  Future<void> _loginNow() async {
-    setState(() { _busy = true; _error = null; });
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      // The HTTP login is intentionally kept in this first scaffold simple.
-      // Once the API is reachable, the token is stored and the same offline
-      // sync service can continue working across connectivity changes.
-      if (_school.text.trim().isEmpty || _login.text.trim().isEmpty || _password.text.isEmpty) {
-        throw Exception('School code, login and password are required');
-      }
-      final token = prefs.getString('demo_access_token');
-      if (token == null || token.isEmpty) {
-        // This keeps the app usable as a UI scaffold without inventing a real
-        // authentication token. Production login will call /api/auth/login.
-        throw Exception('Connect the app to the ERP API to sign in');
-      }
-      await OfflineSyncService.instance.initialize(accessToken: token);
-      if (!mounted) return;
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const HomePage()));
-    } catch (e) {
-      if (mounted) setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 430),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Icon(Icons.school_rounded, size: 58),
-                    const SizedBox(height: 14),
-                    Text(AppConfig.appName, textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 6),
-                    const Text('One app for school staff, parents, students and drivers', textAlign: TextAlign.center),
-                    const SizedBox(height: 24),
-                    TextField(controller: _school, decoration: const InputDecoration(labelText: 'School Code', border: OutlineInputBorder())),
-                    const SizedBox(height: 12),
-                    TextField(controller: _login, decoration: const InputDecoration(labelText: 'Email / Phone', border: OutlineInputBorder())),
-                    const SizedBox(height: 12),
-                    TextField(controller: _password, obscureText: true, decoration: const InputDecoration(labelText: 'Password', border: OutlineInputBorder())),
-                    if (_error != null) ...[
-                      const SizedBox(height: 12),
-                      Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-                    ],
-                    const SizedBox(height: 18),
-                    FilledButton(onPressed: _busy ? null : _loginNow, child: Text(_busy ? 'Signing in…' : 'Sign in')),
-                    const SizedBox(height: 10),
-                    Text('API: ${AppConfig.apiBaseUrl}', textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodySmall),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
-
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  int _pending = 0;
-  String _status = 'Ready';
-
-  Future<void> _sync() async {
-    setState(() => _status = 'Syncing…');
-    try {
-      await OfflineSyncService.instance.syncNow();
-      _pending = await OfflineSyncService.instance.pendingCount();
-      if (mounted) setState(() => _status = 'Synced successfully');
-    } catch (e) {
-      if (mounted) setState(() => _status = 'Offline / sync pending');
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _refreshPending();
-  }
-
-  Future<void> _refreshPending() async {
-    final count = await OfflineSyncService.instance.pendingCount();
-    if (mounted) setState(() => _pending = count);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(AppConfig.appName)),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Card(child: ListTile(leading: const Icon(Icons.cloud_done), title: const Text('ERP connection'), subtitle: Text(_status), trailing: IconButton(onPressed: _sync, icon: const Icon(Icons.sync)))),
-          Card(child: ListTile(leading: const Icon(Icons.cloud_off), title: const Text('Offline outbox'), subtitle: Text('$_pending pending change(s)'))),
-          const SizedBox(height: 8),
-          const _ModuleCard(icon: Icons.people, title: 'Students & Enrollments', text: 'Student profiles, admissions and class enrollment.'),
-          const _ModuleCard(icon: Icons.fact_check, title: 'Attendance', text: 'Role-aware attendance and class records.'),
-          const _ModuleCard(icon: Icons.edit_note, title: 'Exams & Marks', text: 'Teachers can edit only their permitted class/subject records.'),
-          const _ModuleCard(icon: Icons.receipt_long, title: 'Fees', text: 'Fee invoices, payments and outstanding records.'),
-          const _ModuleCard(icon: Icons.notifications_active, title: 'Notifications', text: 'School updates remain available with offline cache support.'),
-        ],
-      ),
-    );
-  }
-}
-
-class _ModuleCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String text;
-  const _ModuleCard({required this.icon, required this.title, required this.text});
-
-  @override
-  Widget build(BuildContext context) => Card(child: ListTile(leading: Icon(icon), title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)), subtitle: Text(text)));
-}
+class HomePage extends StatefulWidget{const HomePage({super.key});@override State<HomePage> createState()=>_HomePageState();}
+class _HomePageState extends State<HomePage>{int pending=0;String status='Ready';@override void initState(){super.initState();refresh();}Future<void> refresh()async{final c=await OfflineSyncService.instance.pendingCount();if(mounted)setState(()=>pending=c);}Future<void> sync()async{setState(()=>status='Syncing…');try{await OfflineSyncService.instance.syncNow();await refresh();if(mounted)setState(()=>status='Synced successfully');}catch(_){if(mounted)setState(()=>status='Offline / sync pending');}}@override Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:Text(AppConfig.appName)),body:ListView(padding:const EdgeInsets.all(16),children:[Card(child:ListTile(leading:const Icon(Icons.cloud_done),title:const Text('ERP connection'),subtitle:Text(status),trailing:IconButton(onPressed:sync,icon:const Icon(Icons.sync)))),Card(child:ListTile(leading:const Icon(Icons.cloud_off),title:const Text('Offline outbox'),subtitle:Text('$pending pending change(s)'))),const _ModuleCard(icon:Icons.people,title:'Students & Enrollments',text:'Student profiles, admissions and class enrollment.'),const _ModuleCard(icon:Icons.fact_check,title:'Attendance',text:'Role-aware attendance and class records.'),const _ModuleCard(icon:Icons.edit_note,title:'Exams & Marks',text:'Teachers can edit only their permitted class/subject records.'),const _ModuleCard(icon:Icons.receipt_long,title:'Fees',text:'Fee invoices, payments and outstanding records.'),const _ModuleCard(icon:Icons.notifications_active,title:'Notifications',text:'School updates with offline cache and automatic sync.') ]));}
+class _ModuleCard extends StatelessWidget{final IconData icon;final String title;final String text;const _ModuleCard({required this.icon,required this.title,required this.text});@override Widget build(BuildContext context)=>Card(child:ListTile(leading:Icon(icon),title:Text(title,style:const TextStyle(fontWeight:FontWeight.w700)),subtitle:Text(text)));}
