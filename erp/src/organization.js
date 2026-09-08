@@ -65,5 +65,36 @@ function registerOrganizationRoutes(app, pool) {
       res.status(201).json({ school: s.rows[0], mainBranch: b.rows[0] });
     } catch (e) { await client.query('ROLLBACK').catch(() => {}); if (e.code === '23505') return res.status(409).json({ error: 'School code, app slug or branch code already exists' }); next(e); } finally { client.release(); }
   });
+
+  app.patch('/api/platform/schools/:id', authenticate, requireRoles('super_admin'), async (req, res, next) => {
+    const client = await pool.connect();
+    try {
+      const schoolId = req.params.id;
+      const schoolFields = { name:'name', code:'code', displayName:'display_name', address:'address', phone:'phone', supportEmail:'email', logoUrl:'logo_url', status:'status' };
+      const appFields = { appName:'app_name', appSlug:'app_slug', androidPackage:'android_package', iosBundleId:'ios_bundle_id', apiBaseUrl:'api_base_url', primaryColor:'primary_color', secondaryColor:'secondary_color', supportEmail:'support_email', supportPhone:'support_phone', minAppVersion:'min_app_version', forceUpdate:'force_update', appStatus:'status' };
+      const schoolSets=[]; const schoolValues=[];
+      const appSets=[]; const appValues=[];
+      for (const [key,col] of Object.entries(schoolFields)) if (Object.prototype.hasOwnProperty.call(req.body||{},key)) { schoolSets.push(`${col}=$${schoolValues.length+1}`); schoolValues.push(key==='code'?clean(req.body[key],50).toUpperCase():req.body[key]); }
+      for (const [key,col] of Object.entries(appFields)) if (Object.prototype.hasOwnProperty.call(req.body||{},key)) { appSets.push(`${col}=$${appValues.length+1}`); appValues.push(key==='appSlug'?clean(req.body[key],100).toLowerCase():req.body[key]); }
+      await client.query('BEGIN');
+      let school;
+      if (schoolSets.length) {
+        schoolValues.push(schoolId);
+        const r=await client.query(`UPDATE schools SET ${schoolSets.join(',')} WHERE id=$${schoolValues.length} RETURNING id,name,code,display_name,address,phone,email,logo_url,status,created_at`,schoolValues);
+        if(!r.rows.length){await client.query('ROLLBACK');return res.status(404).json({error:'School not found'});}
+        school=r.rows[0];
+      } else {
+        const r=await client.query(`SELECT id,name,code,display_name,address,phone,email,logo_url,status,created_at FROM schools WHERE id=$1`,[schoolId]);
+        if(!r.rows.length){await client.query('ROLLBACK');return res.status(404).json({error:'School not found'});}
+        school=r.rows[0];
+      }
+      if (appSets.length) {
+        appValues.push(schoolId);
+        await client.query(`UPDATE mobile_app_configs SET ${appSets.join(',')} WHERE school_id=$${appValues.length}`,appValues);
+      }
+      await client.query('COMMIT');
+      res.json({ school });
+    } catch(e){ await client.query('ROLLBACK').catch(()=>{}); if(e.code==='23505')return res.status(409).json({error:'School code or app slug already exists'}); next(e); } finally { client.release(); }
+  });
 }
 module.exports = { registerOrganizationRoutes };
