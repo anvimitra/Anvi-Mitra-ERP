@@ -1,0 +1,160 @@
+name: Mobile App Build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'erp/mobile_app/**'
+      - '.github/workflows/mobile-app-build-fixed.yml'
+  workflow_dispatch:
+    inputs:
+      school_name:
+        description: 'School app display name'
+        required: false
+        default: 'LSK Academy'
+      school_slug:
+        description: 'School slug'
+        required: false
+        default: 'lsk-academy'
+      application_id:
+        description: 'Android application id'
+        required: false
+        default: 'in.anvimitra.lskacademy'
+      artifact_name:
+        description: 'APK artifact name'
+        required: false
+        default: 'lsk-academy-school-app-apk'
+      primary_color:
+        description: 'Primary color without #'
+        required: false
+        default: '4F46E5'
+      secondary_color:
+        description: 'Secondary color without #'
+        required: false
+        default: '0F1720'
+      logo_url:
+        description: 'Optional HTTPS PNG logo URL'
+        required: false
+        default: ''
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up job
+        run: echo "Building Anvi Mitra School App"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.2'
+          channel: stable
+          cache: true
+
+      - name: Generate Android platform project
+        working-directory: erp/mobile_app
+        run: flutter create . --platforms=android --project-name anvi_mitra_school_app
+
+      - name: Apply school branding
+        working-directory: erp/mobile_app
+        env:
+          SCHOOL_NAME: ${{ inputs.school_name || 'LSK Academy' }}
+          SCHOOL_SLUG: ${{ inputs.school_slug || 'lsk-academy' }}
+          APPLICATION_ID: ${{ inputs.application_id || 'in.anvimitra.lskacademy' }}
+          PRIMARY_COLOR: ${{ inputs.primary_color || '4F46E5' }}
+          SECONDARY_COLOR: ${{ inputs.secondary_color || '0F1720' }}
+          LOGO_URL: ${{ inputs.logo_url || '' }}
+        run: |
+          python3 - <<'PY'
+          import os, pathlib, re
+          p=pathlib.Path('lib/app_config.dart')
+          s=p.read_text()
+          replacements={
+            'SCHOOL_SLUG':os.environ['SCHOOL_SLUG'],
+            'APP_NAME':os.environ['SCHOOL_NAME'],
+            'PRIMARY_COLOR':os.environ['PRIMARY_COLOR'],
+            'SECONDARY_COLOR':os.environ['SECONDARY_COLOR'],
+            'LOGO_URL':os.environ['LOGO_URL'],
+          }
+          for key,value in replacements.items():
+            s=re.sub(r"defaultValue:\s*'[^']*'", lambda m: m.group(0) if key not in m.group(0) else m.group(0), s)
+          s=s.replace("defaultValue: 'lsk-academy'", "defaultValue: '%s'"%replacements['SCHOOL_SLUG'])
+          s=s.replace("defaultValue: 'Anvi Mitra School App'", "defaultValue: '%s'"%replacements['APP_NAME'])
+          s=s.replace("defaultValue: ''", "defaultValue: '%s'"%replacements['LOGO_URL'],1)
+          s=s.replace("defaultValue: '4F46E5'", "defaultValue: '%s'"%replacements['PRIMARY_COLOR'])
+          s=s.replace("defaultValue: '0F1720'", "defaultValue: '%s'"%replacements['SECONDARY_COLOR'])
+          p.write_text(s)
+          
+          manifest=pathlib.Path('android/app/src/main/AndroidManifest.xml')
+          m=manifest.read_text()
+          m=m.replace('android:label="anvi_mitra_school_app"','android:label="%s"'%os.environ['SCHOOL_NAME'])
+          manifest.write_text(m)
+          gradle=pathlib.Path('android/app/build.gradle')
+          g=gradle.read_text()
+          g=re.sub(r'applicationId\s+["\'][^"\']+["\']', 'applicationId "%s"'%os.environ['APPLICATION_ID'], g)
+          gradle.write_text(g)
+          PY
+
+      - name: Install launcher icon tooling
+        working-directory: erp/mobile_app
+        run: flutter pub add --dev flutter_launcher_icons
+
+      - name: Prepare school logo and launcher icon
+        working-directory: erp/mobile_app
+        env:
+          LOGO_URL: ${{ inputs.logo_url || '' }}
+          SCHOOL_SLUG: ${{ inputs.school_slug || 'lsk-academy' }}
+        run: |
+          mkdir -p assets/icon
+          if [ -n "$LOGO_URL" ]; then
+            curl -fL "$LOGO_URL" -o assets/icon/school_logo.png
+          elif [ "$SCHOOL_SLUG" = "lsk-academy" ] && [ -f branding/lsk-academy-logo.svg ]; then
+            convert -background none branding/lsk-academy-logo.svg -resize 1024x1024 assets/icon/school_logo.png
+          else
+            echo "No school logo supplied; using default Flutter icon."
+          fi
+          if [ -f assets/icon/school_logo.png ]; then
+            cat > flutter_launcher_icons.yaml <<'YAML'
+          flutter_launcher_icons:
+            android: true
+            ios: true
+            image_path: assets/icon/school_logo.png
+            adaptive_icon_background: '#FFFFFF'
+            adaptive_icon_foreground: assets/icon/school_logo.png
+          YAML
+            dart run flutter_launcher_icons
+          fi
+
+      - name: Remove generated sample test
+        working-directory: erp/mobile_app
+        run: rm -f test/widget_test.dart
+
+      - name: Get dependencies
+        working-directory: erp/mobile_app
+        run: flutter pub get
+
+      - name: Analyze
+        working-directory: erp/mobile_app
+        run: flutter analyze --no-fatal-infos
+
+      - name: Build APK
+        working-directory: erp/mobile_app
+        env:
+          API_BASE_URL: ${{ secrets.ERP_API_BASE_URL }}
+        run: flutter build apk --release --dart-define=API_BASE_URL="${API_BASE_URL:-http://localhost:4000}"
+
+      - name: Prepare named APK
+        working-directory: erp/mobile_app
+        env:
+          ARTIFACT_NAME: ${{ inputs.artifact_name || 'lsk-academy-school-app-apk' }}
+        run: cp build/app/outputs/flutter-apk/app-release.apk "${ARTIFACT_NAME}.apk"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name || 'lsk-academy-school-app-apk' }}
+          path: erp/mobile_app/${{ inputs.artifact_name || 'lsk-academy-school-app-apk' }}.apk
+          if-no-files-found: error
