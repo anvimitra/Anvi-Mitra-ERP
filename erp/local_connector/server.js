@@ -7,6 +7,9 @@ const app = express();
 const port = Number(process.env.PORT || 43800);
 const root = path.resolve(process.env.LOCAL_STORAGE_ROOT || './anvi-mitra-data');
 const token = String(process.env.LOCAL_CONNECTOR_TOKEN || '').trim();
+const erpApiUrl = String(process.env.ERP_API_URL || '').trim().replace(/\/$/, '');
+const erpAccessToken = String(process.env.ERP_ACCESS_TOKEN || '').trim();
+const syncDeviceKey = String(process.env.SYNC_DEVICE_KEY || '').trim();
 
 app.disable('x-powered-by');
 app.use(cors({ origin: process.env.CORS_ORIGIN || true }));
@@ -30,9 +33,23 @@ function safePath(relativePath) {
 
 async function ensureRoot() { await fs.mkdir(root, { recursive: true }); }
 
+async function erpRequest(endpoint, method = 'GET', body) {
+  if (!erpApiUrl || !erpAccessToken || !syncDeviceKey) {
+    throw Object.assign(new Error('ERP_API_URL, ERP_ACCESS_TOKEN and SYNC_DEVICE_KEY are required for remote sync'), { statusCode: 503 });
+  }
+  const response = await fetch(`${erpApiUrl}${endpoint}`, {
+    method,
+    headers: { Authorization: `Bearer ${erpAccessToken}`, 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body)
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw Object.assign(new Error(data.error || `ERP request failed (${response.status})`), { statusCode: response.status });
+  return data;
+}
+
 app.get('/health', async (_req, res) => {
   await ensureRoot();
-  res.json({ ok: true, service: 'anvi-mitra-local-connector', root, readWrite: true });
+  res.json({ ok: true, service: 'anvi-mitra-local-connector', root, readWrite: true, remoteSyncConfigured: Boolean(erpApiUrl && erpAccessToken && syncDeviceKey) });
 });
 
 app.get('/list', auth, async (req, res, next) => {
@@ -66,9 +83,41 @@ app.post('/write', auth, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// Registers this PC/device with the central ERP sync service.
+app.post('/sync/register', auth, async (_req, res, next) => {
+  try {
+    const result = await erpRequest('/api/sync/device', 'POST', {
+      deviceKey: syncDeviceKey,
+      deviceName: process.env.LOCAL_CONNECTOR_NAME || 'School PC Local Connector',
+      platform: process.platform
+    });
+    res.json(result);
+  } catch (e) { next(e); }
+});
+
+// Push a prepared local outbox to the central ERP. The local connector never
+// gets unrestricted database access; all remote writes go through ERP sync APIs.
+app.post('/sync/push', auth, async (req, res, next) => {
+  try {
+    const changes = Array.isArray(req.body?.changes) ? req.body.changes : [];
+    if (changes.length > 200) return res.status(400).json({ error: 'Maximum 200 changes per request' });
+    const result = await erpRequest('/api/sync/push', 'POST', { deviceKey: syncDeviceKey, changes });
+    res.json(result);
+  } catch (e) { next(e); }
+});
+
+// Pull central changes so a local agent can materialize them into its ERP data folder.
+app.get('/sync/pull', auth, async (req, res, next) => {
+  try {
+    const cursor = Math.max(0, Number(req.query.cursor || 0));
+    const result = await erpRequest(`/api/sync/changes?deviceKey=${encodeURIComponent(syncDeviceKey)}&cursor=${Number.isFinite(cursor) ? cursor : 0}&limit=200`);
+    res.json(result);
+  } catch (e) { next(e); }
+});
+
 app.use((err, _req, res, _next) => {
   console.error(err);
-  const status = [400,401,403,404,413,503].includes(err?.statusCode) ? err.statusCode : 500;
+  const status = [400,401,403,404,413,429,503].includes(err?.statusCode) ? err.statusCode : 500;
   res.status(status).json({ error: status < 500 ? err.message : 'Local connector error' });
 });
 
