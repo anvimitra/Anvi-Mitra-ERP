@@ -25,7 +25,7 @@ window.LSKERP = (() => {
       const method=String(options.method||'GET').toUpperCase();
       if (options.offlineQueue && ['POST','PATCH','PUT','DELETE'].includes(method)) {
         const body=options.body?JSON.parse(options.body):{};
-        enqueue({path,method,payload:body});
+        enqueue({path,method,payload:body,replay:options.replay===true,syncMeta:options.syncMeta||null});
         return {offlineQueued:true,queued:offlineQueue().length};
       }
       throw err;
@@ -36,12 +36,21 @@ window.LSKERP = (() => {
   async function sync() {
     if(!token()||!navigator.onLine) throw new Error('Internet connection required for sync');
     await registerDevice();
-    const q=offlineQueue(); let uploaded=0;
+    let q=offlineQueue(); let uploaded=0;
+    for(const item of q.slice(0,200)){
+      if(!item.replay) continue;
+      try{
+        await request(item.path,{method:item.method,body:item.payload?JSON.stringify(item.payload):undefined});
+        q=q.filter(x=>x.clientId!==item.clientId); uploaded++; saveQueue(q);
+      }catch(_){ break; }
+    }
     if(q.length){
-      const changes=q.slice(0,200).map(({clientId,path,method,payload,queuedAt})=>({clientId,entityType:`web:${method}:${path}`.slice(0,100),entityId:null,operation:method==='DELETE'?'delete':method==='POST'?'create':'update',payload:{path,method,body:payload,queuedAt}}));
-      const pushed=await request('/api/sync/push',{method:'POST',body:JSON.stringify({deviceKey:deviceKey(),changes})});
-      const accepted=pushed.accepted||[]; uploaded=accepted.length;
-      const ids=new Set(accepted.map(x=>x.clientId).filter(Boolean)); localStorage.setItem(QUEUE_KEY,JSON.stringify(q.filter(x=>!ids.has(x.clientId))));
+      const changes=q.filter(x=>!x.replay).slice(0,200).map(({clientId,path,method,payload,queuedAt,syncMeta})=>({clientId,entityType:(syncMeta?.entityType||`web:${method}:${path}`).slice(0,100),entityId:syncMeta?.entityId||null,operation:method==='DELETE'?'delete':method==='POST'?'create':'update',baseCursor:Number(localStorage.getItem(CURSOR_KEY)||0),payload:{path,method,body:payload,queuedAt}}));
+      if(changes.length){
+        const pushed=await request('/api/sync/push',{method:'POST',body:JSON.stringify({deviceKey:deviceKey(),changes})});
+        const accepted=new Set((pushed.accepted||[]).map(x=>x.clientId).filter(Boolean));
+        if(accepted.size){q=q.filter(x=>!accepted.has(x.clientId));saveQueue(q);uploaded+=accepted.size;}
+      }
     }
     const cursor=Number(localStorage.getItem(CURSOR_KEY)||0);
     const pulled=await request(`/api/sync/changes?cursor=${encodeURIComponent(cursor)}&limit=250&deviceKey=${encodeURIComponent(deviceKey())}`);
