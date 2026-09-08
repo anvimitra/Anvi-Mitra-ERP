@@ -1,1 +1,1 @@
-Next logical implementation: connect the existing multi-school/branch UI to the offline-first sync protocol and local storage connector.
+Next major implementation: extend the verified offline-first replay pattern from teacher marks to attendance, admissions/enrollment, and other safe transactional modules, with conflict resolution and end-to-end sync tests. The current phase makes teacher marks replay the real protected API after reconnect, so the server remains the source of truth and teacher permissions are re-checked at sync time.
