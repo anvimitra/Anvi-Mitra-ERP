@@ -1,1 +1,0 @@
-PostgreSQL CI integration test setup is being enabled.
