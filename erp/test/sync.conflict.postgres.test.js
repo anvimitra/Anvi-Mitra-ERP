@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
+const crypto = require('node:crypto');
 const express = require('express');
 const { Pool } = require('pg');
 const { signAccessToken } = require('../src/security');
