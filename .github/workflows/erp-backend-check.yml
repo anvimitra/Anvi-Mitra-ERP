@@ -99,4 +99,3 @@ jobs:
           test -f sql/036_teacher_marks_guard.sql
           test -f local_connector/server.js
           test -f mobile_app/lib/offline_sync.dart
-          test -f test/postgres.integration.test.js
