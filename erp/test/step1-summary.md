@@ -1,0 +1,1 @@
+Step 1 is limited to PostgreSQL integration verification. No UI or offline/local-connector changes are being started in this step.
