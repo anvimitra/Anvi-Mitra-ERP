@@ -1,4 +1,4 @@
--- Anvi Mitra ERP: offline-first sync storage.
+-- Anvi Mitra ERP: offline-first synchronization and secondary local-storage coordination.
 -- PostgreSQL is the online source of truth; clients keep a local cache/outbox.
 
 CREATE TABLE IF NOT EXISTS sync_devices (
@@ -27,8 +27,7 @@ CREATE TABLE IF NOT EXISTS sync_changes (
   changed_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ALTER TABLE sync_changes ADD COLUMN IF NOT EXISTS client_change_id VARCHAR(200);
-CREATE UNIQUE INDEX IF NOT EXISTS sync_changes_school_client_change_idx
-  ON sync_changes(school_id,client_change_id) WHERE client_change_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS sync_changes_school_client_change_idx ON sync_changes(school_id,client_change_id) WHERE client_change_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS sync_changes_school_cursor_idx ON sync_changes(school_id,cursor);
 CREATE INDEX IF NOT EXISTS sync_changes_school_entity_idx ON sync_changes(school_id,entity_type,entity_id,cursor);
 
@@ -61,3 +60,19 @@ CREATE TABLE IF NOT EXISTS local_storage_connectors (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS local_storage_school_device_idx ON local_storage_connectors(school_id,device_id,enabled);
+
+-- Security helper used by result-entry APIs. Teacher access is limited to their assigned subject + section + session.
+CREATE OR REPLACE FUNCTION teacher_can_edit_exam_subject(p_user_id UUID, p_exam_subject_id UUID)
+RETURNS BOOLEAN LANGUAGE SQL STABLE AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM users u
+    JOIN teachers t ON t.user_id=u.id AND t.school_id=u.school_id
+    JOIN exam_subjects es ON es.id=p_exam_subject_id AND es.school_id=u.school_id
+    JOIN teacher_subjects ts ON ts.teacher_id=t.id AND ts.school_id=u.school_id
+      AND ts.subject_id=es.subject_id
+      AND ts.session_id=(SELECT session_id FROM exams WHERE id=es.exam_id AND school_id=u.school_id)
+    JOIN sections sec ON sec.id=ts.section_id AND sec.school_id=u.school_id
+    WHERE u.id=p_user_id AND u.role='teacher' AND sec.class_id=es.class_id
+      AND (ts.branch_id IS NULL OR es.branch_id IS NULL OR ts.branch_id=es.branch_id)
+  );
+$$;
