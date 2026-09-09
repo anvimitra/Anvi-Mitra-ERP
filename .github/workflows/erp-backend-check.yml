@@ -6,12 +6,14 @@ on:
     paths:
       - 'erp/src/**'
       - 'erp/sql/**'
+      - 'erp/test/**'
       - 'erp/package.json'
       - '.github/workflows/erp-backend-check.yml'
   pull_request:
     paths:
       - 'erp/src/**'
       - 'erp/sql/**'
+      - 'erp/test/**'
       - 'erp/package.json'
       - '.github/workflows/erp-backend-check.yml'
   workflow_dispatch:
@@ -19,6 +21,23 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: erp
+          POSTGRES_PASSWORD: erp
+          POSTGRES_DB: erp_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U erp -d erp_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://erp:erp@127.0.0.1:5432/erp_test
+      JWT_SECRET: ci-only-anvi-mitra-erp-secret-1234567890
     defaults:
       run:
         working-directory: erp
@@ -68,6 +87,10 @@ jobs:
           }
           console.log(`Validated ${files.length} SQL migration files.`);
           NODE
+      - name: Run PostgreSQL migrations
+        run: npm run migrate
+      - name: Run Node test suite
+        run: npm test
       - name: Check critical modules exist
         run: |
           test -f src/sync.js
@@ -76,3 +99,4 @@ jobs:
           test -f sql/036_teacher_marks_guard.sql
           test -f local_connector/server.js
           test -f mobile_app/lib/offline_sync.dart
+          test -f test/postgres.integration.test.js
