@@ -7,10 +7,15 @@ function registerExamResultRoutes(app, pool) {
   async function teacherMarkAccess(client, auth, examId, sessionId, classId, sectionId, subjectId) {
     if (['super_admin','principal','admin'].includes(auth.role)) return true;
     if (auth.role !== 'teacher') return false;
-    const r = await client.query(`SELECT 1 FROM teacher_class_subject_permissions
-      WHERE school_id=$1 AND teacher_user_id=$2 AND class_id=$3 AND section_id=$4 AND subject_id=$5 AND session_id=$6
-        AND can_view=true AND can_edit_marks=true AND (branch_id IS NULL OR branch_id=$7) LIMIT 1`,
-      [auth.schoolId,auth.sub,classId,sectionId,subjectId,sessionId,auth.branchId||null]);
+    const r = await client.query(`SELECT 1 FROM teacher_subjects ts
+      JOIN teachers t ON t.id=ts.teacher_id AND t.school_id=ts.school_id
+      JOIN sections sec ON sec.id=ts.section_id AND sec.school_id=ts.school_id
+      JOIN exams e ON e.id=$3 AND e.school_id=ts.school_id AND e.session_id=ts.session_id
+      WHERE ts.school_id=$1 AND t.user_id=$2 AND ts.subject_id=$6
+        AND ts.section_id=$5 AND ts.session_id=$4 AND sec.class_id=$7
+        AND (ts.branch_id IS NULL OR $8::uuid IS NULL OR ts.branch_id=$8)
+      LIMIT 1`,
+      [auth.schoolId,auth.sub,examId,sessionId,sectionId,subjectId,classId,auth.branchId||null]);
     return r.rows.length > 0;
   }
 
@@ -42,7 +47,7 @@ function registerExamResultRoutes(app, pool) {
     try {
       const {examId,sessionId,classId,sectionId,studentId,marks,remarks=''}=req.body||{};
       if(!examId||!sessionId||!classId||!sectionId||!studentId)return res.status(400).json({error:'examId, sessionId, classId, sectionId and studentId are required'});
-      const subject=await client.query(`SELECT es.id AS "examSubjectId",es.subject_id AS "subjectId",es.max_marks AS "maxMarks",e.status AS "examStatus"
+      const subject=await client.query(`SELECT es.id AS "examSubjectId",es.subject_id AS "subjectId",es.max_marks AS "maxMarks",es.branch_id AS "branchId",e.status AS "examStatus"
         FROM exam_subjects es JOIN exams e ON e.id=es.exam_id AND e.school_id=es.school_id
         WHERE es.school_id=$1 AND es.exam_id=$2 AND e.session_id=$3 AND es.class_id=$4 AND ($5::uuid IS NULL OR es.branch_id=$5 OR es.branch_id IS NULL) AND ($5::uuid IS NULL OR e.branch_id=$5 OR e.branch_id IS NULL) LIMIT 1`,
         [req.auth.schoolId,examId,sessionId,classId,req.auth.branchId||null]);
