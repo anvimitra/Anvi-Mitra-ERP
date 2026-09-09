@@ -1,0 +1,1 @@
+Super Admin school onboarding is implemented through the organization API. UI wiring is the next web step.
