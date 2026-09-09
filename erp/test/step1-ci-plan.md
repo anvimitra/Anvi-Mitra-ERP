@@ -1,0 +1,1 @@
+Step 1 CI plan: start PostgreSQL 16, apply all migrations, then run integration tests for offline sync idempotency/conflicts and teacher marks authorization.
