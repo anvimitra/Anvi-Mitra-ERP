@@ -1,0 +1,1 @@
+Fix target: 027_attendance_branch_scope.sql. The UPDATE LATERAL subquery cannot reference UPDATE alias ar; correlate it through students.school_id instead.
