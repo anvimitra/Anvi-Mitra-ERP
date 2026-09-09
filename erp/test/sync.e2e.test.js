@@ -73,7 +73,14 @@ function createFakePool() {
 function request(server, method, path, token, body) {
   return new Promise((resolve, reject) => {
     const payload = body === undefined ? null : JSON.stringify(body);
-    const req = http.request(server, { method, path, headers: { Authorization: `Bearer ${token}`, ...(payload ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) } : {}) } }, res => {
+    const address = server.address();
+    const req = http.request({
+      host: '127.0.0.1',
+      port: address.port,
+      method,
+      path,
+      headers: { Authorization: `Bearer ${token}`, ...(payload ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) } : {}) },
+    }, res => {
       let data = '';
       res.setEncoding('utf8');
       res.on('data', chunk => { data += chunk; });
