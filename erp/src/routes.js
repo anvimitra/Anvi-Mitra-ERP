@@ -4,8 +4,6 @@ function registerRoutes(app, pool) {
   app.get('/api/me', authenticate, (req,res)=>res.json({ user: req.auth }));
   app.get('/api/admin/ping', authenticate, requireRoles('super_admin','principal','admin'), (req,res)=>res.json({ ok:true, area:'admin', schoolId:req.auth.schoolId }));
 
-  // Offline-first sync transport. Domain endpoints remain the source of truth;
-  // this layer stores device cursors and distributes committed change records.
   app.post('/api/sync/device', authenticate, async (req,res,next)=>{
     try {
       const { deviceKey, deviceName='', platform='unknown' } = req.body || {};
@@ -19,22 +17,24 @@ function registerRoutes(app, pool) {
     } catch(err){ next(err); }
   });
 
-  app.get('/api/sync/pull', authenticate, async (req,res,next)=>{
+  async function pullChanges(req,res,next){
     try {
       const deviceKey=String(req.query.deviceKey||'');
       const cursor=Math.max(0,Number(req.query.cursor||0));
       const limit=Math.min(500,Math.max(1,Number(req.query.limit||200)));
       if(!deviceKey)return res.status(400).json({error:'deviceKey is required'});
-      const device=await pool.query(`SELECT id,last_cursor,status FROM sync_devices WHERE school_id=$1 AND device_key=$2`,[req.auth.schoolId,deviceKey]);
+      const device=await pool.query(`SELECT id,status FROM sync_devices WHERE school_id=$1 AND device_key=$2`,[req.auth.schoolId,deviceKey]);
       if(!device.rows.length)return res.status(404).json({error:'Sync device is not registered'});
       if(device.rows[0].status!=='active')return res.status(403).json({error:'Sync device is revoked'});
-      const {rows}=await pool.query(`SELECT cursor,"entity_type" AS "entityType","entity_id" AS "entityId",operation,payload,"changed_at" AS "changedAt"
+      const {rows}=await pool.query(`SELECT cursor,"entity_type" AS "entity_type","entity_id" AS "entity_id",operation,payload,"changed_at" AS "changed_at"
         FROM sync_changes WHERE school_id=$1 AND cursor>$2 ORDER BY cursor LIMIT $3`,[req.auth.schoolId,cursor,limit]);
       const nextCursor=rows.length?Number(rows[rows.length-1].cursor):cursor;
       await pool.query(`UPDATE sync_devices SET last_cursor=GREATEST(last_cursor,$1),last_seen_at=now() WHERE id=$2`,[nextCursor,device.rows[0].id]);
       res.json({changes:rows,cursor:nextCursor,hasMore:rows.length===limit});
     }catch(err){next(err)}
-  });
+  }
+  app.get('/api/sync/pull', authenticate, pullChanges);
+  app.get('/api/sync/changes', authenticate, pullChanges);
 
   app.post('/api/sync/push', authenticate, async (req,res,next)=>{
     const client=await pool.connect();
@@ -55,7 +55,7 @@ function registerRoutes(app, pool) {
         const payload=change.payload&&typeof change.payload==='object'?change.payload:{};
         const r=await client.query(`INSERT INTO sync_changes(school_id,entity_type,entity_id,operation,payload,changed_by)
           VALUES($1,$2,$3,$4,$5::jsonb,$6) RETURNING cursor`,[req.auth.schoolId,entityType,entityId,operation,JSON.stringify(payload),req.auth.sub]);
-        accepted.push({clientMutationId:change.clientMutationId||null,cursor:Number(r.rows[0].cursor)});
+        accepted.push({clientId:change.clientId||change.clientMutationId||null,cursor:Number(r.rows[0].cursor)});
       }
       await client.query(`UPDATE sync_devices SET last_seen_at=now() WHERE id=$1`,[d.rows[0].id]);
       await client.query('COMMIT');
