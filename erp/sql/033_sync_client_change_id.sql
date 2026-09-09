@@ -1,12 +1,7 @@
--- Anvi Mitra ERP: idempotent offline outbox support.
--- client_change_id prevents duplicate application when a device retries a batch.
-
+-- Add client-side idempotency key used by the offline sync API.
 ALTER TABLE sync_changes
   ADD COLUMN IF NOT EXISTS client_change_id VARCHAR(200);
 
-CREATE UNIQUE INDEX IF NOT EXISTS sync_changes_school_client_change_uidx
+CREATE UNIQUE INDEX IF NOT EXISTS sync_changes_school_client_change_idx
   ON sync_changes(school_id, client_change_id)
   WHERE client_change_id IS NOT NULL;
-
-CREATE INDEX IF NOT EXISTS sync_changes_school_changed_at_idx
-  ON sync_changes(school_id, changed_at DESC);
