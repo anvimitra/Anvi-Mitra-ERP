@@ -1,0 +1,1 @@
+CI migration failure identified in 027_attendance_branch_scope.sql; Step 1 remains migration/test verification only.
