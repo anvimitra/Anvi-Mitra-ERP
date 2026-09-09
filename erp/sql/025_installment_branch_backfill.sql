@@ -4,9 +4,10 @@ ALTER TABLE IF EXISTS fee_installments
 
 UPDATE fee_installments fi
 SET branch_id = COALESCE(fi.branch_id, a.branch_id, s.branch_id)
-FROM student_fee_assignments a
-JOIN students s ON s.id = fi.student_id AND s.school_id = fi.school_id
+FROM student_fee_assignments a, students s
 WHERE fi.assignment_id = a.id
+  AND s.id = fi.student_id
+  AND s.school_id = fi.school_id
   AND fi.branch_id IS NULL;
 
 CREATE INDEX IF NOT EXISTS fee_installments_branch_idx
