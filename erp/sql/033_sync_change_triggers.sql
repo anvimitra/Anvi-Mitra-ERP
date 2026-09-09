@@ -41,7 +41,9 @@ DECLARE
   table_name TEXT;
   trigger_name TEXT;
 BEGIN
-  FOREACH table_name IN ARRAY ARRAY['schools','branches','classes','sections','subjects','teachers','parents','students','enrollments'] LOOP
+  -- Every table below has both school_id and id columns. schools itself is
+  -- intentionally excluded because its tenant key is id, not school_id.
+  FOREACH table_name IN ARRAY ARRAY['branches','classes','sections','subjects','teachers','parents','students','enrollments'] LOOP
     trigger_name := 'sync_capture_' || table_name;
     IF to_regclass(table_name) IS NOT NULL THEN
       EXECUTE format('DROP TRIGGER IF EXISTS %I ON %I', trigger_name, table_name);
