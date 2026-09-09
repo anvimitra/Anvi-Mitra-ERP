@@ -15,10 +15,8 @@ function registerOrganizationRoutes(app, pool) {
   });
 
   app.get('/api/branches', authenticate, requireSchool, async (req, res, next) => {
-    try {
-      const r = await pool.query(`SELECT id,name,code,address,phone,status FROM branches WHERE school_id=$1 ORDER BY name`, [req.auth.schoolId]);
-      res.json({ branches: r.rows });
-    } catch (e) { next(e); }
+    try { const r = await pool.query(`SELECT id,name,code,address,phone,status FROM branches WHERE school_id=$1 ORDER BY name`, [req.auth.schoolId]); res.json({ branches: r.rows }); }
+    catch (e) { next(e); }
   });
 
   app.post('/api/branches', authenticate, requireSchool, requireRoles('super_admin','principal','admin'), async (req, res, next) => {
@@ -32,32 +30,25 @@ function registerOrganizationRoutes(app, pool) {
 
   app.patch('/api/branches/:id', authenticate, requireSchool, requireRoles('super_admin','principal','admin'), async (req, res, next) => {
     try {
-      const map = { name: 'name', code: 'code', address: 'address', phone: 'phone', status: 'status' };
-      const sets = []; const values = [];
+      const map = { name: 'name', code: 'code', address: 'address', phone: 'phone', status: 'status' }; const sets = []; const values = [];
       for (const [key, col] of Object.entries(map)) if (Object.prototype.hasOwnProperty.call(req.body || {}, key)) { sets.push(`${col}=$${values.length + 1}`); values.push(key === 'code' ? clean(req.body[key], 50).toUpperCase() : req.body[key]); }
       if (!sets.length) return res.status(400).json({ error: 'No supported fields supplied' });
       values.push(req.params.id, req.auth.schoolId);
       const r = await pool.query(`UPDATE branches SET ${sets.join(',')},updated_at=now() WHERE id=$${values.length-1} AND school_id=$${values.length} RETURNING id,name,code,address,phone,status`, values);
-      if (!r.rows.length) return res.status(404).json({ error: 'Branch not found' });
-      res.json({ branch: r.rows[0] });
+      if (!r.rows.length) return res.status(404).json({ error: 'Branch not found' }); res.json({ branch: r.rows[0] });
     } catch (e) { if (e.code === '23505') return res.status(409).json({ error: 'Branch code already exists for this school' }); next(e); }
   });
 
   app.get('/api/platform/schools', authenticate, requireRoles('super_admin'), async (_req, res, next) => {
-    try {
-      const r = await pool.query(`SELECT s.id,s.name,s.code,s.display_name,s.address,s.phone,s.email,s.logo_url,s.status,s.created_at,mc.app_name,mc.app_slug,b.name AS branch_name,b.code AS branch_code FROM schools s LEFT JOIN mobile_app_configs mc ON mc.school_id=s.id LEFT JOIN branches b ON b.school_id=s.id AND b.code='MAIN' ORDER BY s.created_at DESC`);
-      res.json({ schools: r.rows });
-    } catch (e) { next(e); }
+    try { const r = await pool.query(`SELECT s.id,s.name,s.code,s.display_name,s.address,s.phone,s.email,s.logo_url,s.status,s.created_at,mc.app_name,mc.app_slug,b.name AS branch_name,b.code AS branch_code FROM schools s LEFT JOIN mobile_app_configs mc ON mc.school_id=s.id LEFT JOIN branches b ON b.school_id=s.id AND b.code='MAIN' ORDER BY s.created_at DESC`); res.json({ schools: r.rows }); }
+    catch (e) { next(e); }
   });
 
   app.post('/api/platform/schools', authenticate, requireRoles('super_admin'), async (req, res, next) => {
     const client = await pool.connect();
     try {
       const name = clean(req.body?.name); const code = clean(req.body?.code, 50).toUpperCase(); const appSlug = clean(req.body?.appSlug, 100).toLowerCase();
-      const adminEmail = clean(req.body?.initialAdminEmail, 254).toLowerCase();
-      const adminPhone = clean(req.body?.initialAdminPhone, 30);
-      const adminPassword = String(req.body?.initialAdminPassword || '');
-      const adminName = clean(req.body?.initialAdminName, 200);
+      const adminEmail = clean(req.body?.initialAdminEmail, 254).toLowerCase(); const adminPhone = clean(req.body?.initialAdminPhone, 30); const adminPassword = String(req.body?.initialAdminPassword || ''); const adminName = clean(req.body?.initialAdminName, 200);
       if (!name || !code || !appSlug) return res.status(400).json({ error: 'name, code and appSlug are required' });
       if ((adminEmail || adminPhone) && adminPassword.length < 6) return res.status(400).json({ error: 'Initial admin password must be at least 6 characters' });
       if (!adminEmail && !adminPhone) return res.status(400).json({ error: 'Initial admin email or phone is required for school onboarding' });
@@ -72,27 +63,59 @@ function registerOrganizationRoutes(app, pool) {
       const passwordHash = await hashPassword(adminPassword);
       const admin = await client.query(`INSERT INTO users(school_id,email,phone,password_hash,role,status) VALUES($1,$2,$3,$4,'admin','active') RETURNING id,email,phone,role,status,created_at`, [schoolId,adminEmail || null,adminPhone || null,passwordHash]);
       await client.query(`INSERT INTO audit_logs(school_id,user_id,action,entity_type,metadata) VALUES($1,$2,$3,$4,$5)`, [schoolId,req.auth.sub,'school_onboarded','school',JSON.stringify({initialAdminId:admin.rows[0].id,mainBranchId:b.rows[0].id})]);
-      await client.query('COMMIT');
-      res.status(201).json({ school: s.rows[0], mainBranch: b.rows[0], initialAdmin: admin.rows[0] });
+      await client.query('COMMIT'); res.status(201).json({ school: s.rows[0], mainBranch: b.rows[0], initialAdmin: admin.rows[0] });
     } catch (e) { await client.query('ROLLBACK').catch(() => {}); if (e.code === '23505') return res.status(409).json({ error: 'School code, app slug, branch code or initial admin contact already exists' }); next(e); } finally { client.release(); }
   });
 
   app.patch('/api/platform/schools/:id', authenticate, requireRoles('super_admin'), async (req, res, next) => {
     const client = await pool.connect();
     try {
-      const schoolId = req.params.id;
-      const schoolFields = { name:'name', code:'code', displayName:'display_name', address:'address', phone:'phone', supportEmail:'email', logoUrl:'logo_url', status:'status' };
-      const appFields = { appName:'app_name', appSlug:'app_slug', androidPackage:'android_package', iosBundleId:'ios_bundle_id', apiBaseUrl:'api_base_url', primaryColor:'primary_color', secondaryColor:'secondary_color', supportEmail:'support_email', supportPhone:'support_phone', minAppVersion:'min_app_version', forceUpdate:'force_update', appStatus:'status' };
+      const schoolId = req.params.id; const schoolFields = { name:'name', code:'code', displayName:'display_name', address:'address', phone:'phone', supportEmail:'email', logoUrl:'logo_url', status:'status' }; const appFields = { appName:'app_name', appSlug:'app_slug', androidPackage:'android_package', iosBundleId:'ios_bundle_id', apiBaseUrl:'api_base_url', primaryColor:'primary_color', secondaryColor:'secondary_color', supportEmail:'support_email', supportPhone:'support_phone', minAppVersion:'min_app_version', forceUpdate:'force_update', appStatus:'status' };
       const schoolSets=[]; const schoolValues=[]; const appSets=[]; const appValues=[];
       for (const [key,col] of Object.entries(schoolFields)) if (Object.prototype.hasOwnProperty.call(req.body||{},key)) { schoolSets.push(`${col}=$${schoolValues.length+1}`); schoolValues.push(key==='code'?clean(req.body[key],50).toUpperCase():req.body[key]); }
       for (const [key,col] of Object.entries(appFields)) if (Object.prototype.hasOwnProperty.call(req.body||{},key)) { appSets.push(`${col}=$${appValues.length+1}`); appValues.push(key==='appSlug'?clean(req.body[key],100).toLowerCase():req.body[key]); }
-      await client.query('BEGIN');
-      let school;
+      await client.query('BEGIN'); let school;
       if (schoolSets.length) { schoolValues.push(schoolId); const r=await client.query(`UPDATE schools SET ${schoolSets.join(',')} WHERE id=$${schoolValues.length} RETURNING id,name,code,display_name,address,phone,email,logo_url,status,created_at`,schoolValues); if(!r.rows.length){await client.query('ROLLBACK');return res.status(404).json({error:'School not found'});} school=r.rows[0]; }
       else { const r=await client.query(`SELECT id,name,code,display_name,address,phone,email,logo_url,status,created_at FROM schools WHERE id=$1`,[schoolId]); if(!r.rows.length){await client.query('ROLLBACK');return res.status(404).json({error:'School not found'});} school=r.rows[0]; }
       if (appSets.length) { appValues.push(schoolId); await client.query(`UPDATE mobile_app_configs SET ${appSets.join(',')} WHERE school_id=$${appValues.length}`,appValues); }
       await client.query('COMMIT'); res.json({ school });
     } catch(e){ await client.query('ROLLBACK').catch(()=>{}); if(e.code==='23505')return res.status(409).json({error:'School code or app slug already exists'}); next(e); } finally { client.release(); }
+  });
+
+  // Offline sync endpoints. PostgreSQL remains the source of truth; clients send an
+  // outbox and pull changes using a per-school cursor.
+  app.post('/api/sync/device', authenticate, requireSchool, async (req,res,next)=>{
+    try {
+      const deviceKey=clean(req.body?.deviceKey,200); if(!deviceKey)return res.status(400).json({error:'deviceKey is required'});
+      const r=await pool.query(`INSERT INTO sync_devices(school_id,device_key,device_name,platform,last_seen_at,status) VALUES($1,$2,$3,$4,now(),'active') ON CONFLICT(school_id,device_key) DO UPDATE SET device_name=EXCLUDED.device_name,platform=EXCLUDED.platform,last_seen_at=now(),status='active' RETURNING id,school_id,device_key,last_cursor,status`,[req.auth.schoolId,deviceKey,clean(req.body?.deviceName,200),clean(req.body?.platform,30)||'unknown']);
+      res.json({device:r.rows[0]});
+    }catch(e){next(e)}
+  });
+
+  app.get('/api/sync/changes', authenticate, requireSchool, async (req,res,next)=>{
+    try {
+      const cursor=Math.max(0,Number(req.query.cursor||0)); const limit=Math.min(500,Math.max(1,Number(req.query.limit||250))); const deviceKey=clean(req.query.deviceKey,200);
+      if(!deviceKey)return res.status(400).json({error:'deviceKey is required'});
+      const d=await pool.query(`SELECT id FROM sync_devices WHERE school_id=$1 AND device_key=$2 AND status='active'`,[req.auth.schoolId,deviceKey]); if(!d.rows.length)return res.status(403).json({error:'Sync device is not registered'});
+      const r=await pool.query(`SELECT cursor,entity_type,entity_id,operation,payload,changed_at FROM sync_changes WHERE school_id=$1 AND cursor>$2 ORDER BY cursor LIMIT $3`,[req.auth.schoolId,cursor,limit]); const nextCursor=r.rows.length?Number(r.rows[r.rows.length-1].cursor):cursor;
+      await pool.query(`UPDATE sync_devices SET last_cursor=$1,last_seen_at=now() WHERE id=$2`,[nextCursor,d.rows[0].id]); res.json({cursor:nextCursor,changes:r.rows});
+    }catch(e){next(e)}
+  });
+
+  app.post('/api/sync/push', authenticate, requireSchool, async (req,res,next)=>{
+    const client=await pool.connect();
+    try {
+      const deviceKey=clean(req.body?.deviceKey,200); const changes=Array.isArray(req.body?.changes)?req.body.changes.slice(0,200):[]; if(!deviceKey)return res.status(400).json({error:'deviceKey is required'});
+      const d=await client.query(`SELECT id FROM sync_devices WHERE school_id=$1 AND device_key=$2 AND status='active'`,[req.auth.schoolId,deviceKey]); if(!d.rows.length)return res.status(403).json({error:'Sync device is not registered'});
+      const accepted=[]; const conflicts=[]; await client.query('BEGIN');
+      for(const change of changes){
+        const op=['create','update','delete'].includes(change.operation)?change.operation:null; const entityType=clean(change.entityType,100); if(!op||!entityType)continue;
+        const entityId=change.entityId||null; const baseCursor=Number(change.baseCursor||0); const latest=entityId?await client.query(`SELECT cursor,payload FROM sync_changes WHERE school_id=$1 AND entity_type=$2 AND entity_id=$3 ORDER BY cursor DESC LIMIT 1`,[req.auth.schoolId,entityType,entityId]):{rows:[]};
+        if(latest.rows.length && baseCursor && Number(latest.rows[0].cursor)>baseCursor){ const c=await client.query(`INSERT INTO sync_conflicts(school_id,device_id,entity_type,entity_id,local_payload,server_payload) VALUES($1,$2,$3,$4,$5,$6) RETURNING id`,[req.auth.schoolId,d.rows[0].id,entityType,entityId,JSON.stringify(change.payload||{}),JSON.stringify(latest.rows[0].payload||{})]); conflicts.push({clientId:change.clientId,conflictId:c.rows[0].id}); continue; }
+        const inserted=await client.query(`INSERT INTO sync_changes(school_id,entity_type,entity_id,operation,payload,changed_by) VALUES($1,$2,$3,$4,$5,$6) RETURNING cursor`,[req.auth.schoolId,entityType,entityId,op,JSON.stringify(change.payload||{}),req.auth.sub]); accepted.push({clientId:change.clientId,cursor:Number(inserted.rows[0].cursor)});
+      }
+      await client.query(`UPDATE sync_devices SET last_seen_at=now() WHERE id=$1`,[d.rows[0].id]); await client.query('COMMIT'); res.json({accepted,conflicts});
+    }catch(e){await client.query('ROLLBACK').catch(()=>{});next(e)}finally{client.release()}
   });
 }
 module.exports = { registerOrganizationRoutes };
