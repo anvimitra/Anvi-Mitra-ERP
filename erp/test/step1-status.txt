@@ -1,1 +1,0 @@
-CI exposed a pre-existing PostgreSQL migration defect in 027_attendance_branch_scope.sql. Step 1 is not complete until migrations pass.
