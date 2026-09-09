@@ -15,6 +15,7 @@ class OfflineSyncService {
   static const _deviceKeyPref = 'erp_sync_device_key';
   static const _cursorPref = 'erp_sync_cursor';
   static const _outboxPref = 'erp_sync_outbox';
+  static const _conflictsPref = 'erp_sync_conflicts';
   static const _cachePrefix = 'erp_sync_cache_';
 
   SharedPreferences? _prefs;
@@ -25,8 +26,6 @@ class OfflineSyncService {
   Future<void> initialize({required String accessToken}) async {
     _prefs ??= await SharedPreferences.getInstance();
     _accessToken = accessToken;
-    // Device registration is best-effort: login/use of the app must remain
-    // possible when the first launch happens without internet.
     await _ensureDevice().catchError((_) {});
     _autoSyncTimer?.cancel();
     _autoSyncTimer = Timer.periodic(const Duration(minutes: 1), (_) {
@@ -86,6 +85,20 @@ class OfflineSyncService {
     await prefs.setString(_outboxPref, jsonEncode(items));
   }
 
+  Future<List<Map<String, dynamic>>> _conflicts() async {
+    final prefs = _prefs ??= await SharedPreferences.getInstance();
+    final raw = prefs.getString(_conflictsPref);
+    if (raw == null || raw.isEmpty) return [];
+    final decoded = jsonDecode(raw);
+    if (decoded is! List) return [];
+    return decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+  }
+
+  Future<void> _saveConflicts(List<Map<String, dynamic>> items) async {
+    final prefs = _prefs ??= await SharedPreferences.getInstance();
+    await prefs.setString(_conflictsPref, jsonEncode(items));
+  }
+
   Future<void> queueChange({
     required String entityType,
     required String operation,
@@ -99,19 +112,13 @@ class OfflineSyncService {
     final clientId = '${DateTime.now().microsecondsSinceEpoch}-${items.length}';
     final prefs = _prefs ??= await SharedPreferences.getInstance();
     final cursor = prefs.getInt(_cursorPref) ?? 0;
-    items.add({
-      'clientId': clientId,
-      'entityType': entityType,
-      'entityId': entityId,
-      'operation': operation,
-      'payload': payload,
-      'baseCursor': cursor,
-      'queuedAt': DateTime.now().toIso8601String(),
-    });
+    items.add({'clientId': clientId,'entityType': entityType,'entityId': entityId,'operation': operation,'payload': payload,'baseCursor': cursor,'queuedAt': DateTime.now().toIso8601String()});
     await _saveOutbox(items);
   }
 
   Future<int> pendingCount() async => (await _outbox()).length;
+  Future<int> conflictCount() async => (await _conflicts()).length;
+  Future<List<Map<String, dynamic>>> pendingConflicts() => _conflicts();
 
   Future<void> syncNow() async {
     if (_syncing) return;
@@ -130,23 +137,22 @@ class OfflineSyncService {
     final items = await _outbox();
     if (items.isEmpty) return;
     final key = await _deviceKey();
-    final result = await _request('/api/sync/push', method: 'POST', body: {
-      'deviceKey': key,
-      'changes': items.take(200).toList(),
-    });
-    final accepted = (result['accepted'] as List? ?? const [])
-        .map((e) => Map<String, dynamic>.from(e as Map))
-        .map((e) => e['clientId']?.toString())
-        .whereType<String>()
-        .toSet();
-    final conflicts = (result['conflicts'] as List? ?? const [])
-        .map((e) => Map<String, dynamic>.from(e as Map))
-        .map((e) => e['clientId']?.toString())
-        .whereType<String>()
-        .toSet();
+    final result = await _request('/api/sync/push', method: 'POST', body: {'deviceKey': key,'changes': items.take(200).toList()});
+    final accepted = (result['accepted'] as List? ?? const []).map((e) => Map<String, dynamic>.from(e as Map)).map((e) => e['clientId']?.toString()).whereType<String>().toSet();
+    final conflicts = (result['conflicts'] as List? ?? const []).map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    final conflictIds = conflicts.map((e) => e['clientId']?.toString()).whereType<String>().toSet();
+    if (conflicts.isNotEmpty) {
+      final saved = await _conflicts();
+      for (final conflict in conflicts) {
+        final clientId = conflict['clientId']?.toString();
+        final original = items.cast<Map<String, dynamic>?>().firstWhere((e) => e?['clientId']?.toString() == clientId, orElse: () => null);
+        saved.add({...conflict, 'localChange': original, 'detectedAt': DateTime.now().toIso8601String()});
+      }
+      await _saveConflicts(saved);
+    }
     final remaining = items.where((e) {
       final id = e['clientId']?.toString();
-      return id == null || (!accepted.contains(id) && !conflicts.contains(id));
+      return id == null || (!accepted.contains(id) && !conflictIds.contains(id));
     }).toList();
     await _saveOutbox(remaining);
   }
@@ -156,20 +162,14 @@ class OfflineSyncService {
     final cursor = prefs.getInt(_cursorPref) ?? 0;
     final key = await _deviceKey();
     final result = await _request('/api/sync/changes?deviceKey=${Uri.encodeQueryComponent(key)}&cursor=$cursor&limit=200');
-    final changes = (result['changes'] as List? ?? const [])
-        .map((e) => Map<String, dynamic>.from(e as Map))
-        .toList();
+    final changes = (result['changes'] as List? ?? const []).map((e) => Map<String, dynamic>.from(e as Map)).toList();
     for (final change in changes) {
       final type = change['entity_type'] ?? change['entityType'];
       final id = change['entity_id'] ?? change['entityId'];
       if (type == null || id == null) continue;
       final operation = change['operation']?.toString();
       final keyName = '$_cachePrefix$type:$id';
-      if (operation == 'delete') {
-        await prefs.remove(keyName);
-      } else {
-        await prefs.setString(keyName, jsonEncode(change['payload'] ?? {}));
-      }
+      if (operation == 'delete') { await prefs.remove(keyName); } else { await prefs.setString(keyName, jsonEncode(change['payload'] ?? {})); }
     }
     final next = int.tryParse('${result['cursor'] ?? cursor}') ?? cursor;
     if (next >= cursor) await prefs.setInt(_cursorPref, next);
@@ -184,10 +184,7 @@ class OfflineSyncService {
 
   Future<void> clearLocalSyncData() async {
     final prefs = _prefs ??= await SharedPreferences.getInstance();
-    await prefs.remove(_outboxPref);
-    await prefs.remove(_cursorPref);
-    for (final key in prefs.getKeys().where((k) => k.startsWith(_cachePrefix)).toList()) {
-      await prefs.remove(key);
-    }
+    await prefs.remove(_outboxPref); await prefs.remove(_cursorPref); await prefs.remove(_conflictsPref);
+    for (final key in prefs.getKeys().where((k) => k.startsWith(_cachePrefix)).toList()) { await prefs.remove(key); }
   }
 }
