@@ -21,9 +21,26 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: erp_test
+          POSTGRES_PASSWORD: erp_test
+          POSTGRES_DB: anvi_mitra_erp_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U erp_test -d anvi_mitra_erp_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
     defaults:
       run:
         working-directory: erp
+    env:
+      DATABASE_URL: postgresql://erp_test:erp_test@127.0.0.1:5432/anvi_mitra_erp_test
+      NODE_ENV: test
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -47,14 +64,5 @@ jobs:
             node --check "$file"
           done < <(find src -type f -name '*.js' -print0)
 
-      - name: Run backend tests when present
-        shell: bash
-        run: |
-          set -euo pipefail
-          shopt -s nullglob
-          tests=(test/*.test.js)
-          if ((${#tests[@]} == 0)); then
-            echo 'No backend test files yet; syntax checks completed.'
-            exit 0
-          fi
-          npm test
+      - name: Run backend integration tests
+        run: npm test
