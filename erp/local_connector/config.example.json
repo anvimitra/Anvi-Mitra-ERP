@@ -1,0 +1,8 @@
+{
+  "apiBaseUrl": "https://your-erp-domain.example.com",
+  "accessToken": "DO_NOT_COMMIT",
+  "schoolCode": "SCHOOLCODE",
+  "connectorDisplayName": "School Office PC",
+  "rootPath": "D:\\AnviMitraERPData",
+  "permissionMode": "read_write"
+}
