@@ -9,5 +9,9 @@ Completed in the current phase:
 - Flutter offline cache/outbox is connected to the sync API and automatic retry flow.
 - Web ERP now has an offline outbox, cached GET fallback, automatic sync on reconnect and a service worker for the ERP web shell.
 - Added Node built-in HTTP coverage for sync device registration, sync status, change pull and authentication rejection.
+- Backend CI now applies all PostgreSQL migrations before integration tests.
+- Added an integration test that verifies the real server uses the transactional sync routes for offline admissions.
+- Corrected the offline sync integration test so it validates the API-level teacher permission boundary instead of assuming PostgreSQL RLS that is not present in the current schema.
+- Transactional sync and local-storage routes are registered before legacy organization routes so the intended replay/sync handlers win when duplicate endpoints exist.
 
-Next major implementation: add real PostgreSQL integration tests for offline replay, conflict detection, idempotency and teacher-permission enforcement using the CI PostgreSQL service. Keep conflict resolution explicit, auditable and server-authoritative.
+Next major implementation: add explicit, auditable conflict-resolution APIs/UI (server-wins, local-wins and merged payload review), then connect the resolution flow to the web and Flutter sync queues. Keep resolution server-authoritative and permission-checked.
