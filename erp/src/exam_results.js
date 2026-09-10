@@ -22,14 +22,15 @@ function registerExamResultRoutes(app, pool) {
   app.get('/api/teacher-marks', authenticate, requireRoles(...staffRoles), async (req,res,next) => {
     const client=await pool.connect();
     try {
-      const { sessionId, examId, classId, sectionId } = req.query || {};
-      if (!sessionId||!examId||!classId||!sectionId) return res.status(400).json({error:'sessionId, examId, classId and sectionId are required'});
+      const { sessionId, examId, classId, sectionId, subjectId } = req.query || {};
+      if (!sessionId||!examId||!classId||!sectionId||!subjectId) return res.status(400).json({error:'sessionId, examId, classId, sectionId and subjectId are required'});
       const branchId=req.auth.branchId||null;
-      const subject=await client.query(`SELECT es.id AS "examSubjectId",es.subject_id AS "subjectId",sub.name AS "subjectName",es.class_id AS "classId",es.max_marks AS "maxMarks",es.pass_marks AS "passMarks",e.session_id AS "sessionId",e.branch_id AS "branchId"
+      const subject=await client.query(`SELECT es.id AS "examSubjectId",es.subject_id AS "subjectId",sub.name AS "subjectName",es.class_id AS "classId",es.max_marks AS "maxMarks",es.pass_marks AS "passMarks",e.session_id AS "sessionId",e.branch_id AS "branchId",e.status AS "examStatus",e.name AS "examName"
         FROM exam_subjects es JOIN exams e ON e.id=es.exam_id AND e.school_id=es.school_id JOIN subjects sub ON sub.id=es.subject_id AND sub.school_id=es.school_id
-        WHERE es.school_id=$1 AND es.exam_id=$2 AND e.session_id=$3 AND es.class_id=$4 AND ($5::uuid IS NULL OR es.branch_id=$5 OR es.branch_id IS NULL) AND ($5::uuid IS NULL OR e.branch_id=$5 OR e.branch_id IS NULL) LIMIT 1`,
-        [req.auth.schoolId,examId,sessionId,classId,branchId]);
-      if(!subject.rows.length)return res.status(404).json({error:'Exam subject not found for this class/branch'});
+        WHERE es.school_id=$1 AND es.exam_id=$2 AND e.session_id=$3 AND es.class_id=$4 AND es.subject_id=$5
+          AND ($6::uuid IS NULL OR es.branch_id=$6 OR es.branch_id IS NULL) AND ($6::uuid IS NULL OR e.branch_id=$6 OR e.branch_id IS NULL) LIMIT 1`,
+        [req.auth.schoolId,examId,sessionId,classId,subjectId,branchId]);
+      if(!subject.rows.length)return res.status(404).json({error:'Exam subject not found for this class, subject or branch'});
       const es=subject.rows[0];
       if(!(await teacherMarkAccess(client,req.auth,examId,sessionId,classId,sectionId,es.subjectId)))return res.status(403).json({error:'You are not permitted to edit marks for this class, section and subject'});
       const students=await client.query(`SELECT s.id,s.admission_no AS "admissionNo",s.full_name AS "fullName",m.marks,m.grade,m.remarks
@@ -45,12 +46,13 @@ function registerExamResultRoutes(app, pool) {
   app.post('/api/teacher-marks', authenticate, requireRoles(...staffRoles), async (req,res,next) => {
     const client=await pool.connect();
     try {
-      const {examId,sessionId,classId,sectionId,studentId,marks,remarks=''}=req.body||{};
-      if(!examId||!sessionId||!classId||!sectionId||!studentId)return res.status(400).json({error:'examId, sessionId, classId, sectionId and studentId are required'});
+      const {examId,sessionId,classId,sectionId,subjectId,studentId,marks,remarks=''}=req.body||{};
+      if(!examId||!sessionId||!classId||!sectionId||!subjectId||!studentId)return res.status(400).json({error:'examId, sessionId, classId, sectionId, subjectId and studentId are required'});
       const subject=await client.query(`SELECT es.id AS "examSubjectId",es.subject_id AS "subjectId",es.max_marks AS "maxMarks",es.branch_id AS "branchId",e.status AS "examStatus"
         FROM exam_subjects es JOIN exams e ON e.id=es.exam_id AND e.school_id=es.school_id
-        WHERE es.school_id=$1 AND es.exam_id=$2 AND e.session_id=$3 AND es.class_id=$4 AND ($5::uuid IS NULL OR es.branch_id=$5 OR es.branch_id IS NULL) AND ($5::uuid IS NULL OR e.branch_id=$5 OR e.branch_id IS NULL) LIMIT 1`,
-        [req.auth.schoolId,examId,sessionId,classId,req.auth.branchId||null]);
+        WHERE es.school_id=$1 AND es.exam_id=$2 AND e.session_id=$3 AND es.class_id=$4 AND es.subject_id=$5
+          AND ($6::uuid IS NULL OR es.branch_id=$6 OR es.branch_id IS NULL) AND ($6::uuid IS NULL OR e.branch_id=$6 OR e.branch_id IS NULL) LIMIT 1`,
+        [req.auth.schoolId,examId,sessionId,classId,subjectId,req.auth.branchId||null]);
       if(!subject.rows.length)return res.status(404).json({error:'Exam subject not found'});
       const es=subject.rows[0];
       if(es.examStatus==='published')return res.status(409).json({error:'Published exam marks are locked'});
