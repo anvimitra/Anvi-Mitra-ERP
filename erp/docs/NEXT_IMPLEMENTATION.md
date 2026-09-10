@@ -16,5 +16,7 @@ Completed in the current phase:
 - Teacher assignment APIs now expose class context and filter teacher users to their own assignments.
 - Teacher marks API now requires the exact assigned `subjectId` for both read and write, preventing a teacher from targeting another subject in the same class/exam.
 - Added the teacher marks workspace at `/erp/web/teacher-marks.html`, using only server-returned teacher assignments and preserving offline queue/replay behavior.
+- Added the student enrollment backend workspace API with branch/session/class/section validation, student create-or-update enrollment, parent-account creation, parent linking, and sync journaling.
+- Parent listing now exposes the linked parent user ID and staff can create parent login accounts from the enrollment flow.
 
-Next major implementation: complete the student enrollment workspace so school staff can create/admit a student, select the academic session + class + section + branch, link parent/guardian accounts, and validate the enrollment server-side before it becomes available to attendance, fees, exams and report cards.
+Next major implementation: connect the student enrollment UI to these new endpoints, add enrollment editing/parent-link management to the existing admissions/student screens, and then run backend CI with migrations + integration tests before moving to fee assignment automation.
