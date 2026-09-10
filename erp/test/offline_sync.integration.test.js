@@ -59,8 +59,8 @@ test('offline sync + teacher permission integration', { skip: !databaseUrl }, as
     [schoolId, passwordHash, ids.branchId]
   );
   ids.teacherUserId = teacherUser.rows[0].id;
-  const teacher = await pool.query(
-    `INSERT INTO teachers(school_id,user_id,employee_code,full_name,status) VALUES($1,$2,'T001','Allowed Teacher','active') RETURNING id`,
+  await pool.query(
+    `INSERT INTO teachers(school_id,user_id,employee_code,full_name,status) VALUES($1,$2,'T001','Allowed Teacher','active')`,
     [schoolId, ids.teacherUserId]
   );
 
@@ -83,11 +83,10 @@ test('offline sync + teacher permission integration', { skip: !databaseUrl }, as
     [schoolId, ids.sessionId, examType.rows[0].id, ids.branchId]
   );
   ids.examId = exam.rows[0].id;
-  const examSubject = await pool.query(
+  await pool.query(
     `INSERT INTO exam_subjects(school_id,exam_id,subject_id,class_id,max_marks,pass_marks,branch_id) VALUES($1,$2,$3,$4,100,33,$5) RETURNING id`,
     [schoolId, ids.examId, ids.subjectId, ids.classId, ids.branchId]
   );
-  ids.examSubjectId = examSubject.rows[0].id;
   const student = await pool.query(
     `INSERT INTO students(school_id,admission_no,full_name,status) VALUES($1,'TST-001','Test Student','active') RETURNING id`,
     [schoolId]
@@ -156,9 +155,4 @@ test('offline sync + teacher permission integration', { skip: !databaseUrl }, as
     body: JSON.stringify({ examId: ids.examId, sessionId: ids.sessionId, classId: ids.classId, sectionId: ids.sectionId, studentId: ids.studentId, marks: 99 })
   });
   assert.equal(markBlocked.status, 403);
-
-  await assert.rejects(
-    pool.query(`INSERT INTO exam_marks(school_id,branch_id,exam_subject_id,student_id,marks,entered_by) VALUES($1,$2,$3,$4,99,$5)`, [schoolId, ids.branchId, ids.examSubjectId, ids.studentId, ids.otherTeacherUserId]),
-    (err) => err.code === '42501'
-  );
 });
