@@ -1,9 +1,0 @@
-{
-  "name": "anvi-mitra-local-connector",
-  "version": "0.1.0",
-  "private": true,
-  "description": "Anvi Mitra ERP PC/NAS local storage connector",
-  "main": "agent.js",
-  "scripts": {"start": "node agent.js"},
-  "engines": {"node": ">=20"}
-}
