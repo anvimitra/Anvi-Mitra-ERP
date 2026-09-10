@@ -36,9 +36,24 @@ function registerPeopleRoutes(app, pool) {
 
   app.get('/api/parents', authenticate, requireRoles(...staff), async (req,res,next)=>{
     try {
-      const { rows } = await pool.query(`SELECT p.id,p.full_name AS "fullName",p.phone,p.email,p.branch_id AS "branchId",b.name AS "branchName" FROM parents p LEFT JOIN branches b ON b.id=p.branch_id WHERE p.school_id=$1 AND ($2::uuid IS NULL OR p.branch_id=$2) ORDER BY p.full_name`, [req.auth.schoolId, req.auth.branchId || null]);
+      const { rows } = await pool.query(`SELECT p.id,p.user_id AS "userId",p.full_name AS "fullName",p.phone,p.email,p.branch_id AS "branchId",b.name AS "branchName" FROM parents p LEFT JOIN branches b ON b.id=p.branch_id WHERE p.school_id=$1 AND ($2::uuid IS NULL OR p.branch_id=$2) ORDER BY p.full_name`, [req.auth.schoolId, req.auth.branchId || null]);
       res.json({ parents: rows });
     } catch(err){ next(err); }
+  });
+
+  app.post('/api/parents', authenticate, requireRoles(...staff), async (req,res,next)=>{
+    const client=await pool.connect();
+    try {
+      const {fullName,email=null,phone=null,password,address=null}=req.body||{};
+      const name=String(fullName||'').trim(); const em=String(email||'').trim().toLowerCase(); const ph=String(phone||'').trim();
+      if(!name||(!em&&!ph)||String(password||'').length<6)return res.status(400).json({error:'fullName, email or phone, and password (min 6) are required'});
+      const branchId=req.auth.branchId||null;
+      await client.query('BEGIN');
+      const u=await client.query(`INSERT INTO users(school_id,branch_id,email,phone,password_hash,role,status) VALUES($1,$2,$3,$4,$5,'parent','active') RETURNING id,email,phone,role,status,branch_id AS "branchId"`,[req.auth.schoolId,branchId,em||null,ph||null,await hashPassword(String(password))]);
+      const p=await client.query(`INSERT INTO parents(school_id,branch_id,user_id,full_name,phone,email,address,status) VALUES($1,$2,$3,$4,$5,$6,$7,'active') RETURNING id,user_id AS "userId",full_name AS "fullName",phone,email,address,branch_id AS "branchId",status`,[req.auth.schoolId,branchId,u.rows[0].id,name,ph||null,em||null,address||null]);
+      await client.query('COMMIT');
+      res.status(201).json({parent:p.rows[0]});
+    }catch(err){await client.query('ROLLBACK').catch(()=>{});if(err.code==='23505')return res.status(409).json({error:'Parent email or phone already exists'});next(err)}finally{client.release()}
   });
 }
 module.exports = { registerPeopleRoutes };
