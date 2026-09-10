@@ -8,7 +8,7 @@ function registerTeacherAssignmentRoutes(app, pool) {
       const { rows } = await pool.query(`
         SELECT ts.id,ts.teacher_id AS "teacherId",t.full_name AS "teacherName",
                ts.subject_id AS "subjectId",su.name AS "subjectName",
-               ts.section_id AS "sectionId",c.name AS "className",s.name AS "sectionName",
+               ts.section_id AS "sectionId",c.id AS "classId",c.name AS "className",s.name AS "sectionName",
                ts.session_id AS "sessionId",a.name AS "sessionName",
                ts.branch_id AS "branchId",b.name AS "branchName"
         FROM teacher_subjects ts
@@ -18,8 +18,9 @@ function registerTeacherAssignmentRoutes(app, pool) {
         JOIN classes c ON c.id=s.class_id AND c.school_id=ts.school_id
         JOIN academic_sessions a ON a.id=ts.session_id AND a.school_id=ts.school_id
         LEFT JOIN branches b ON b.id=ts.branch_id
-        WHERE ts.school_id=$1 AND ($2::uuid IS NULL OR ts.branch_id=$2)
-        ORDER BY a.starts_on DESC,c.name,s.name,su.name,t.full_name`, [req.auth.schoolId,req.auth.branchId || null]);
+        WHERE ts.school_id=$1 AND ($2::uuid IS NULL OR ts.branch_id=$2 OR ts.branch_id IS NULL)
+          AND ($3::uuid IS NULL OR t.user_id=$3)
+        ORDER BY a.starts_on DESC,c.name,s.name,su.name,t.full_name`, [req.auth.schoolId,req.auth.branchId || null,req.auth.role==='teacher'?req.auth.sub:null]);
       res.json({ assignments: rows });
     } catch (err) { next(err); }
   });
@@ -40,7 +41,7 @@ function registerTeacherAssignmentRoutes(app, pool) {
         JOIN academic_sessions a ON a.id=cta.session_id AND a.school_id=cta.school_id
         WHERE cta.school_id=$1
           AND ($2::uuid IS NULL OR cta.session_id=$2)
-          AND ($3::uuid IS NULL OR cta.branch_id=$3)
+          AND ($3::uuid IS NULL OR cta.branch_id=$3 OR cta.branch_id IS NULL)
           AND ($4::uuid IS NULL OR t.user_id=$4)
         ORDER BY a.starts_on DESC,c.name,sec.name`,
         [req.auth.schoolId,sessionId,req.auth.branchId || null,teacherUserId]);
@@ -76,7 +77,7 @@ function registerTeacherAssignmentRoutes(app, pool) {
 
   app.delete('/api/class-teacher-assignments/:id', authenticate, requireRoles(...staff), async (req,res,next) => {
     try {
-      const result=await pool.query('DELETE FROM class_teacher_assignments WHERE id=$1 AND school_id=$2 AND ($3::uuid IS NULL OR branch_id=$3)',[req.params.id,req.auth.schoolId,req.auth.branchId||null]);
+      const result=await pool.query('DELETE FROM class_teacher_assignments WHERE id=$1 AND school_id=$2 AND ($3::uuid IS NULL OR branch_id=$3 OR branch_id IS NULL)',[req.params.id,req.auth.schoolId,req.auth.branchId||null]);
       if(!result.rowCount) return res.status(404).json({error:'Class teacher assignment not found'});
       res.status(204).end();
     } catch(err){next(err);}
@@ -110,7 +111,7 @@ function registerTeacherAssignmentRoutes(app, pool) {
 
   app.delete('/api/teacher-assignments/:id', authenticate, requireRoles(...staff), async (req,res,next) => {
     try {
-      const result = await pool.query('DELETE FROM teacher_subjects WHERE id=$1 AND school_id=$2 AND ($3::uuid IS NULL OR branch_id=$3)', [req.params.id,req.auth.schoolId,req.auth.branchId || null]);
+      const result = await pool.query('DELETE FROM teacher_subjects WHERE id=$1 AND school_id=$2 AND ($3::uuid IS NULL OR branch_id=$3 OR branch_id IS NULL)', [req.params.id,req.auth.schoolId,req.auth.branchId || null]);
       if (!result.rowCount) return res.status(404).json({ error:'Assignment not found in selected branch' });
       res.status(204).end();
     } catch (err) { next(err); }
