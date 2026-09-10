@@ -2,7 +2,7 @@ const { authenticate } = require('./auth');
 
 async function resolveDevice(pool, schoolId, deviceKey) {
   const result = await pool.query(
-    `SELECT id, status, last_cursor FROM sync_devices WHERE school_id=$1 AND device_key=$2`,
+    `SELECT id,status,last_cursor FROM sync_devices WHERE school_id=$1 AND device_key=$2`,
     [schoolId, String(deviceKey)]
   );
   return result.rows[0] || null;
@@ -46,16 +46,14 @@ function registerSyncRoutes(app, pool) {
 
   async function pullChanges(req, res, next) {
     try {
-      const { deviceKey, cursor = 0, limit = 200 } = req.query.deviceKey
-        ? req.query
-        : (req.body || {});
+      const source = req.query.deviceKey ? req.query : (req.body || {});
+      const { deviceKey, cursor = 0, limit = 200 } = source;
       if (!deviceKey) return res.status(400).json({ error: 'deviceKey is required' });
       const safeLimit = Math.min(Math.max(Number(limit) || 200, 1), 1000);
       const device = await resolveDevice(pool, req.auth.schoolId, deviceKey);
       if (!device || device.status !== 'active') return res.status(403).json({ error: 'Sync device is not registered or is revoked' });
       const result = await pool.query(
-        `SELECT cursor, entity_type, entity_id, operation, payload, changed_by, changed_at,
-                client_change_id, base_cursor
+        `SELECT cursor,entity_type,entity_id,operation,payload,changed_by,changed_at,client_change_id,base_cursor
          FROM sync_changes WHERE school_id=$1 AND cursor>$2 ORDER BY cursor ASC LIMIT $3`,
         [req.auth.schoolId, Number(cursor) || 0, safeLimit]
       );
@@ -81,7 +79,7 @@ function registerSyncRoutes(app, pool) {
       const { deviceKey, changes = [] } = req.body || {};
       if (!deviceKey) return res.status(400).json({ error: 'deviceKey is required' });
       if (!Array.isArray(changes) || changes.length > 500) return res.status(400).json({ error: 'changes must be an array with at most 500 items' });
-      const deviceResult = await client.query(`SELECT id, status, last_cursor FROM sync_devices WHERE school_id=$1 AND device_key=$2 FOR UPDATE`, [req.auth.schoolId, String(deviceKey)]);
+      const deviceResult = await client.query(`SELECT id,status,last_cursor FROM sync_devices WHERE school_id=$1 AND device_key=$2 FOR UPDATE`, [req.auth.schoolId, String(deviceKey)]);
       const device = deviceResult.rows[0];
       if (!device || device.status !== 'active') return res.status(403).json({ error: 'Sync device is not registered or is revoked' });
       await client.query('BEGIN');
@@ -98,7 +96,7 @@ function registerSyncRoutes(app, pool) {
 
         if (clientChangeId) {
           const duplicate = await client.query(
-            `SELECT cursor, entity_type, entity_id, operation, payload, changed_at, client_change_id, base_cursor
+            `SELECT cursor,entity_type,entity_id,operation,payload,changed_at,client_change_id,base_cursor
              FROM sync_changes WHERE school_id=$1 AND device_id=$2 AND client_change_id=$3 LIMIT 1`,
             [req.auth.schoolId, device.id, clientChangeId]
           );
@@ -113,7 +111,7 @@ function registerSyncRoutes(app, pool) {
         let conflict = false;
         if (baseCursor > 0) {
           const newer = await client.query(
-            `SELECT cursor, payload FROM sync_changes
+            `SELECT cursor,payload FROM sync_changes
              WHERE school_id=$1 AND entity_type=$2 AND entity_id IS NOT DISTINCT FROM $3 AND cursor>$4
              ORDER BY cursor ASC LIMIT 1`,
             [req.auth.schoolId, entityType, entityId, baseCursor]
@@ -133,7 +131,7 @@ function registerSyncRoutes(app, pool) {
         const result = await client.query(
           `INSERT INTO sync_changes (school_id,device_id,client_change_id,base_cursor,entity_type,entity_id,operation,payload,changed_by)
            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-           RETURNING cursor, entity_type, entity_id, operation, payload, changed_at, client_change_id, base_cursor`,
+           RETURNING cursor,entity_type,entity_id,operation,payload,changed_at,client_change_id,base_cursor`,
           [req.auth.schoolId, device.id, clientChangeId, baseCursor, entityType, entityId, operation, JSON.stringify(payload), req.auth.sub]
         );
         accepted.push(result.rows[0]);
