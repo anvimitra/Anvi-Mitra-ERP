@@ -1,8 +1,9 @@
 window.AnviMitraOfflineSync = (() => {
   const DB_NAME = 'anvi-mitra-erp-offline';
-  const DB_VERSION = 1;
+  const DB_VERSION = 2;
   const OUTBOX = 'outbox';
   const META = 'meta';
+  const CACHE = 'cache';
   let dbPromise;
 
   function openDb() {
@@ -13,6 +14,7 @@ window.AnviMitraOfflineSync = (() => {
         const db = request.result;
         if (!db.objectStoreNames.contains(OUTBOX)) db.createObjectStore(OUTBOX, { keyPath: 'clientId' });
         if (!db.objectStoreNames.contains(META)) db.createObjectStore(META, { keyPath: 'key' });
+        if (!db.objectStoreNames.contains(CACHE)) db.createObjectStore(CACHE, { keyPath: 'key' });
       };
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
@@ -25,7 +27,12 @@ window.AnviMitraOfflineSync = (() => {
     return new Promise((resolve, reject) => {
       const t = db.transaction(store, mode);
       const s = t.objectStore(store);
-      const result = work(s);
+      const request = work(s);
+      let result;
+      if (request && typeof request.onsuccess !== 'undefined') {
+        request.onsuccess = () => { result = request.result; };
+        request.onerror = () => reject(request.error);
+      } else result = request;
       t.oncomplete = () => resolve(result);
       t.onerror = () => reject(t.error);
       t.onabort = () => reject(t.error);
@@ -69,22 +76,48 @@ window.AnviMitraOfflineSync = (() => {
     return item;
   }
 
+  async function save(entityType, entityId, value) {
+    return put(CACHE, { key: `${entityType}:${entityId}`, entityType, entityId: entityId || null, value, savedAt: new Date().toISOString() });
+  }
+
+  async function read(entityType, entityId) {
+    const item = await get(CACHE, `${entityType}:${entityId}`);
+    return item?.value ?? null;
+  }
+
+  async function removeCached(entityType, entityId) {
+    return remove(CACHE, `${entityType}:${entityId}`);
+  }
+
+  async function applyPulledChanges(changes = []) {
+    for (const change of changes) {
+      if (!change.entity_type) continue;
+      if (change.operation === 'delete') await removeCached(change.entity_type, change.entity_id);
+      else await save(change.entity_type, change.entity_id, change.payload || {});
+    }
+  }
+
   async function push() {
     const items = await all(OUTBOX);
     if (!items.length) return { accepted: [], conflicts: [], nextCursor: await cursor() };
     const result = await request('/api/sync/push', { method: 'POST', body: JSON.stringify({ deviceKey: deviceKey(), changes: items.map(x => ({ clientId: x.clientId, entityType: x.entityType, entityId: x.entityId, operation: x.operation, payload: x.payload, baseCursor: x.baseCursor })) }) });
-    for (const accepted of (result.accepted || [])) if (accepted.client_id || accepted.clientChangeId || accepted.client_change_id) await remove(OUTBOX, accepted.client_id || accepted.clientChangeId || accepted.client_change_id);
+    for (const accepted of (result.accepted || [])) {
+      const id = accepted.client_change_id || accepted.clientChangeId || accepted.client_id;
+      if (id) await remove(OUTBOX, id);
+    }
     return result;
   }
 
   async function pull(limit = 200) {
     const c = await cursor();
     const result = await request(`/api/sync/changes?deviceKey=${encodeURIComponent(deviceKey())}&cursor=${encodeURIComponent(c)}&limit=${encodeURIComponent(limit)}`);
+    await applyPulledChanges(result.changes || []);
     await setCursor(result.nextCursor || c);
     return result;
   }
 
   async function sync() {
+    if (!navigator.onLine) return { online: false, pushed: { accepted: [], conflicts: [] }, pulled: { changes: [] } };
     await registerDevice();
     const pushed = await push();
     const pulled = await pull();
@@ -94,8 +127,9 @@ window.AnviMitraOfflineSync = (() => {
   async function cursor() { return Number((await get(META, 'cursor'))?.value || 0); }
   async function setCursor(value) { return put(META, { key: 'cursor', value: Number(value) || 0 }); }
   async function outboxCount() { return (await all(OUTBOX)).length; }
-  async function status() { return { online: navigator.onLine, deviceKey: deviceKey(), cursor: await cursor(), outboxCount: await outboxCount() }; }
+  async function cacheCount() { return (await all(CACHE)).length; }
+  async function status() { return { online: navigator.onLine, deviceKey: deviceKey(), cursor: await cursor(), outboxCount: await outboxCount(), cacheCount: await cacheCount() }; }
 
   window.addEventListener('online', () => sync().catch(() => {}));
-  return { deviceKey, registerDevice, queue, push, pull, sync, status, cursor, setCursor, outboxCount };
+  return { deviceKey, registerDevice, queue, save, read, removeCached, applyPulledChanges, push, pull, sync, status, cursor, setCursor, outboxCount, cacheCount };
 })();
