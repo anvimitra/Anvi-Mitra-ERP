@@ -1,0 +1,1 @@
+console.log('Anvi Mitra ERP local connector');
