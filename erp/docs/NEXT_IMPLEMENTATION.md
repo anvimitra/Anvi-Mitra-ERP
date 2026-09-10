@@ -13,5 +13,8 @@ Completed in the current phase:
 - Connected the Flutter offline queue to refresh and resolve server conflicts.
 - Backend CI applies all PostgreSQL migrations before integration tests.
 - Sync resolution remains server-authoritative; offline/local data cannot bypass school, branch or role permissions.
+- Teacher assignment APIs now expose class context and filter teacher users to their own assignments.
+- Teacher marks API now requires the exact assigned `subjectId` for both read and write, preventing a teacher from targeting another subject in the same class/exam.
+- Added the teacher marks workspace at `/erp/web/teacher-marks.html`, using only server-returned teacher assignments and preserving offline queue/replay behavior.
 
-Next major implementation: build the complete staff/teacher assignment workspace so admins can assign teachers to class + subject + section + academic session, review permissions, and expose only those permitted subjects/classes in the marks-entry workflow.
+Next major implementation: complete the student enrollment workspace so school staff can create/admit a student, select the academic session + class + section + branch, link parent/guardian accounts, and validate the enrollment server-side before it becomes available to attendance, fees, exams and report cards.
