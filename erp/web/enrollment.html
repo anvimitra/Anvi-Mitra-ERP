@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Anvi Mitra ERP • Student Enrollment</title>
+<style>
+:root{font-family:Inter,system-ui,sans-serif;color:#172033;background:#f4f7fb;--brand:#5b5bd6;--line:#e4e8f0;--muted:#667085}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1200px;margin:auto;padding:24px}.top{display:flex;justify-content:space-between;align-items:center;gap:15px}.top h1{margin:0;font-size:26px}.back{color:var(--brand);font-weight:750;text-decoration:none}.panel{background:#fff;border:1px solid var(--line);border-radius:17px;padding:20px;margin-top:16px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field label{display:block;font-size:12px;font-weight:750;margin-bottom:6px}.field select,.field input{width:100%;padding:11px;border:1px solid #d8deea;border-radius:10px;background:#fff;font:inherit}.hint{font-size:11px;color:var(--muted);margin-top:5px}.actions{display:flex;gap:10px;margin-top:16px}.btn{border:0;border-radius:10px;padding:11px 16px;background:var(--brand);color:#fff;font:inherit;font-weight:750;cursor:pointer}.btn:disabled{opacity:.6;cursor:wait}.msg{font-size:13px;margin-top:10px}.ok{color:#087443}.err{color:#b42318}.table{overflow:auto;margin-top:12px}table{width:100%;border-collapse:collapse;min-width:650px}th,td{text-align:left;padding:11px;border-bottom:1px solid var(--line);font-size:13px}th{font-size:11px;color:var(--muted);text-transform:uppercase}@media(max-width:700px){.wrap{padding:16px}.grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body><main class="wrap">
+<div class="top"><div><a class="back" href="/erp/web/portal-dashboard.html">← Dashboard</a><h1>Student Enrollment</h1></div><span id="role" class="hint">Checking access…</span></div>
+<section class="panel"><h2>Enroll student for an academic session</h2><div class="grid">
+<div class="field"><label>Student *</label><select id="student"><option value="">Select student</option></select></div>
+<div class="field"><label>Academic session *</label><select id="session"><option value="">Select session</option></select></div>
+<div class="field"><label>Section *</label><select id="section"><option value="">Select section</option></select></div>
+<div class="field"><label>Roll number</label><input id="roll" inputmode="numeric" maxlength="20" placeholder="Optional"></div>
+</div><div class="actions"><button class="btn" id="save">Save enrollment</button><button class="btn" id="refresh" style="background:#eef0f7;color:#172033">Refresh</button></div><div id="msg" class="msg"></div></section>
+<section class="panel"><h2>Current enrollments</h2><div class="table"><table><thead><tr><th>Session</th><th>Class</th><th>Section</th><th>Roll</th><th>Branch</th><th>Status</th></tr></thead><tbody id="rows"><tr><td colspan="6">Select a student.</td></tr></tbody></table></div></section>
+</main>
+<script src="/erp/web/api.js"></script><script>
+(async()=>{
+ const token=LSKERP.token(),user=LSKERP.user(),role=(user.role||'').toLowerCase();
+ if(!token){location.replace('/erp/web/login.html');return}
+ const allowed=['super_admin','principal','admin','office_staff'];
+ if(!allowed.includes(role)){document.getElementById('role').textContent='Enrollment permission required';document.getElementById('msg').className='msg err';document.getElementById('msg').textContent='Only school administration/office staff can create enrollments.';document.getElementById('save').disabled=true;return}
+ document.getElementById('role').textContent='Role: '+role;
+ const student=document.getElementById('student'),session=document.getElementById('session'),section=document.getElementById('section'),rows=document.getElementById('rows'),msg=document.getElementById('msg');
+ let students=[],structure;
+ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ async function load(){
+  msg.textContent='Loading…';msg.className='msg';
+  try{
+   const [sd,ac]=await Promise.all([LSKERP.request('/api/students'),LSKERP.request('/api/academic-structure')]);
+   students=sd.students||sd.data||[];structure=ac;
+   student.innerHTML='<option value="">Select student</option>'+students.map(s=>`<option value="${s.id}">${esc(s.fullName||s.full_name)} • ${esc(s.admissionNo||s.admission_no||'No admission no.')}</option>`).join('');
+   session.innerHTML='<option value="">Select session</option>'+(structure.sessions||[]).map(s=>`<option value="${s.id}">${esc(s.name)}${s.isCurrent?' • Current':''}</option>`).join('');
+   section.innerHTML='<option value="">Select section</option>';
+   msg.textContent='';
+  }catch(e){msg.className='msg err';msg.textContent=e.message||'Could not load enrollment data'}
+ }
+ function loadSections(){
+  const sections=structure?.sections||[]; const classId=(document.getElementById('class')?.value)||'';
+  section.innerHTML='<option value="">Select section</option>'+sections.filter(x=>!classId||x.classId===classId).map(x=>`<option value="${x.id}">${esc(x.className||x.class_name||'Class')} • ${esc(x.name)}</option>`).join('');
+ }
+ // academic-structure may expose classes/sections; add a lightweight class selector only when sections have classId.
+ const classWrap=document.createElement('div');classWrap.className='field';classWrap.innerHTML='<label>Class *</label><select id="class"><option value="">Select class</option></select>';document.querySelector('.grid').insertBefore(classWrap,section.parentElement);
+ function loadClasses(){const c=document.getElementById('class');c.innerHTML='<option value="">Select class</option>'+(structure?.classes||[]).map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('');loadSections()}
+ document.getElementById('class').addEventListener('change',loadSections);
+ student.addEventListener('change',async()=>{if(!student.value){rows.innerHTML='<tr><td colspan="6">Select a student.</td></tr>';return}try{const d=await LSKERP.request('/api/students/'+encodeURIComponent(student.value)+'/enrollments');const list=d.enrollments||[];rows.innerHTML=list.length?list.map(x=>`<tr><td>${esc(x.sessionName)}</td><td>${esc(x.className)}</td><td>${esc(x.sectionName)}</td><td>${esc(x.rollNo||'—')}</td><td>${esc(x.branchName||'School')}</td><td>${esc(x.status)}</td></tr>`).join(''):'<tr><td colspan="6">No enrollment found.</td></tr>'}catch(e){rows.innerHTML=`<tr><td colspan="6">${esc(e.message)}</td></tr>`}});
+ document.getElementById('save').onclick=async()=>{msg.textContent='';msg.className='msg';if(!student.value||!session.value||!section.value){msg.className='msg err';msg.textContent='Student, session, class and section are required.';return}const btn=document.getElementById('save');btn.disabled=true;try{await LSKERP.request('/api/students/'+encodeURIComponent(student.value)+'/enrollments',{method:'POST',body:JSON.stringify({sessionId:session.value,sectionId:section.value,rollNo:document.getElementById('roll').value.trim()||null})});msg.className='msg ok';msg.textContent='Enrollment saved successfully.';student.dispatchEvent(new Event('change'))}catch(e){msg.className='msg err';msg.textContent=e.message||'Could not save enrollment'}finally{btn.disabled=false}};
+ document.getElementById('refresh').onclick=load;
+ await load();loadClasses();
+})().catch(e=>{document.getElementById('msg').className='msg err';document.getElementById('msg').textContent=e.message||'Could not initialize enrollment page'});
+</script></body></html>
