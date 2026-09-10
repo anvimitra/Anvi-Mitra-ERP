@@ -17,7 +17,7 @@ function registerExamRoutes(app, pool) {
       const branchId=req.auth.branchId||null;
       const teacherFilter = req.auth.role === 'teacher' ? `AND EXISTS (
         SELECT 1 FROM teacher_subjects ts
-        JOIN users tu ON tu.teacher_id=ts.teacher_id AND tu.id=$4 AND tu.school_id=ts.school_id
+        JOIN teachers tt ON tt.id=ts.teacher_id AND tt.user_id=$4 AND tt.school_id=ts.school_id
         JOIN exam_subjects tes ON tes.exam_id=e.id AND tes.subject_id=ts.subject_id AND tes.class_id IN (
           SELECT c2.id FROM classes c2 JOIN sections sec2 ON sec2.class_id=c2.id WHERE sec2.id=ts.section_id
         )
@@ -47,7 +47,7 @@ function registerExamRoutes(app, pool) {
       const { examId, classId } = req.query || {};
       if (!examId) return res.status(400).json({ error: 'examId is required' });
       const branchId=req.auth.branchId||null;
-      const teacherFilter = req.auth.role === 'teacher' ? `AND EXISTS (SELECT 1 FROM teacher_subjects ts JOIN users tu ON tu.teacher_id=ts.teacher_id AND tu.id=$5 AND tu.school_id=ts.school_id WHERE ts.school_id=es.school_id AND ts.subject_id=es.subject_id AND ts.session_id=e.session_id AND EXISTS (SELECT 1 FROM sections sec WHERE sec.id=ts.section_id AND sec.class_id=es.class_id) AND ($3::uuid IS NULL OR ts.branch_id=$3 OR ts.branch_id IS NULL))` : '';
+      const teacherFilter = req.auth.role === 'teacher' ? `AND EXISTS (SELECT 1 FROM teacher_subjects ts JOIN teachers tt ON tt.id=ts.teacher_id AND tt.user_id=$5 AND tt.school_id=ts.school_id WHERE ts.school_id=es.school_id AND ts.subject_id=es.subject_id AND ts.session_id=e.session_id AND EXISTS (SELECT 1 FROM sections sec WHERE sec.id=ts.section_id AND sec.class_id=es.class_id) AND ($3::uuid IS NULL OR ts.branch_id=$3 OR ts.branch_id IS NULL))` : '';
       const { rows } = await pool.query(`SELECT es.id,es.exam_id AS "examId",es.subject_id AS "subjectId",s.name AS "subjectName",es.class_id AS "classId",c.name AS "className",es.max_marks AS "maxMarks",es.pass_marks AS "passMarks",es.exam_date AS "examDate",es.branch_id AS "branchId" FROM exam_subjects es JOIN exams e ON e.id=es.exam_id JOIN subjects s ON s.id=es.subject_id JOIN classes c ON c.id=es.class_id WHERE es.school_id=$1 AND es.exam_id=$2 AND ($3::uuid IS NULL OR es.branch_id=$3 OR es.branch_id IS NULL) AND ($4::uuid IS NULL OR es.class_id=$4) AND e.school_id=$1 AND ($3::uuid IS NULL OR e.branch_id=$3 OR e.branch_id IS NULL) ${teacherFilter} ORDER BY c.name,s.name`, [req.auth.schoolId,examId,branchId,classId||null,req.auth.sub]);
       res.json({ examSubjects: rows });
     } catch(err){ next(err); }
@@ -82,7 +82,7 @@ function registerExamRoutes(app, pool) {
       const { examSubjectId } = req.query || {};
       if (!examSubjectId) return res.status(400).json({ error: 'examSubjectId is required' });
       const branchId=req.auth.branchId||null;
-      const teacherFilter = req.auth.role === 'teacher' ? `AND EXISTS (SELECT 1 FROM teacher_subjects ts JOIN users tu ON tu.teacher_id=ts.teacher_id AND tu.id=$3 AND tu.school_id=ts.school_id WHERE ts.school_id=es.school_id AND ts.subject_id=es.subject_id AND ts.session_id=e.session_id AND EXISTS (SELECT 1 FROM sections sec WHERE sec.id=ts.section_id AND sec.class_id=es.class_id) AND ($2::uuid IS NULL OR ts.branch_id=$2 OR ts.branch_id IS NULL))` : '';
+      const teacherFilter = req.auth.role === 'teacher' ? `AND EXISTS (SELECT 1 FROM teacher_subjects ts JOIN teachers tt ON tt.id=ts.teacher_id AND tt.user_id=$3 AND tt.school_id=ts.school_id WHERE ts.school_id=es.school_id AND ts.subject_id=es.subject_id AND ts.session_id=e.session_id AND EXISTS (SELECT 1 FROM sections sec WHERE sec.id=ts.section_id AND sec.class_id=es.class_id) AND ($2::uuid IS NULL OR ts.branch_id=$2 OR ts.branch_id IS NULL))` : '';
       const { rows } = await pool.query(`SELECT DISTINCT s.id,s.admission_no AS "admissionNo",s.roll_no AS "rollNo",s.full_name AS "fullName",s.photo_url AS "photoUrl",s.branch_id AS "branchId" FROM exam_subjects es JOIN exams e ON e.id=es.exam_id JOIN enrollments en ON en.school_id=es.school_id AND en.session_id=e.session_id AND en.class_id=es.class_id AND en.status='active' JOIN students s ON s.id=en.student_id AND s.school_id=es.school_id WHERE es.id=$1 AND es.school_id=$4 AND ($2::uuid IS NULL OR es.branch_id=$2 OR es.branch_id IS NULL) AND ($2::uuid IS NULL OR e.branch_id=$2 OR e.branch_id IS NULL) AND ($2::uuid IS NULL OR en.branch_id=$2 OR en.branch_id IS NULL) AND ($2::uuid IS NULL OR s.branch_id=$2 OR s.branch_id IS NULL) ${teacherFilter} ORDER BY s.full_name`, [examSubjectId,branchId,req.auth.sub,req.auth.schoolId]);
       res.json({ students: rows });
     } catch(err){ next(err); }
@@ -93,7 +93,7 @@ function registerExamRoutes(app, pool) {
       const { examSubjectId, studentId } = req.query || {};
       if (!examSubjectId) return res.status(400).json({ error: 'examSubjectId is required' });
       const branchId=req.auth.branchId||null;
-      const teacherFilter = req.auth.role === 'teacher' ? `AND EXISTS (SELECT 1 FROM teacher_subjects ts JOIN users tu ON tu.teacher_id=ts.teacher_id AND tu.id=$4 AND tu.school_id=ts.school_id WHERE ts.school_id=es.school_id AND ts.subject_id=es.subject_id AND ts.session_id=e.session_id AND EXISTS (SELECT 1 FROM sections sec WHERE sec.id=ts.section_id AND sec.class_id=es.class_id) AND ($3::uuid IS NULL OR ts.branch_id=$3 OR ts.branch_id IS NULL))` : '';
+      const teacherFilter = req.auth.role === 'teacher' ? `AND EXISTS (SELECT 1 FROM teacher_subjects ts JOIN teachers tt ON tt.id=ts.teacher_id AND tt.user_id=$4 AND tt.school_id=ts.school_id WHERE ts.school_id=es.school_id AND ts.subject_id=es.subject_id AND ts.session_id=e.session_id AND EXISTS (SELECT 1 FROM sections sec WHERE sec.id=ts.section_id AND sec.class_id=es.class_id) AND ($3::uuid IS NULL OR ts.branch_id=$3 OR ts.branch_id IS NULL))` : '';
       const { rows } = await pool.query(`SELECT m.id,m.exam_subject_id AS "examSubjectId",m.student_id AS "studentId",m.marks,m.grade,m.remarks,m.branch_id AS "branchId",u.email AS "enteredBy" FROM exam_marks m LEFT JOIN users u ON u.id=m.entered_by JOIN exam_subjects es ON es.id=m.exam_subject_id JOIN exams e ON e.id=es.exam_id WHERE m.school_id=$1 AND m.exam_subject_id=$2 AND ($3::uuid IS NULL OR m.branch_id=$3 OR m.branch_id IS NULL) AND ($5::uuid IS NULL OR m.student_id=$5) AND es.school_id=$1 AND ($3::uuid IS NULL OR es.branch_id=$3 OR es.branch_id IS NULL) AND e.school_id=$1 AND ($3::uuid IS NULL OR e.branch_id=$3 OR e.branch_id IS NULL) ${teacherFilter} ORDER BY m.student_id`, [req.auth.schoolId,examSubjectId,branchId,req.auth.sub,studentId||null]);
       res.json({ marks: rows });
     } catch(err){ next(err); }
@@ -106,7 +106,7 @@ function registerExamRoutes(app, pool) {
       const numericMarks = marks === null || marks === undefined || marks === '' ? null : Number(marks);
       if (numericMarks !== null && (!Number.isFinite(numericMarks) || numericMarks < 0)) return res.status(400).json({ error: 'marks must be a non-negative number' });
       const branchId=req.auth.branchId||null;
-      const teacherFilter = req.auth.role === 'teacher' ? `AND EXISTS (SELECT 1 FROM teacher_subjects ts JOIN users tu ON tu.teacher_id=ts.teacher_id AND tu.id=$8 AND tu.school_id=ts.school_id WHERE ts.school_id=es.school_id AND ts.subject_id=es.subject_id AND ts.session_id=e.session_id AND EXISTS (SELECT 1 FROM sections sec WHERE sec.id=ts.section_id AND sec.class_id=es.class_id) AND ($2::uuid IS NULL OR ts.branch_id=$2 OR ts.branch_id IS NULL))` : '';
+      const teacherFilter = req.auth.role === 'teacher' ? `AND EXISTS (SELECT 1 FROM teacher_subjects ts JOIN teachers tt ON tt.id=ts.teacher_id AND tt.user_id=$8 AND tt.school_id=ts.school_id WHERE ts.school_id=es.school_id AND ts.subject_id=es.subject_id AND ts.session_id=e.session_id AND EXISTS (SELECT 1 FROM sections sec WHERE sec.id=ts.section_id AND sec.class_id=es.class_id) AND ($2::uuid IS NULL OR ts.branch_id=$2 OR ts.branch_id IS NULL))` : '';
       const { rows } = await pool.query(`WITH valid AS (
         SELECT es.id,es.branch_id,es.max_marks,e.session_id,e.school_id,c.id AS class_id
         FROM exam_subjects es JOIN exams e ON e.id=es.exam_id JOIN classes c ON c.id=es.class_id
@@ -114,7 +114,7 @@ function registerExamRoutes(app, pool) {
           AND ($2::uuid IS NULL OR es.branch_id=$2 OR es.branch_id IS NULL)
           AND ($2::uuid IS NULL OR e.branch_id=$2 OR e.branch_id IS NULL)
           AND ($2::uuid IS NULL OR c.branch_id=$2 OR c.branch_id IS NULL)
-          ${teacherFilter.replace('AND EXISTS','AND EXISTS')}
+          ${teacherFilter}
       ), eligible_student AS (
         SELECT s.id FROM students s JOIN enrollments en ON en.student_id=s.id AND en.school_id=s.school_id
         JOIN valid v ON true
