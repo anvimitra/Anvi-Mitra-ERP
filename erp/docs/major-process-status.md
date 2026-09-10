@@ -11,6 +11,7 @@
 - Local PC/NAS/external-drive connector configuration with read-only/read-write permission mode and heartbeat tracking.
 - Web offline sync client and dashboard sync status.
 - Teacher marks permission API based on teacher + subject + class/section assignment.
+- Offline sync journal guard for teacher exam-mark changes, so unauthorized teachers cannot use the sync transport to bypass the assignment rule.
 
 ## Teacher marks permission APIs
 
@@ -21,6 +22,12 @@ Returns whether the signed-in user can edit that exam subject. `super_admin`, `p
 `POST /api/teacher-permissions/marks/check-batch`
 
 Accepts `{"examSubjectIds":["..."]}` and returns permission results for up to 500 exam-subject IDs.
+
+## Offline sync security
+
+`erp/sql/034_sync_teacher_marks_guard.sql` adds a database trigger on `sync_changes`. When a teacher submits an `exam_mark` / `exam_marks` sync record, the payload must contain `examSubjectId` (or `exam_subject_id`) and the same teacher + subject + class/section helper is evaluated before the journal record is accepted.
+
+This is a sync-boundary safeguard; authoritative exam-result domain endpoints should still enforce their own authorization before changing result tables.
 
 ## Data model rule
 
