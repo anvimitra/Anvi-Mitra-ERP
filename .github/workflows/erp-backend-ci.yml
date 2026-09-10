@@ -55,6 +55,9 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Apply PostgreSQL migrations
+        run: npm run migrate
+
       - name: Syntax check server JavaScript
         shell: bash
         run: |
