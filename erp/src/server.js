@@ -28,15 +28,15 @@ app.get('/api/health', async (_req, res) => {
 
 function registerOptional(moduleName, registerName) {
   let file;
-  try { file = require.resolve(`./${moduleName}`); }
-  catch (_) { console.warn(`Optional ERP module not present: ${moduleName}.js`); return false; }
+  try { file = require.resolve('./' + moduleName); }
+  catch (_) { console.warn('Optional ERP module not present: ' + moduleName + '.js'); return false; }
   try {
     const mod = require(file);
-    if (typeof mod[registerName] !== 'function') { console.warn(`ERP module ${moduleName}.js does not export ${registerName}`); return false; }
+    if (typeof mod[registerName] !== 'function') { console.warn('ERP module ' + moduleName + '.js does not export ' + registerName); return false; }
     mod[registerName](app, pool);
     return true;
   } catch (error) {
-    console.error(`Failed to load ERP module ${moduleName}.js:`, error);
+    console.error('Failed to load ERP module ' + moduleName + '.js:', error);
     if (process.env.NODE_ENV === 'production') throw error;
     return false;
   }
@@ -46,7 +46,7 @@ if (pool) {
   registerAuthRoutes(app, pool);
   const modules = [
     ['routes','registerRoutes'], ['people','registerPeopleRoutes'], ['staff','registerStaffRoutes'], ['attendance','registerAttendanceRoutes'],
-    ['attendance_reports','registerAttendanceReportRoutes'], ['exams','registerExamRoutes'], ['exam_results','registerExamResultRoutes'],
+    ['attendance_reports','registerAttendanceReportRoutes'], ['exams','registerExamRoutes'], ['exam_results','registerExamResultRoutes'], ['exam_marks','registerExamMarkRoutes'],
     ['fees','registerFeeRoutes'], ['fee_ledger','registerFeeLedgerRoutes'], ['fee_assignments','registerFeeAssignmentRoutes'],
     ['fee_receipts','registerFeeReceiptRoutes'], ['notifications','registerNotificationRoutes'], ['reportcard_engine_route','registerReportCardEngineRoute'],
     ['reportcard_result_sync','registerReportCardResultSyncRoutes'], ['reportcards','registerReportCardRoutes'], ['reportcard_context','registerReportCardContextRoutes'],
@@ -70,5 +70,5 @@ app.use((err, _req, res, _next) => {
   res.status(status).json({ error: status < 500 ? (err.message || 'Request failed') : 'Internal server error' });
 });
 
-if (require.main === module) app.listen(port, () => console.log(`Anvi Mitra ERP API listening on ${port}`));
+if (require.main === module) app.listen(port, () => console.log('Anvi Mitra ERP API listening on ' + port));
 module.exports = { app, pool };
