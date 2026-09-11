@@ -30,11 +30,9 @@ app.get('/api/health', async (_req, res) => {
 });
 
 function registerOptional(moduleName, registerName) {
-  const file = require.resolve(`./${moduleName}`);
-  if (!fs.existsSync(file)) {
-    console.warn(`Optional ERP module not present: ${moduleName}.js`);
-    return false;
-  }
+  let file;
+  try { file = require.resolve(`./${moduleName}`); }
+  catch (_) { console.warn(`Optional ERP module not present: ${moduleName}.js`); return false; }
   try {
     const mod = require(file);
     if (typeof mod[registerName] !== 'function') {
@@ -70,8 +68,8 @@ if (pool) {
     ['teacher_permissions','registerTeacherPermissionRoutes']
   ];
   for (const [moduleName, registerName] of modules) registerOptional(moduleName, registerName);
-  if (fs.existsSync(require.resolve('./notification_worker'))) require('./notification_worker').startNotificationWorker(pool);
-  if (fs.existsSync(require.resolve('./push_worker'))) require('./push_worker').startPushWorker(pool);
+  try { require('./notification_worker').startNotificationWorker(pool); } catch (_) { console.warn('Notification worker unavailable'); }
+  try { require('./push_worker').startPushWorker(pool); } catch (_) { console.warn('Push worker unavailable'); }
 } else {
   app.post('/api/auth/login', (_req, res) => res.status(503).json({ error: 'Database is not configured' }));
 }
