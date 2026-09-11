@@ -45,7 +45,7 @@ function registerOptional(moduleName, registerName) {
 if (pool) {
   registerAuthRoutes(app, pool);
   const modules = [
-    ['routes','registerRoutes'], ['people','registerPeopleRoutes'], ['attendance','registerAttendanceRoutes'],
+    ['routes','registerRoutes'], ['people','registerPeopleRoutes'], ['staff','registerStaffRoutes'], ['attendance','registerAttendanceRoutes'],
     ['attendance_reports','registerAttendanceReportRoutes'], ['exams','registerExamRoutes'], ['exam_results','registerExamResultRoutes'],
     ['fees','registerFeeRoutes'], ['fee_ledger','registerFeeLedgerRoutes'], ['fee_assignments','registerFeeAssignmentRoutes'],
     ['fee_receipts','registerFeeReceiptRoutes'], ['notifications','registerNotificationRoutes'], ['reportcard_engine_route','registerReportCardEngineRoute'],
