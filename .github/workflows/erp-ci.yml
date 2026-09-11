@@ -1,0 +1,48 @@
+name: ERP CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'erp/**'
+      - '.github/workflows/erp-ci.yml'
+  pull_request:
+    paths:
+      - 'erp/**'
+      - '.github/workflows/erp-ci.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Validate server modules
+        shell: bash
+        run: |
+          set -e
+          for f in erp/src/*.js; do
+            node --check "$f"
+          done
+      - name: Validate key web pages
+        shell: bash
+        run: |
+          set -e
+          test -f erp/web/super-admin-schools.html
+          test -f erp/web/super-admin-branches.html
+          test -f erp/web/school-management.html
+          test -f erp/web/school-onboarding.html
+          test -f erp/web/staff-management.html
+          test -f erp/web/student-enrollment.html
+          test -f erp/web/teacher-permissions.html
+          test -f erp/web/offline-sync.js
+          test -f erp/web/local-storage.html
+      - name: Validate SQL files
+        shell: bash
+        run: |
+          set -e
+          for f in erp/sql/*.sql; do
+            test -s "$f"
+          done
