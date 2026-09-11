@@ -73,6 +73,34 @@ function registerOrganizationRoutes(app, pool) {
     finally{client.release();}
   });
 
+  app.post('/api/platform/schools/:schoolId/branches', authenticate, requireRoles(...platformRoles), async (req,res,next) => {
+    try {
+      const {name,code,address=null,phone=null,email=null,logoUrl=null,isMain=false}=req.body||{};
+      if(!name||!code)return res.status(400).json({error:'name and code are required'});
+      const {rows}=await pool.query(
+        `INSERT INTO branches(school_id,name,code,address,phone,email,logo_url,is_main)
+         VALUES($1,$2,$3,$4,$5,$6,$7,$8)
+         RETURNING id,name,code,address,phone,email,logo_url AS "logoUrl",status,is_main AS "isMain"`,
+        [req.params.schoolId,String(name).trim(),String(code).trim().toUpperCase(),address,phone,email,logoUrl,Boolean(isMain)]
+      );
+      res.status(201).json({branch:rows[0]});
+    }catch(err){next(err);}
+  });
+
+  app.patch('/api/platform/schools/:schoolId/branches/:id', authenticate, requireRoles(...platformRoles), async (req,res,next) => {
+    try {
+      const map={name:'name',code:'code',address:'address',phone:'phone',email:'email',logoUrl:'logo_url',status:'status',isMain:'is_main'};
+      const keys=Object.keys(map).filter(k=>Object.prototype.hasOwnProperty.call(req.body||{},k));
+      if(!keys.length)return res.status(400).json({error:'No fields to update'});
+      const sets=keys.map((k,i)=>`${map[k]}=${i+1}`);
+      const vals=keys.map(k=>k==='code'?String(req.body[k]).trim().toUpperCase():req.body[k]);
+      vals.push(req.params.id,req.params.schoolId);
+      const {rows}=await pool.query(`UPDATE branches SET ${sets.join(',')},updated_at=now() WHERE id=${vals.length-1} AND school_id=${vals.length} RETURNING id,name,code,address,phone,email,logo_url AS "logoUrl",status,is_main AS "isMain"`,vals);
+      if(!rows.length)return res.status(404).json({error:'Branch not found'});
+      res.json({branch:rows[0]});
+    }catch(err){next(err);}
+  });
+
   app.post('/api/platform/schools', authenticate, requireRoles(...platformRoles), async (req,res,next)=>{
     const client=await pool.connect();
     try { const body=req.body||{}; const name=String(body.name||'').trim(); const code=String(body.code||'').trim().toUpperCase(); const displayName=String(body.displayName||name).trim(); const appName=String(body.appName||displayName).trim(); const appSlug=String(body.appSlug||code.toLowerCase()).trim().toLowerCase(); if(!name||!code||!appSlug)return res.status(400).json({error:'name, code and appSlug are required'}); if(!/^[a-z0-9][a-z0-9-]{2,98}$/.test(appSlug))return res.status(400).json({error:'appSlug must contain 3-99 lowercase letters, numbers or hyphens'}); await client.query('BEGIN'); const schoolResult=await client.query(`INSERT INTO schools(name,code,status) VALUES($1,$2,$3) RETURNING id,name,code,status,created_at AS "createdAt"`,[name,body.status==='inactive'?'inactive':'active']); const school=schoolResult.rows[0]; await client.query(`INSERT INTO school_settings(school_id,display_name,logo_url,primary_color,secondary_color,address,phone,email,website,timezone,currency_code,locale,date_format) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,[school.id,displayName,body.logoUrl||null,body.primaryColor||null,body.secondaryColor||null,body.address||null,body.phone||null,body.email||null,body.website||null,body.timezone||'Asia/Kolkata',body.currencyCode||'INR',body.locale||'en-IN',body.dateFormat||'DD-MM-YYYY']); await client.query(`INSERT INTO branches(school_id,name,code,address,phone,email,logo_url,is_main) VALUES($1,$2,$3,$4,$5,$6,$7,true)`,[school.id,body.mainBranchName||'Main Branch',body.mainBranchCode||'MAIN',body.address||null,body.phone||null,body.email||null,body.logoUrl||null]); await client.query(`INSERT INTO mobile_app_configs(school_id,app_name,app_slug,android_package,ios_bundle_id,api_base_url,logo_url,primary_color,secondary_color,support_email,support_phone) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,[school.id,appName,appSlug,body.androidPackage||null,body.iosBundleId||null,body.apiBaseUrl||null,body.logoUrl||null,body.primaryColor||null,body.secondaryColor||null,body.email||null,body.phone||null]); await client.query('COMMIT'); res.status(201).json({school,message:'School created with settings, main branch and mobile app configuration'}); }
