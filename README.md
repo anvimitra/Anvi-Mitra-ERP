@@ -9,6 +9,7 @@ Multi-school, multi-branch School ERP platform with Web + Flutter mobile clients
 **Phase:** Production hardening / integration verification  
 **Architecture foundation:** Complete  
 **Core school/teacher/offline security foundation:** Complete  
+**CI status:** Currently red on GitHub Actions. The latest verification jobs terminate before step details are exposed by the connected GitHub API, so the failure is being treated as an infrastructure/runner verification issue rather than being marked as a code pass.  
 **Production-ready:** Not yet — runtime database verification, end-to-end smoke tests, deployment checks and final client build validation remain.
 
 ---
