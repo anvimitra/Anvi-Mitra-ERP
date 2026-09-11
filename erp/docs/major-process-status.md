@@ -81,6 +81,9 @@ Online PostgreSQL remains the source of truth. Offline/local storage is a cache/
 
 The browser cannot silently access a user's computer. The Local Storage Connector uses explicit browser folder permission and supports `read_only` or `read_write`. The selected local folder is secondary storage; server data remains authoritative.
 
-## Next hardening phase
+## Current hardening phase
 
-The multi-school provisioning, enrollment, teacher-scope, offline-sync and local-storage foundations are now wired. The next hardening phase is end-to-end CI/database migration verification and then filling any remaining domain-specific gaps discovered by those checks.
+- Added GitHub Actions CI that syntax-checks every ERP Node module and verifies required web/SQL assets exist.
+- School provisioning now creates the first school administrator account transactionally from the Super Admin form.
+- Super Admin school management supports create, list, edit, status changes and branch navigation.
+- The remaining hardening work is runtime database migration verification, end-to-end API smoke tests, and production deployment checks.
