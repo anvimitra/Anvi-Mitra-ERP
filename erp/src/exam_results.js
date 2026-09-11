@@ -34,8 +34,17 @@ function registerExamResultRoutes(app, pool) {
           AND ($4::uuid IS NULL OR e.branch_id=$4 OR e.branch_id IS NULL)
           AND ($5::uuid IS NULL OR et.id=$5)
           AND ($6::uuid IS NULL OR e.id=$6)
+          AND ($7 <> 'teacher' OR EXISTS (
+            SELECT 1
+            FROM teacher_subjects ts
+            JOIN teachers t ON t.id=ts.teacher_id AND t.school_id=ts.school_id
+            WHERE ts.school_id=en.school_id AND t.user_id=$8
+              AND ts.session_id=en.session_id AND ts.section_id=en.section_id
+              AND ts.subject_id=es.subject_id AND ts.can_mark=true AND ts.status='active'
+              AND (ts.branch_id IS NULL OR es.branch_id IS NULL OR ts.branch_id=es.branch_id)
+          ))
         ORDER BY e.starts_on NULLS LAST,et.display_order,e.name,s.name`,
-        [req.auth.schoolId,req.params.studentId,sessionId,branchId,examTypeId||null,examId||null]);
+        [req.auth.schoolId,req.params.studentId,sessionId,branchId,examTypeId||null,examId||null,req.auth.role,req.auth.sub]);
       res.json({ results: rows });
     } catch (err) { next(err); }
   });
@@ -70,9 +79,18 @@ function registerExamResultRoutes(app, pool) {
           AND ($7::uuid IS NULL OR en.section_id=$7)
           AND ($3::uuid IS NULL OR es.branch_id=$3 OR es.branch_id IS NULL)
           AND ($3::uuid IS NULL OR e.branch_id=$3 OR e.branch_id IS NULL)
+          AND ($8 <> 'teacher' OR EXISTS (
+            SELECT 1
+            FROM teacher_subjects ts
+            JOIN teachers t ON t.id=ts.teacher_id AND t.school_id=ts.school_id
+            WHERE ts.school_id=en.school_id AND t.user_id=$9
+              AND ts.session_id=en.session_id AND ts.section_id=en.section_id
+              AND ts.subject_id=es.subject_id AND ts.can_mark=true AND ts.status='active'
+              AND (ts.branch_id IS NULL OR es.branch_id IS NULL OR ts.branch_id=es.branch_id)
+          ))
         GROUP BY s.id,s.admission_no,s.full_name,c.name,sec.name
         ORDER BY c.name,sec.name,s.full_name`,
-        [req.auth.schoolId,sessionId,branchId,examTypeId||null,examId||null,classId||null,sectionId||null]);
+        [req.auth.schoolId,sessionId,branchId,examTypeId||null,examId||null,classId||null,sectionId||null,req.auth.role,req.auth.sub]);
       res.json({ results: rows });
     } catch(err){ next(err); }
   });
