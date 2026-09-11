@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Anvi Mitra ERP • Teacher Assignments</title>
+<style>
+:root{font-family:Inter,system-ui,sans-serif;color:#172033;background:#f4f7fb;--line:#e4e8f0;--muted:#667085;--brand:#4f46e5}
+*{box-sizing:border-box}body{margin:0}.app{min-height:100vh;display:grid;grid-template-columns:240px 1fr}
+.side{background:linear-gradient(160deg,#10162d,#24275a);color:#fff;padding:22px}.brand{font-size:20px;font-weight:850}.sub{font-size:11px;color:#b8c2e5;margin:5px 0 28px}.back{color:#d9e2ff;text-decoration:none}
+.main{padding:25px;max-width:1450px;width:100%;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:18px}.top h1{margin:0;font-size:27px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 430px;gap:18px}.panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 10px 30px #10162d0b}
+.form{display:grid;gap:11px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field label{display:block;font-size:12px;font-weight:750;margin-bottom:5px}.field select{width:100%;padding:10px;border:1px solid #d9dee8;border-radius:9px;background:#fff;font:inherit}
+.btn{padding:12px;border:0;border-radius:10px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font:inherit;font-weight:800;cursor:pointer}.btn:disabled{opacity:.6}
+.list{display:grid;gap:10px}.assignment{border:1px solid #e7eaf0;border-radius:13px;padding:13px;display:flex;gap:12px;align-items:center}.avatar{width:42px;height:42px;border-radius:12px;background:#eef0ff;display:grid;place-items:center;font-weight:850;color:#4f46e5}.meta{font-size:12px;color:var(--muted);line-height:1.5;margin-top:3px}.badge{padding:5px 8px;border-radius:999px;background:#eefbf4;color:#087443;font-size:11px;font-weight:800;margin-left:auto;white-space:nowrap}.toggles{display:flex;gap:8px;flex-wrap:wrap;margin-top:7px}.tag{font-size:11px;padding:4px 7px;border-radius:999px;background:#f2f4f7}.actions{display:flex;gap:7px;margin-left:auto}.mini{border:1px solid #d9dee8;background:#fff;border-radius:8px;padding:7px 9px;cursor:pointer;font-weight:750}
+.msg{min-height:18px;font-size:12px}.ok{color:#087443}.err{color:#b42318}.empty{color:var(--muted);padding:35px;text-align:center}
+@media(max-width:950px){.app{grid-template-columns:1fr}.side{padding:13px}.layout{grid-template-columns:1fr}}@media(max-width:600px){.row{grid-template-columns:1fr}.main{padding:15px}}
+</style>
+</head>
+<body>
+<div class="app"><aside class="side"><div class="brand">Anvi Mitra ERP</div><div class="sub">Academic Access Control</div><a class="back" href="/erp/web/portal-dashboard.html">← Dashboard</a></aside>
+<main class="main"><div class="top"><div><h1>Teacher Assignments</h1><div class="meta">Assign each teacher to an exact session, class/section and subject.</div></div><span id="role" class="badge"></span></div>
+<div class="layout">
+<section class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0">Active assignments</h2><input id="search" placeholder="Search teacher, class, subject…" style="padding:9px 11px;border:1px solid #d9dee8;border-radius:9px;font:inherit;width:min(270px,100%)"></div><div id="list" class="list" style="margin-top:14px">Loading…</div></section>
+<section class="panel"><h2 style="margin-top:0">Create / update assignment</h2><form id="form" class="form">
+<div class="field"><label>Teacher *</label><select id="teacher" required><option value="">Loading…</option></select></div>
+<div class="row"><div class="field"><label>Academic session *</label><select id="session" required><option value="">Loading…</option></select></div><div class="field"><label>Class / section *</label><select id="section" required><option value="">Loading…</option></select></div></div>
+<div class="field"><label>Subject *</label><select id="subject" required><option value="">Loading…</option></select></div>
+<div class="row"><div class="field"><label><input id="canMark" type="checkbox" checked> Can enter marks</label></div><div class="field"><label><input id="canAttendance" type="checkbox" checked> Can take attendance</label></div></div>
+<button id="save" class="btn">Save assignment</button><div id="msg" class="msg"></div>
+</form></section></div></main></div>
+<script src="/erp/web/api.js"></script>
+<script>
+(async()=>{
+ const u=LSKERP.user(), role=(u.role||'').toLowerCase();
+ if(!LSKERP.token()||!['super_admin','principal','admin'].includes(role)){location.replace('/erp/web/login.html');return}
+ const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ $('role').textContent=role;
+ let assignments=[],masters={};
+ async function load(){
+   try{
+     masters=await LSKERP.request('/api/teacher-assignments/masters');
+     assignments=(await LSKERP.request('/api/teacher-assignments')).assignments||[];
+     $('teacher').innerHTML='<option value="">Select teacher</option>'+(masters.teachers||[]).map(x=>'<option value="'+esc(x.id)+'">'+esc(x.email||x.phone)+' • '+esc(x.branchName||'School level')+'</option>').join('');
+     $('session').innerHTML='<option value="">Select session</option>'+(masters.sessions||[]).map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+(x.isCurrent?' (Current)':'')+'</option>').join('');
+     $('section').innerHTML='<option value="">Select class / section</option>'+(masters.sections||[]).map(x=>'<option value="'+esc(x.id)+'">'+esc(x.className)+' — '+esc(x.name)+'</option>').join('');
+     $('subject').innerHTML='<option value="">Select subject</option>'+(masters.subjects||[]).map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+' ('+esc(x.code||'')+')</option>').join('');
+     render();
+   }catch(e){$('list').innerHTML='<div class="empty">'+esc(e.message||'Unable to load assignments')+'</div>'}
+ }
+ function render(){
+   const q=$('search').value.trim().toLowerCase();
+   const rows=assignments.filter(x=>[x.email,x.phone,x.className,x.sectionName,x.subjectName,x.sessionName,x.branchName].join(' ').toLowerCase().includes(q));
+   $('list').innerHTML=rows.length?rows.map(x=>{
+     const initials=(x.email||x.phone||'T').slice(0,1).toUpperCase();
+     return '<article class="assignment"><div class="avatar">'+esc(initials)+'</div><div><b>'+esc(x.email||x.phone||'Teacher')+'</b><div class="meta">'+esc(x.className)+' • '+esc(x.sectionName)+' • '+esc(x.subjectName)+'</div><div class="meta">'+esc(x.sessionName)+' • '+esc(x.branchName||'School level')+'</div><div class="toggles"><span class="tag">'+(x.canMark?'✓ Marks':'✕ Marks')+'</span><span class="tag">'+(x.canAttendance?'✓ Attendance':'✕ Attendance')+'</span></div></div><span class="badge">'+esc(x.status)+'</span><div class="actions"><button class="mini" data-toggle="'+esc(x.id)+'">'+(x.canMark?'Disable marks':'Enable marks')+'</button></div></article>';
+   }).join(''):'<div class="empty">No teacher assignments found.</div>';
+   document.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=()=>toggleMark(b.dataset.toggle));
+ }
+ async function toggleMark(id){
+   const x=assignments.find(a=>String(a.id)===String(id));if(!x)return;
+   try{await LSKERP.request('/api/teacher-assignments/'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify({canMark:!x.canMark})});await load()}catch(e){$('msg').className='msg err';$('msg').textContent=e.message||'Could not update assignment'}
+ }
+ $('search').oninput=render;
+ $('form').onsubmit=async e=>{
+   e.preventDefault();const b=$('save'),m=$('msg');b.disabled=true;m.className='msg';m.textContent='Saving…';
+   try{await LSKERP.request('/api/teacher-assignments',{method:'POST',body:JSON.stringify({teacherId:$('teacher').value,sessionId:$('session').value,sectionId:$('section').value,subjectId:$('subject').value,canMark:$('canMark').checked,canAttendance:$('canAttendance').checked})});m.className='msg ok';m.textContent='Assignment saved successfully. Teacher can now be authorized for this exact class/subject.';await load()}catch(err){m.className='msg err';m.textContent=err.message||'Could not save assignment'}finally{b.disabled=false}
+ };
+ load();
+})();
+</script></body></html>
