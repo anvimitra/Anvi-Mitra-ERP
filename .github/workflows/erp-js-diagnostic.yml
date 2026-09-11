@@ -39,4 +39,4 @@ jobs:
         with:
           node-version: 20
       - name: Check file
-        run: node --check "erp/src/FILE"
+        run: node --check "erp/src/${{ matrix.file }}"
