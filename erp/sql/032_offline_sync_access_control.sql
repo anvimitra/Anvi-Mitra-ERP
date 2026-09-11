@@ -73,7 +73,7 @@ RETURNS BOOLEAN LANGUAGE SQL STABLE AS $$
     FROM users u
     JOIN teachers t ON t.user_id=u.id AND t.school_id=u.school_id
     JOIN exam_subjects es ON es.id=p_exam_subject_id AND es.school_id=u.school_id
-    JOIN teacher_assignments ta ON ta.teacher_id=t.id
+    JOIN teacher_subjects ta ON ta.teacher_id=t.id
       AND ta.school_id=u.school_id
       AND ta.subject_id=es.subject_id
       AND ta.session_id=(SELECT session_id FROM exams WHERE id=es.exam_id AND school_id=u.school_id)
