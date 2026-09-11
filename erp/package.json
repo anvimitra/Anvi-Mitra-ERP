@@ -6,7 +6,8 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "check": "for f in src/*.js; do node --check "$f"; done"
+    "check": "for f in src/*.js; do node --check "$f"; done",
+    "migrate": "node src/migrate.js"
   },
   "engines": {
     "node": ">=20"
