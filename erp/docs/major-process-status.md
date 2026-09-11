@@ -14,6 +14,7 @@
 - Teacher marks permission API based on teacher + subject + class/section assignment.
 - Offline sync journal guard for teacher exam-mark changes, so unauthorized teachers cannot use the sync transport to bypass the assignment rule.
 - Authoritative exam-mark mutation API with the same teacher assignment authorization, enrollment validation, maximum-mark validation and published-exam lock.
+- Teacher scope enforced in exam-result views: teachers only receive result subjects matching their assigned class/section/subject/session and `can_mark` permission.
 
 ## Teacher marks permission APIs
 
@@ -49,4 +50,4 @@ Online PostgreSQL remains the source of truth. Offline/local storage is a cache/
 
 ## Next domain integration rule
 
-The next major domain step is to connect the teacher-permission checks directly into the existing exam-result UI so a teacher only sees and edits permitted class/subject mark grids, while administrators retain school-wide visibility.
+Teacher permission scope is now enforced in the result-view backend. The next major domain step is to apply the same scope directly to the marks-entry grid's subject/class selectors and then build the teacher assignment workflow UX.
