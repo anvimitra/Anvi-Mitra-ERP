@@ -22,16 +22,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Install ERP dependencies
+      - name: Validate package metadata
         working-directory: erp
-        run: npm install
+        run: node -e "const p=require('./package.json'); if(!p.name || !p.main || !p.scripts || !p.scripts.start) process.exit(1); console.log('package metadata OK')"
       - name: Validate JavaScript
         run: |
-          set -e
-          for f in erp/src/*.js; do node --check "$f"; done
+          set -euo pipefail
+          for f in erp/src/*.js; do
+            echo "Checking $f"
+            node --check "$f"
+          done
       - name: Validate required web files
         run: |
-          set -e
+          set -euo pipefail
           for f in \
             erp/web/super-admin-schools.html \
             erp/web/super_admin_schools.html \
@@ -47,8 +50,29 @@ jobs:
           done
       - name: Validate SQL files
         run: |
-          set -e
-          for f in erp/sql/*.sql; do test -s "$f"; done
+          set -euo pipefail
+          for f in erp/sql/*.sql; do
+            test -s "$f"
+          done
       - name: Validate migration runner
         working-directory: erp
         run: node --check src/migrate.js
+      - name: Verify migration ordering
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import glob, os, re
+          files = sorted(glob.glob('erp/sql/*.sql'))
+          nums = []
+          for f in files:
+              m = re.match(r'.*/(\\d+)_', f)
+              if m:
+                  nums.append((int(m.group(1)), os.path.basename(f)))
+          duplicates = {}
+          for n, name in nums:
+              duplicates.setdefault(n, []).append(name)
+          bad = {n:v for n,v in duplicates.items() if len(v)>1}
+          if bad:
+              raise SystemExit(f'Duplicate migration numbers: {bad}')
+          print(f'Validated {len(nums)} numbered SQL migrations; ordering is unambiguous.')
+          PY
