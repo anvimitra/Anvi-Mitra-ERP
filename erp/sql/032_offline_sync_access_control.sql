@@ -19,6 +19,9 @@ CREATE INDEX IF NOT EXISTS sync_devices_school_status_idx ON sync_devices(school
 CREATE TABLE IF NOT EXISTS sync_changes (
   cursor BIGSERIAL PRIMARY KEY,
   school_id UUID NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
+  device_id UUID REFERENCES sync_devices(id) ON DELETE SET NULL,
+  client_change_id VARCHAR(200),
+  base_cursor BIGINT NOT NULL DEFAULT 0,
   entity_type VARCHAR(100) NOT NULL,
   entity_id UUID,
   operation VARCHAR(20) NOT NULL CHECK (operation IN ('create','update','delete')),
@@ -26,6 +29,10 @@ CREATE TABLE IF NOT EXISTS sync_changes (
   changed_by UUID REFERENCES users(id) ON DELETE SET NULL,
   changed_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+ALTER TABLE sync_changes ADD COLUMN IF NOT EXISTS device_id UUID REFERENCES sync_devices(id) ON DELETE SET NULL;
+ALTER TABLE sync_changes ADD COLUMN IF NOT EXISTS client_change_id VARCHAR(200);
+ALTER TABLE sync_changes ADD COLUMN IF NOT EXISTS base_cursor BIGINT NOT NULL DEFAULT 0;
+CREATE UNIQUE INDEX IF NOT EXISTS sync_changes_device_client_idx ON sync_changes(school_id,device_id,client_change_id) WHERE client_change_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS sync_changes_school_cursor_idx ON sync_changes(school_id,cursor);
 CREATE INDEX IF NOT EXISTS sync_changes_school_entity_idx ON sync_changes(school_id,entity_type,entity_id,cursor);
 
@@ -59,26 +66,21 @@ CREATE TABLE IF NOT EXISTS local_storage_connectors (
 );
 CREATE INDEX IF NOT EXISTS local_storage_school_device_idx ON local_storage_connectors(school_id,device_id,enabled);
 
--- Security helper used by result-entry APIs. A teacher is allowed to edit marks only
--- when their teacher_subjects assignment matches the exam session, subject and class.
 CREATE OR REPLACE FUNCTION teacher_can_edit_exam_subject(p_user_id UUID, p_exam_subject_id UUID)
-RETURNS BOOLEAN
-LANGUAGE SQL
-STABLE
-AS $$
+RETURNS BOOLEAN LANGUAGE SQL STABLE AS $$
   SELECT EXISTS (
     SELECT 1
     FROM users u
     JOIN teachers t ON t.user_id=u.id AND t.school_id=u.school_id
     JOIN exam_subjects es ON es.id=p_exam_subject_id AND es.school_id=u.school_id
-    JOIN teacher_subjects ts ON ts.teacher_id=t.id
-      AND ts.school_id=u.school_id
-      AND ts.subject_id=es.subject_id
-      AND ts.session_id=(SELECT session_id FROM exams WHERE id=es.exam_id AND school_id=u.school_id)
-    JOIN sections sec ON sec.id=ts.section_id AND sec.school_id=u.school_id
+    JOIN teacher_assignments ta ON ta.teacher_id=t.id
+      AND ta.school_id=u.school_id
+      AND ta.subject_id=es.subject_id
+      AND ta.session_id=(SELECT session_id FROM exams WHERE id=es.exam_id AND school_id=u.school_id)
+    JOIN sections sec ON sec.id=ta.section_id AND sec.school_id=u.school_id
     WHERE u.id=p_user_id
       AND u.role='teacher'
       AND sec.class_id=es.class_id
-      AND (ts.branch_id IS NULL OR es.branch_id IS NULL OR ts.branch_id=es.branch_id)
+      AND (ta.branch_id IS NULL OR es.branch_id IS NULL OR ta.branch_id=es.branch_id)
   );
 $$;
