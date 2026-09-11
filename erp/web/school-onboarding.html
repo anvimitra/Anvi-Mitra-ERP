@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Anvi Mitra ERP • School Onboarding</title>
+<style>
+:root{font-family:Inter,system-ui,sans-serif;color:#172033;background:#f3f6fb;--line:#e2e7ef;--brand:#4f46e5;--muted:#667085}
+*{box-sizing:border-box}body{margin:0}.shell{min-height:100vh;padding:28px;display:flex;justify-content:center;align-items:flex-start;background:radial-gradient(circle at 10% 10%,#6366f120,transparent 30%),radial-gradient(circle at 90% 20%,#06b6d415,transparent 28%)}
+.card{width:min(900px,100%);background:#fff;border:1px solid var(--line);border-radius:24px;box-shadow:0 22px 70px #17203314;padding:26px;animation:up .5s ease both}
+h1{margin:0;font-size:28px}.sub{color:var(--muted);margin:7px 0 24px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.full{grid-column:1/-1}.section{border-top:1px solid var(--line);margin:22px 0 16px;padding-top:18px;font-weight:850}.field label{display:block;font-size:12px;font-weight:750;margin-bottom:6px}.field input{width:100%;padding:11px 12px;border:1px solid #d7dce5;border-radius:10px;font:inherit}.field input:focus{outline:3px solid #4f46e522;border-color:var(--brand)}.actions{display:flex;gap:10px;align-items:center;margin-top:22px}.button{border:0;border-radius:11px;padding:12px 18px;background:var(--brand);color:#fff;font:inherit;font-weight:800;cursor:pointer}.button:disabled{opacity:.55}.back{color:#475467;text-decoration:none}.msg{font-size:13px}.ok{color:#087443}.err{color:#b42318}.result{display:none;margin-top:18px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:14px}.result.show{display:block}@keyframes up{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:none}}@media(max-width:650px){.shell{padding:14px}.card{padding:18px;border-radius:18px}.grid{grid-template-columns:1fr}.full{grid-column:auto}}
+</style>
+</head>
+<body>
+<div class="shell"><main class="card">
+<h1>School Onboarding</h1><div class="sub">Create a tenant, main branch and first School Administrator in one secure transaction.</div>
+<form id="form">
+<div class="section">School profile</div>
+<div class="grid">
+<div class="field"><label>School name *</label><input id="name" required maxlength="200"></div>
+<div class="field"><label>School code *</label><input id="code" required maxlength="50" placeholder="LSK01"></div>
+<div class="field"><label>Display name</label><input id="displayName" maxlength="200"></div>
+<div class="field"><label>Logo URL</label><input id="logoUrl" type="url" maxlength="1000" placeholder="https://…/logo.png"></div>
+<div class="field"><label>Phone</label><input id="phone" maxlength="30"></div>
+<div class="field"><label>Email</label><input id="email" type="email" maxlength="254"></div>
+<div class="field full"><label>Address</label><input id="address" maxlength="500"></div>
+<div class="field"><label>Primary color</label><input id="primaryColor" value="4F46E5" maxlength="6"></div>
+<div class="field"><label>Secondary color</label><input id="secondaryColor" value="0F1720" maxlength="6"></div>
+</div>
+<div class="section">Main branch</div>
+<div class="grid">
+<div class="field"><label>Branch name</label><input id="branchName" value="Main Branch" maxlength="200"></div>
+<div class="field"><label>Branch code</label><input id="branchCode" value="MAIN" maxlength="50"></div>
+</div>
+<div class="section">ERP / mobile app identity</div>
+<div class="grid">
+<div class="field"><label>App name</label><input id="appName" maxlength="200"></div>
+<div class="field"><label>App slug *</label><input id="appSlug" required pattern="[a-z0-9][a-z0-9-]{2,98}" maxlength="99" placeholder="lsk-academy"></div>
+<div class="field"><label>Android package</label><input id="androidPackage" maxlength="200" placeholder="in.anvimitra.lskacademy"></div>
+<div class="field"><label>API base URL</label><input id="apiBaseUrl" type="url" maxlength="1000"></div>
+</div>
+<div class="section">First School Administrator</div>
+<div class="grid">
+<div class="field"><label>Admin email *</label><input id="adminEmail" type="email" maxlength="254"></div>
+<div class="field"><label>Admin phone</label><input id="adminPhone" maxlength="30"></div>
+<div class="field"><label>Temporary password *</label><input id="adminPassword" type="password" minlength="6" required maxlength="200"></div>
+</div>
+<div class="actions"><a class="back" href="/erp/web/super-admin-schools.html">← Schools</a><button class="button" id="submit">Provision school</button><span id="msg" class="msg"></span></div>
+<div id="result" class="result"></div>
+</form>
+</main></div>
+<script src="/erp/web/api.js"></script>
+<script>
+(async()=>{
+ const u=LSKERP.user(); if(!LSKERP.token()||(u.role||'').toLowerCase()!=='super_admin'){location.replace('/erp/web/login.html');return}
+ const $=id=>document.getElementById(id),v=id=>$(id).value.trim();
+ $('form').onsubmit=async e=>{
+   e.preventDefault(); const b=$('submit'),m=$('msg'),r=$('result'); b.disabled=true;m.className='msg';m.textContent='Provisioning…';r.className='result';
+   try{
+     const d=await LSKERP.request('/api/platform/schools',{method:'POST',body:JSON.stringify({
+       name:v('name'),code:v('code'),displayName:v('displayName'),logoUrl:v('logoUrl')||null,
+       phone:v('phone')||null,email:v('email')||null,address:v('address')||null,
+       primaryColor:v('primaryColor').replace('#',''),secondaryColor:v('secondaryColor').replace('#',''),
+       mainBranchName:v('branchName'),mainBranchCode:v('branchCode'),
+       appName:v('appName'),appSlug:v('appSlug'),androidPackage:v('androidPackage')||null,
+       apiBaseUrl:v('apiBaseUrl')||null,adminEmail:v('adminEmail'),adminPhone:v('adminPhone')||null,adminPassword:v('adminPassword')
+     })});
+     m.className='msg ok';m.textContent='School provisioned successfully';
+     r.className='result show';r.innerHTML='<b>'+String(d.school?.name||'School')+'</b><br>School code: '+String(d.school?.code||'')+'<br>Administrator: '+String(d.admin?.email||d.admin?.phone||'')+'<br>Role: admin';
+     $('adminPassword').value='';
+   }catch(err){m.className='msg err';m.textContent=err.message||'Provisioning failed'}
+   finally{b.disabled=false}
+ };
+})();
+</script>
+</body>
+</html>
