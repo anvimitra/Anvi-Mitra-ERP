@@ -1,4 +1,5 @@
 const { authenticate } = require('./auth');
+const crypto = require('crypto');
 
 async function resolveDevice(pool, schoolId, deviceKey) {
   const result = await pool.query(
@@ -108,6 +109,14 @@ function registerSyncRoutes(app, pool) {
 
         const entityId = change.entityId || null;
         const payload = change.payload && typeof change.payload === 'object' ? change.payload : {};
+        // Financial/exam entities require explicit server-side authorization before
+        // they are accepted from an offline queue. Offline mode never bypasses ACLs.
+        if (['exam_mark','exam_marks','fee_receipt','fee_payment'].includes(entityType) && req.auth.role === 'teacher' && !['exam_mark','exam_marks'].includes(entityType)) {
+          throw Object.assign(new Error('Teacher is not allowed to sync financial records'), { statusCode: 403 });
+        }
+        if (['exam_mark','exam_marks'].includes(entityType) && req.auth.role === 'teacher' && !payload.examSubjectId) {
+          throw Object.assign(new Error('examSubjectId is required for offline teacher marks sync'), { statusCode: 400 });
+        }
         let conflict = false;
         if (baseCursor > 0) {
           const newer = await client.query(
