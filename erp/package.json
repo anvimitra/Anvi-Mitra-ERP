@@ -1,0 +1,20 @@
+{
+  "name": "anvi-mitra-erp-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Anvi Mitra multi-school ERP API and web portal",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "check": "for f in src/*.js; do node --check "$f"; done"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "pg": "^8.16.3"
+  }
+}
