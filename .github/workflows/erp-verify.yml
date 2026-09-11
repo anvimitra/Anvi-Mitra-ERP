@@ -1,0 +1,48 @@
+name: ERP Verify
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'erp/**'
+      - '.github/workflows/erp-verify.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Validate JavaScript
+        run: |
+          set -e
+          for f in erp/src/*.js; do node --check "$f"; done
+      - name: Validate required web files
+        run: |
+          set -e
+          for f in \
+            erp/web/super-admin-schools.html \
+            erp/web/super_admin_schools.html \
+            erp/web/super-admin-branches.html \
+            erp/web/school-management.html \
+            erp/web/school-onboarding.html \
+            erp/web/staff-management.html \
+            erp/web/student-enrollment.html \
+            erp/web/teacher-permissions.html \
+            erp/web/offline-sync.js \
+            erp/web/local-storage.html; do
+            test -s "$f"
+          done
+      - name: Validate SQL files
+        run: |
+          set -e
+          for f in erp/sql/*.sql; do test -s "$f"; done
