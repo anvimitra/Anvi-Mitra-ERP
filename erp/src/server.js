@@ -1,50 +1,86 @@
 require('dotenv').config();
+const fs = require('fs');
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
+
 const { registerAuthRoutes } = require('./auth');
-const { registerRoutes } = require('./routes');
-const { registerPeopleRoutes } = require('./people');
-const { registerAttendanceRoutes } = require('./attendance');
-const { registerAttendanceReportRoutes } = require('./attendance_reports');
-const { registerExamRoutes } = require('./exams');
-const { registerExamResultRoutes } = require('./exam_results');
-const { registerFeeRoutes } = require('./fees');
-const { registerFeeLedgerRoutes } = require('./fee_ledger');
-const { registerFeeAssignmentRoutes } = require('./fee_assignments');
-const { registerFeeReceiptRoutes } = require('./fee_receipts');
-const { registerNotificationRoutes } = require('./notifications');
-const { startNotificationWorker } = require('./notification_worker');
-const { startPushWorker } = require('./push_worker');
-const { registerReportCardEngineRoute } = require('./reportcard_engine_route');
-const { registerReportCardResultSyncRoutes } = require('./reportcard_result_sync');
-const { registerReportCardRoutes } = require('./reportcards');
-const { registerReportCardContextRoutes } = require('./reportcard_context');
-const { registerReportCardListRoutes } = require('./reportcard_list');
-const { registerReportCardBulkRoutes } = require('./reportcard_bulk');
-const { registerAcademicRoutes } = require('./academics');
-const { registerAcademicMasterRoutes } = require('./academic_master');
-const { registerAdmissionRoutes } = require('./admissions');
-const { registerPortalRoutes } = require('./portal');
-const { registerStudentCrudRoutes } = require('./student_crud');
-const { registerEnrollmentRoutes } = require('./enrollment');
-const { registerTeacherAssignmentRoutes } = require('./teacher_assignments');
-const { registerOrganizationRoutes } = require('./organization');
-const { registerMobileRoutes } = require('./mobile');
-const { registerMobileDashboardRoutes } = require('./mobile_dashboards');
-const { registerTransportRoutes } = require('./transport');
-const { registerSyncRoutes } = require('./sync_routes');
-const { registerSyncAdminRoutes } = require('./sync_admin');
-const { registerLocalStorageRoutes } = require('./local_storage');
-const { registerTeacherPermissionRoutes } = require('./teacher_permissions');
+
 const app = express();
 const port = Number(process.env.PORT || 4000);
 const pool = process.env.DATABASE_URL ? new Pool({ connectionString: process.env.DATABASE_URL, max: 10 }) : null;
+
 app.disable('x-powered-by');
 app.use(cors({ origin: process.env.CORS_ORIGIN || true, credentials: true }));
 app.use(express.json({ limit: '1mb' }));
-app.get('/api/health', async (_req,res)=>{let database='not-configured';if(pool){try{await pool.query('SELECT 1');database='ok'}catch(_e){database='unavailable'}}res.json({ok:true,service:'anvi-mitra-erp-api',product:'Anvi Mitra ERP',database,timestamp:new Date().toISOString()})});
-if(pool){registerAuthRoutes(app,pool);registerRoutes(app);registerPeopleRoutes(app,pool);registerAttendanceRoutes(app,pool);registerAttendanceReportRoutes(app,pool);registerExamRoutes(app,pool);registerExamResultRoutes(app,pool);registerFeeRoutes(app,pool);registerFeeLedgerRoutes(app,pool);registerFeeAssignmentRoutes(app,pool);registerFeeReceiptRoutes(app,pool);registerNotificationRoutes(app,pool);registerReportCardEngineRoute(app,pool);registerReportCardResultSyncRoutes(app,pool);registerReportCardRoutes(app,pool);registerReportCardContextRoutes(app,pool);registerReportCardListRoutes(app,pool);registerReportCardBulkRoutes(app,pool);registerAcademicRoutes(app,pool);registerAcademicMasterRoutes(app,pool);registerAdmissionRoutes(app,pool);registerPortalRoutes(app,pool);registerStudentCrudRoutes(app,pool);registerEnrollmentRoutes(app,pool);registerTeacherAssignmentRoutes(app,pool);registerOrganizationRoutes(app,pool);registerMobileRoutes(app,pool);registerMobileDashboardRoutes(app,pool);registerTransportRoutes(app,pool);registerSyncRoutes(app,pool);registerSyncAdminRoutes(app,pool);registerLocalStorageRoutes(app,pool);registerTeacherPermissionRoutes(app,pool);startNotificationWorker(pool);startPushWorker(pool)}else{app.post('/api/auth/login',(_req,res)=>res.status(503).json({error:'Database is not configured'}))}
-app.use((err,_req,res,_next)=>{console.error(err);const status=[400,401,403,404,409,422].includes(err?.statusCode)?err.statusCode:500;res.status(status).json({error:status<500?(err.message||'Request failed'):'Internal server error'})});
-if(require.main===module)app.listen(port,()=>console.log(`Anvi Mitra ERP API listening on ${port}`));
-module.exports={app,pool};
+
+app.get('/api/health', async (_req, res) => {
+  let database = 'not-configured';
+  if (pool) {
+    try { await pool.query('SELECT 1'); database = 'ok'; }
+    catch (_) { database = 'unavailable'; }
+  }
+  res.json({
+    ok: true,
+    service: 'anvi-mitra-erp-api',
+    product: 'Anvi Mitra ERP',
+    database,
+    timestamp: new Date().toISOString()
+  });
+});
+
+function registerOptional(moduleName, registerName) {
+  const file = require.resolve(`./${moduleName}`);
+  if (!fs.existsSync(file)) {
+    console.warn(`Optional ERP module not present: ${moduleName}.js`);
+    return false;
+  }
+  try {
+    const mod = require(file);
+    if (typeof mod[registerName] !== 'function') {
+      console.warn(`ERP module ${moduleName}.js does not export ${registerName}`);
+      return false;
+    }
+    mod[registerName](app, pool);
+    return true;
+  } catch (error) {
+    console.error(`Failed to load ERP module ${moduleName}.js:`, error);
+    if (process.env.NODE_ENV === 'production') throw error;
+    return false;
+  }
+}
+
+if (pool) {
+  registerAuthRoutes(app, pool);
+  const modules = [
+    ['routes','registerRoutes'], ['people','registerPeopleRoutes'], ['attendance','registerAttendanceRoutes'],
+    ['attendance_reports','registerAttendanceReportRoutes'], ['exams','registerExamRoutes'],
+    ['exam_results','registerExamResultRoutes'], ['fees','registerFeeRoutes'], ['fee_ledger','registerFeeLedgerRoutes'],
+    ['fee_assignments','registerFeeAssignmentRoutes'], ['fee_receipts','registerFeeReceiptRoutes'],
+    ['notifications','registerNotificationRoutes'], ['reportcard_engine_route','registerReportCardEngineRoute'],
+    ['reportcard_result_sync','registerReportCardResultSyncRoutes'], ['reportcards','registerReportCardRoutes'],
+    ['reportcard_context','registerReportCardContextRoutes'], ['reportcard_list','registerReportCardListRoutes'],
+    ['reportcard_bulk','registerReportCardBulkRoutes'], ['academics','registerAcademicRoutes'],
+    ['academic_master','registerAcademicMasterRoutes'], ['admissions','registerAdmissionRoutes'],
+    ['portal','registerPortalRoutes'], ['student_crud','registerStudentCrudRoutes'], ['enrollment','registerEnrollmentRoutes'],
+    ['teacher_assignments','registerTeacherAssignmentRoutes'], ['organization','registerOrganizationRoutes'],
+    ['mobile','registerMobileRoutes'], ['mobile_dashboards','registerMobileDashboardRoutes'],
+    ['transport','registerTransportRoutes'], ['sync_routes','registerSyncRoutes'],
+    ['sync_admin','registerSyncAdminRoutes'], ['local_storage','registerLocalStorageRoutes'],
+    ['teacher_permissions','registerTeacherPermissionRoutes']
+  ];
+  for (const [moduleName, registerName] of modules) registerOptional(moduleName, registerName);
+  if (fs.existsSync(require.resolve('./notification_worker'))) require('./notification_worker').startNotificationWorker(pool);
+  if (fs.existsSync(require.resolve('./push_worker'))) require('./push_worker').startPushWorker(pool);
+} else {
+  app.post('/api/auth/login', (_req, res) => res.status(503).json({ error: 'Database is not configured' }));
+}
+
+app.use((err, _req, res, _next) => {
+  console.error(err);
+  const status = [400,401,403,404,409,422].includes(err?.statusCode) ? err.statusCode : 500;
+  res.status(status).json({ error: status < 500 ? (err.message || 'Request failed') : 'Internal server error' });
+});
+
+if (require.main === module) app.listen(port, () => console.log(`Anvi Mitra ERP API listening on ${port}`));
+module.exports = { app, pool };
