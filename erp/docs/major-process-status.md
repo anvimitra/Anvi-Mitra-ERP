@@ -4,6 +4,8 @@
 
 - Multi-school and multi-branch data model with `school_id` scoping.
 - Super Admin school creation flow with school profile, app branding, primary branch and initial admin setup.
+- Super Admin school management UI with animated responsive dashboard, search, edit and branch navigation.
+- Public non-sensitive school/app branding configuration endpoint for school-specific web/mobile bootstrap.
 - School/branch management APIs and Super Admin web UI.
 - Student enrollment workflow with session, class, section and roll-number selection.
 - School staff account management with branch scope and teacher identity initialization.
@@ -15,6 +17,33 @@
 - Offline sync journal guard for teacher exam-mark changes, so unauthorized teachers cannot use the sync transport to bypass the assignment rule.
 - Authoritative exam-mark mutation API with the same teacher assignment authorization, enrollment validation, maximum-mark validation and published-exam lock.
 - Teacher scope enforced in exam-result views: teachers only receive result subjects matching their assigned class/section/subject/session and `can_mark` permission.
+
+## School provisioning
+
+`POST /api/platform/schools`
+
+Super Admin provisions a tenant with:
+- school name/code/status
+- display name and branding
+- logo/contact/address/website
+- timezone/locale/currency
+- main branch
+- app name/slug/package identifiers
+- school administrator account
+
+Provisioning is transactional: if any required part fails, the school setup is rolled back.
+
+`GET /api/platform/schools` and `GET /api/platform/schools/:id`
+
+Return school settings, app configuration and branches for Super Admin management.
+
+`PATCH /api/platform/schools/:id`
+
+Updates school, branding and app configuration.
+
+`GET /api/public/school-config?schoolCode=...`
+
+Returns only non-sensitive active school/app branding and bootstrap settings. It does not expose passwords, tokens or database configuration.
 
 ## Teacher marks permission APIs
 
@@ -42,12 +71,16 @@ Both endpoints append a protected `exam_mark` sync journal entry after the autho
 
 `erp/sql/034_sync_teacher_marks_guard.sql` adds a database trigger on `sync_changes`. When a teacher submits an `exam_mark` / `exam_marks` sync record, the payload must contain `examSubjectId` (or `exam_subject_id`) and the same teacher + subject + class/section helper is evaluated before the journal record is accepted.
 
-This is a sync-boundary safeguard; authoritative exam-result domain endpoints now also enforce their own authorization before changing result tables.
+This is a sync-boundary safeguard; authoritative exam-result domain endpoints also enforce authorization before changing result tables.
 
 ## Data model rule
 
 Online PostgreSQL remains the source of truth. Offline/local storage is a cache/outbox and secondary storage layer. Offline data must not bypass server authorization when synchronized.
 
-## Next domain integration rule
+## Offline/local computer rule
 
-Teacher permission scope is now enforced in the result-view backend. The next major domain step is to apply the same scope directly to the marks-entry grid's subject/class selectors and then build the teacher assignment workflow UX.
+The browser cannot silently access a user's computer. The Local Storage Connector uses explicit browser folder permission and supports `read_only` or `read_write`. The selected local folder is secondary storage; server data remains authoritative.
+
+## Next hardening phase
+
+The multi-school provisioning, enrollment, teacher-scope, offline-sync and local-storage foundations are now wired. The next hardening phase is end-to-end CI/database migration verification and then filling any remaining domain-specific gaps discovered by those checks.
