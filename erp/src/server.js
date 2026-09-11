@@ -17,6 +17,7 @@ app.use(express.static(path.join(__dirname, '../web')));
 
 app.get('/', (_req,res) => res.sendFile(path.join(__dirname,'../web/super-admin-schools.html')));
 app.get('/super-admin/schools', (_req,res) => res.sendFile(path.join(__dirname,'../web/super-admin-schools.html')));
+app.get('/super-admin/school-onboarding', (_req,res) => res.sendFile(path.join(__dirname,'../web/school-onboarding.html')));
 
 app.get('/api/health', async (_req, res) => {
   let database = 'not-configured';
