@@ -82,6 +82,7 @@ Multi-school, multi-branch School ERP platform with Web + Flutter mobile clients
 - [x] Database sync-boundary guard for teacher marks
 - [x] Teacher result-view scope filtering
 - [x] Static contract test covering teacher marks authorization guard
+- [x] Offline sync re-checks teacher class/subject/session authorization before accepting marks
 - [ ] Automated negative tests proving offline sync cannot bypass the same permission
 
 ### 7. Offline-first Web + Mobile
@@ -232,3 +233,12 @@ The browser/app cannot silently read the entire computer. Local storage access r
 - [ ] Run authenticated end-to-end smoke tests before marking production readiness.
 
 **README rule:** only verified implementation work is marked `[x]`; test-dependent items remain `[ ]` until CI/runtime verification confirms them.
+
+
+## Latest Progress — 2026-09-12 (Major Implementation)
+
+- [x] Offline teacher marks are now re-authorized server-side during the sync push endpoint; offline mode cannot bypass the normal teacher assignment rules.
+- [x] Offline marks validate exam subject, school, branch, exam publication state, maximum marks and active student enrollment before the mark is written.
+- [x] Existing online marks and offline-sync paths now use the same database authorization function for teacher subject/class permission.
+- [ ] End-to-end negative test: attempt an unauthorized teacher offline marks sync and verify HTTP 403 with no mark mutation.
+- [ ] End-to-end offline write/reconnect test and conflict-resolution verification.
