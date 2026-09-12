@@ -19,6 +19,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Install ERP dependencies
+        working-directory: erp
+        run: npm ci
       - name: Validate server modules
         shell: bash
         run: |
@@ -46,3 +49,58 @@ jobs:
           for f in erp/sql/*.sql; do
             test -s "$f"
           done
+
+  migration-smoke:
+    runs-on: ubuntu-latest
+    needs: validate
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: erp
+          POSTGRES_PASSWORD: erp
+          POSTGRES_DB: anvi_erp_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U erp -d anvi_erp_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install ERP dependencies
+        working-directory: erp
+        run: npm ci
+      - name: Run clean PostgreSQL migration
+        working-directory: erp
+        env:
+          DATABASE_URL: postgresql://erp:erp@localhost:5432/anvi_erp_ci
+        run: npm run migrate
+      - name: Verify migration journal
+        working-directory: erp
+        env:
+          DATABASE_URL: postgresql://erp:erp@localhost:5432/anvi_erp_ci
+        run: |
+          node - <<'NODE'
+          const { Client } = require('pg');
+          const client = new Client({ connectionString: process.env.DATABASE_URL });
+          (async () => {
+            await client.connect();
+            const { rows } = await client.query(
+              'SELECT count(*)::int AS count FROM schema_migrations'
+            );
+            if (!rows[0] || rows[0].count < 1) {
+              throw new Error('No migrations were recorded');
+            }
+            console.log('Applied migrations:', rows[0].count);
+            await client.end();
+          })().catch(async (err) => {
+            console.error(err);
+            try { await client.end(); } catch (_) {}
+            process.exit(1);
+          });
+          NODE
