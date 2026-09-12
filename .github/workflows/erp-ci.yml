@@ -115,3 +115,8 @@ jobs:
         env:
           DATABASE_URL: postgresql://erp:erp@localhost:5432/anvi_erp_ci
         run: node scripts/api-contract-smoke.js
+      - name: Run authenticated school management E2E
+        working-directory: erp
+        env:
+          DATABASE_URL: postgresql://erp:erp@localhost:5432/anvi_erp_ci
+        run: node scripts/school-management-e2e.js
