@@ -104,7 +104,7 @@ Multi-school, multi-branch School ERP platform with Web + Flutter mobile clients
 - [ ] Offline mobile cache/outbox integration
 
 ### 8. Web UI / UX
-- [x] School management screen
+- [x] Super Admin School Management screen
 - [x] Add School form
 - [x] School search/list/status
 - [x] School configuration management
@@ -157,33 +157,19 @@ The browser/app cannot silently read the entire computer. A local connector uses
 - `erp/docs/offline-sync-api.md`
 - `erp/docs/offline-local-storage-implementation.md`
 
-## Next Logical Work
-
-1. [ ] Run authenticated Super Admin school provisioning E2E test.
-2. [ ] Run school → staff → teacher assignment → student enrollment E2E test.
-3. [ ] Run unauthorized teacher/offline marks negative tests.
-4. [ ] Complete offline push/pull/conflict verification.
-5. [ ] Implement actual PC local-folder connector runtime.
-6. [ ] Connect remaining web write forms to offline outbox.
-7. [ ] Verify Flutter Android build and APK artifact.
-8. [ ] Finish advanced dynamic animation/UI pass.
-9. [ ] Final regression + deployment health checks.
-
-
+## Latest Progress — 2026-09-12
 
 - [x] Super Admin school provisioning API verified against the current multi-school auth/branch model.
 - [x] School configuration/branding changes are journaled into the offline sync change stream.
-\n## Latest Progress — 2026-09-12
-
-- [x] Super Admin school provisioning creates the school tenant, settings/branding, main branch, mobile-app configuration and first school administrator transactionally.
-- [x] Super Admin School Management UI supports school list/search, Add School, configuration editing, status and branch display with dynamic online/offline state and animated interactions.
-- [x] School staff API supports school/branch-scoped staff accounts and automatically initializes teacher identity rows for teacher accounts.
-- [x] Student enrollment API supports session + class + section enrollment, branch validation and parent linking.
-- [x] Teacher assignment API supports teacher + session + section + subject mapping with class/branch validation and mark/attendance permissions.
-- [x] Offline sync foundation includes device registration, journal/cursor, conflict tracking and local storage connector configuration.
-- [x] Super Admin School Management backend completed for list/detail/create/edit/branding/branch operations.
-- [x] First school administrator account is provisioned transactionally during school creation.
-- [x] Generic Web API mutation adapter now queues offline/transport-failed writes for automatic synchronization.
-- [x] README checklist marked to distinguish implemented foundations from items still requiring runtime/E2E verification.
+- [x] Super Admin School Management UI implemented at `erp/web/super-admin-schools.html`.
+- [x] School UI connects to the authenticated `/api/platform/schools` list/create endpoints.
+- [x] Add School UI includes school identity, branding/logo URL, contact details, main branch and mobile-app configuration.
+- [x] README progress tracking cleaned so implemented foundations are separated from runtime/E2E work.
+- [ ] Authenticated Super Admin school create → edit → deactivate E2E verification.
+- [ ] Fresh PostgreSQL migration verification.
+- [ ] Full offline push/pull/conflict verification.
+- [ ] Desktop/local-folder connector runtime.
+- [ ] Flutter Android build + APK artifact verification.
+- [ ] Final advanced dynamic animation/UI pass.
 
 **LSKLive website remains separate and is not modified as part of this ERP work.**
