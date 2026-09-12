@@ -60,6 +60,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Flutter notification routing implementation
 - [x] Unified ERP animation foundation
 - [~] Sync server API hardening **(device registration, cursor-based pull, idempotent push, teacher marks authorization and conflict resolution implemented; integration execution pending)**
+- [x] ERP sync/tenant contract regression checks added (`erp/tests/erp_contract.test.js`)
 - [ ] Desktop read/write sync + recovery integration tests
 - [ ] Flutter production Firebase project/configuration per published school app
 - [ ] Full Android analyze/build + APK artifact verification
