@@ -26,10 +26,10 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Offline sync push/pull/device registration API
 - [x] Sync idempotency and conflict-resolution API
 - [x] Local storage connector API (read-only/read-write permission model)
-- [x] Super Admin school-management create/edit/branding/status flow
-- [x] Provisioned school administrator login coverage in E2E test
-- [x] Provisioned administrator branch-scope coverage in E2E test
-- [x] School deactivate/reactivate and public-branding isolation coverage in E2E test
+- [x] Super Admin school-management create/edit/branding/status API flow
+- [~] Provisioned school administrator login coverage in E2E test (implemented; CI/database execution pending)
+- [~] Provisioned administrator branch-scope coverage in E2E test (implemented; CI/database execution pending)
+- [~] School deactivate/reactivate and public-branding isolation coverage in E2E test (implemented; CI/database execution pending)
 
 ### Major implementation milestones
 - [x] Multi-school / multi-branch foundation
