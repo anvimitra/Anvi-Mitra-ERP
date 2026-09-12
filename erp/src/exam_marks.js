@@ -20,6 +20,30 @@ function registerExamMarkRoutes(app, pool) {
     return rows.length > 0;
   }
 
+  app.get('/api/exam-marks/roster', authenticate, requireRoles(...roles), async (req,res,next) => {
+    try {
+      const { examSubjectId } = req.query || {};
+      if (!examSubjectId) return res.status(400).json({ error: 'examSubjectId is required' });
+      const authz = await authorizeExamSubject(pool, req.auth, examSubjectId);
+      if (authz.error) return res.status(authz.status || 404).json({ error: authz.error });
+      const { subject } = authz;
+      const { rows } = await pool.query(`
+        SELECT s.id AS "studentId", s.admission_no AS "admissionNo", s.full_name AS "studentName",
+               c.id AS "classId", c.name AS "className", sec.id AS "sectionId", sec.name AS "sectionName",
+               em.id AS "markId", em.marks, em.grade, em.remarks
+        FROM enrollments en
+        JOIN students s ON s.id=en.student_id AND s.school_id=en.school_id
+        JOIN classes c ON c.id=en.class_id AND c.school_id=en.school_id
+        JOIN sections sec ON sec.id=en.section_id AND sec.school_id=en.school_id
+        LEFT JOIN exam_marks em ON em.school_id=en.school_id AND em.exam_subject_id=$1 AND em.student_id=s.id
+        WHERE en.school_id=$2 AND en.session_id=$3 AND en.class_id=$4 AND en.status='active'
+          AND ($5::uuid IS NULL OR en.branch_id=$5 OR en.branch_id IS NULL)
+        ORDER BY s.full_name
+      `, [examSubjectId, req.auth.schoolId, subject.sessionId, subject.classId, req.auth.branchId || null]);
+      res.json({ examSubject: subject, students: rows });
+    } catch (err) { next(err); }
+  });
+
   app.post('/api/exam-marks', authenticate, requireRoles(...roles), async (req,res,next) => {
     const client = await pool.connect();
     try {
