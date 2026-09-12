@@ -83,7 +83,8 @@ The browser cannot silently access a user's computer. The Local Storage Connecto
 
 ## Current hardening phase
 
-- Added GitHub Actions CI that syntax-checks every ERP Node module and verifies required web/SQL assets exist.
+- Added GitHub Actions CI that syntax-checks every ERP Node module and verifies required web/SQL assets exist.\n- Added clean PostgreSQL 16 migration smoke testing plus runtime schema verification for required tables, the teacher authorization function and migration journal.
 - School provisioning now creates the first school administrator account transactionally from the Super Admin form.
 - Super Admin school management supports create, list, edit, status changes and branch navigation.
 - The remaining hardening work is runtime database migration verification, end-to-end API smoke tests, and production deployment checks.
+\n## Latest phase\n\n- [x] Runtime migration verification automation added to CI.\n- [ ] Runtime CI result must pass before this phase is considered production-verified.\n
