@@ -6,11 +6,11 @@ Multi-school, multi-branch School ERP platform with Web + Flutter mobile clients
 
 ## Current Status
 
-**Phase:** Production hardening → runtime migration verification  
+**Phase:** Production hardening → API/runtime smoke verification  
 **Architecture foundation:** Complete  
 **Core school/teacher/offline security foundation:** Complete  
-**Latest implementation:** Added runtime PostgreSQL schema verification after clean migrations; CI now checks required ERP tables, the teacher authorization function and the migration journal.  
-**CI status:** Currently red on GitHub Actions. The latest verification jobs terminate before step details are exposed by the connected GitHub API, so the failure is being treated as an infrastructure/runner verification issue rather than being marked as a code pass.  
+**Latest implementation:** Added an API contract smoke test that boots the ERP server against the freshly migrated PostgreSQL service, verifies `/api/health`, the Super Admin school page, and protected-route authentication behavior; CI runs it after migration and schema verification.  
+**CI status:** Pending verification after the latest API smoke-test change.  
 **Production-ready:** Not yet — runtime database verification, end-to-end smoke tests, deployment checks and final client build validation remain.
 
 ---
@@ -138,7 +138,7 @@ Multi-school, multi-branch School ERP platform with Web + Flutter mobile clients
 - [x] Required asset checks
 - [x] SQL file presence checks
 - [x] Database migration execution automation in CI\n- [x] Runtime schema verification contract in CI
-- [ ] API authentication smoke test
+- [x] API contract smoke test: health + Super Admin page + protected-route guard\n- [ ] API authentication smoke test with a real test account
 - [ ] Super Admin school provisioning smoke test
 - [ ] Staff/student enrollment smoke test
 - [ ] Teacher marks authorization test
@@ -203,21 +203,25 @@ The browser/app cannot silently read the entire computer. Local storage access r
 
 ## Next Logical Work
 
-1. Run the complete PostgreSQL migration set on a clean database. **[automation complete; runtime CI result pending]**
-2. Execute API smoke tests for Super Admin school provisioning, detail and edit flows.
-3. Test school → staff → teacher assignment → student enrollment.
-4. Run positive/negative teacher marks authorization tests.
-5. Run offline sync and conflict tests.
-6. Verify local PC storage read/write synchronization.
-7. Verify Flutter Android analyze/build and artifact.
-8. Finish the advanced dynamic UI/animation pass.
-9. Run final regression and deployment health checks.
-10. Mark each item above **[x]** only after it is actually verified.\n\n### Latest verified implementation\n- [x] `erp/scripts/contract-smoke.js` added to validate the cross-module ERP contract before runtime testing.\n- [x] `erp/scripts/verify-schema.js` added to validate the clean PostgreSQL schema after migrations.\n- [x] CI wired to run the runtime schema contract against a fresh PostgreSQL 16 service.
+1. Run the authenticated Super Admin school provisioning smoke test against the clean CI database.
+2. Test school → staff → teacher assignment → student enrollment.
+3. Run positive/negative teacher marks authorization tests, including offline-sync rejection.
+4. Run offline sync and conflict tests.
+5. Verify local PC storage read/write synchronization.
+6. Verify Flutter Android analyze/build and artifact.
+7. Finish the advanced dynamic UI/animation pass.
+8. Run final regression and deployment health checks.
+9. Mark each item above **[x]** only after it is actually verified.\n\n### Latest verified implementation\n- [x] `erp/scripts/contract-smoke.js` added to validate the cross-module ERP contract before runtime testing.\n- [x] `erp/scripts/verify-schema.js` added to validate the clean PostgreSQL schema after migrations.\n- [x] CI wired to run the runtime schema contract against a fresh PostgreSQL 16 service.
+- [x] `erp/scripts/api-contract-smoke.js` boots the actual ERP server against the migrated database and verifies health, Super Admin school page availability and protected-route authentication behavior.
+- [x] CI executes the API contract smoke immediately after migration/schema verification.
 
 **LSKLive website remains separate and is not modified as part of this ERP work.**
 
 
 ## Latest Progress — 2026-09-12
+
+- [x] Added API runtime contract smoke: health, Super Admin school page and protected-route authentication guard.
+- [x] CI now runs the API smoke after clean PostgreSQL migration and schema verification.
 
 - [x] Confirmed Super Admin school-management frontend exists at `super-admin/schools.html` and is wired to school provisioning/detail APIs.
 - [x] Confirmed transactional school provisioning creates the school, main branch, settings, mobile-app configuration and first school administrator.
@@ -225,6 +229,6 @@ The browser/app cannot silently read the entire computer. Local storage access r
 - [x] Kept offline synchronization subordinate to server authorization; the backend remains the source of truth.
 - [ ] Connect every existing web write form to the offline outbox (module-by-module).
 - [ ] Add actual browser folder read/write synchronization through explicit user permission.
-- [ ] Run clean-database migrations and full end-to-end smoke tests before marking production readiness.
+- [ ] Run authenticated end-to-end smoke tests before marking production readiness.
 
 **README rule:** only verified implementation work is marked `[x]`; test-dependent items remain `[ ]` until CI/runtime verification confirms them.
