@@ -13,6 +13,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - **School onboarding foundations:** Implemented
 - **Teacher class/subject security:** Implemented
 - **Offline sync foundation:** Implemented
+- **Sync conflict resolution API:** Implemented
 - **Advanced School Management UI:** Implemented
 - **School Management API/UI contract:** Hardened and CI-aligned
 - **Production-ready:** Not yet — E2E verification, fresh production migration verification, full offline sync verification, desktop connector runtime, Flutter release verification and final UI/accessibility audits remain.
@@ -29,6 +30,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Offline queued marks remain subject to server-side authorization during synchronization.
 - [x] Super Admin School Management UI is connected to the school list/create/detail/edit endpoints.
 - [x] CI validates the actual nested Super Admin School Management page path.
+- [x] Pending sync conflicts can be resolved by authorized school-wide administrators as server-wins, local-wins or an explicit merged payload.
 - [ ] Full online/offline E2E verification before production sign-off.
 
 ## Implementation Checklist
@@ -96,6 +98,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Generic Web API mutation adapter queues transport failures into the offline outbox
 - [x] Mobile notification/action routing
 - [x] Server-side authorization on offline marks sync
+- [x] Authorized sync conflict resolution API
 - [ ] Connect every web write form to the outbox
 - [ ] Full offline write → reconnect → push → pull test
 - [ ] Conflict resolution E2E test
@@ -139,8 +142,8 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Super Admin School Management UI is implemented at `erp/web/super-admin/schools.html`.
 - [x] UI is connected to authenticated school list/create/detail/edit APIs.
 - [x] School Management UI has dynamic online/offline status, animated cards, modal transitions, focus states and responsive layout.
-- [x] CI workflow validates the actual nested School Management UI path.
 - [x] Backend registers the organization, sync, local-storage and teacher-permission modules through the main server.
+- [x] Offline sync conflict-resolution API is registered in the backend and restricted to authorized school-wide administrators.
 - [x] README progress marker verified against the current `main` tree on 2026-09-12.
 - [ ] Authenticated Super Admin school create → edit → deactivate E2E verification.
 - [ ] Fresh PostgreSQL migration verification.
