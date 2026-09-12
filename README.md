@@ -6,7 +6,7 @@ Multi-school, multi-branch School ERP platform with Web + Flutter mobile clients
 
 ## Current Status
 
-**Phase:** Major implementation → School onboarding + teacher assignment + offline foundation  
+**Phase:** Major implementation → School management + onboarding + access control + offline foundation  
 **Architecture foundation:** Complete  
 **Multi-school provisioning:** Implemented  
 **School onboarding foundations:** Implemented  
@@ -31,11 +31,14 @@ Multi-school, multi-branch School ERP platform with Web + Flutter mobile clients
 - [x] Branch management API
 - [x] Super Admin school list/detail APIs
 - [x] Super Admin school provisioning API
+- [x] Super Admin school detail/edit endpoint
+- [x] Super Admin school branding update endpoint
 - [x] Transactional school provisioning
 - [x] Main branch creation during provisioning
 - [x] School-specific mobile-app configuration
 - [x] Public non-sensitive school/app branding bootstrap
 - [x] Initial school administrator provisioning
+- [x] First school admin account is created transactionally from Add School
 - [x] Super Admin School Management UI
 - [x] School branding/configuration update API
 - [x] School branch creation from platform management
@@ -173,6 +176,8 @@ The browser/app cannot silently read the entire computer. A local connector uses
 - [x] Student enrollment API supports session + class + section enrollment, branch validation and parent linking.
 - [x] Teacher assignment API supports teacher + session + section + subject mapping with class/branch validation and mark/attendance permissions.
 - [x] Offline sync foundation includes device registration, journal/cursor, conflict tracking and local storage connector configuration.
+- [x] Super Admin School Management backend completed for list/detail/create/edit/branding/branch operations.
+- [x] First school administrator account is provisioned transactionally during school creation.
 - [x] README checklist marked to distinguish implemented foundations from items still requiring runtime/E2E verification.
 
 **LSKLive website remains separate and is not modified as part of this ERP work.**
