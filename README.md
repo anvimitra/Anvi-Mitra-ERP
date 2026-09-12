@@ -6,10 +6,10 @@ Multi-school, multi-branch School ERP platform with Web + Flutter mobile clients
 
 ## Current Status
 
-**Phase:** Production hardening → automated contract verification  
+**Phase:** Production hardening → runtime migration verification  
 **Architecture foundation:** Complete  
 **Core school/teacher/offline security foundation:** Complete  
-**Latest implementation:** Added an ERP contract smoke test covering required modules/pages, migration presence, school provisioning contracts, teacher marks authorization and sync push/pull/idempotency contracts.  
+**Latest implementation:** Added runtime PostgreSQL schema verification after clean migrations; CI now checks required ERP tables, the teacher authorization function and the migration journal.  
 **CI status:** Currently red on GitHub Actions. The latest verification jobs terminate before step details are exposed by the connected GitHub API, so the failure is being treated as an infrastructure/runner verification issue rather than being marked as a code pass.  
 **Production-ready:** Not yet — runtime database verification, end-to-end smoke tests, deployment checks and final client build validation remain.
 
@@ -137,7 +137,7 @@ Multi-school, multi-branch School ERP platform with Web + Flutter mobile clients
 - [x] Static JavaScript validation
 - [x] Required asset checks
 - [x] SQL file presence checks
-- [ ] Database migration execution test
+- [x] Database migration execution automation in CI\n- [x] Runtime schema verification contract in CI
 - [ ] API authentication smoke test
 - [ ] Super Admin school provisioning smoke test
 - [ ] Staff/student enrollment smoke test
@@ -203,7 +203,7 @@ The browser/app cannot silently read the entire computer. Local storage access r
 
 ## Next Logical Work
 
-1. Run the complete PostgreSQL migration set on a clean database.
+1. Run the complete PostgreSQL migration set on a clean database. **[automation complete; runtime CI result pending]**
 2. Execute API smoke tests for Super Admin school provisioning, detail and edit flows.
 3. Test school → staff → teacher assignment → student enrollment.
 4. Run positive/negative teacher marks authorization tests.
@@ -212,6 +212,6 @@ The browser/app cannot silently read the entire computer. Local storage access r
 7. Verify Flutter Android analyze/build and artifact.
 8. Finish the advanced dynamic UI/animation pass.
 9. Run final regression and deployment health checks.
-10. Mark each item above **[x]** only after it is actually verified.\n\n### Latest verified implementation\n- [x] `erp/scripts/contract-smoke.js` added to validate the cross-module ERP contract before runtime testing.
+10. Mark each item above **[x]** only after it is actually verified.\n\n### Latest verified implementation\n- [x] `erp/scripts/contract-smoke.js` added to validate the cross-module ERP contract before runtime testing.\n- [x] `erp/scripts/verify-schema.js` added to validate the clean PostgreSQL schema after migrations.\n- [x] CI wired to run the runtime schema contract against a fresh PostgreSQL 16 service.
 
 **LSKLive website remains separate and is not modified as part of this ERP work.**
