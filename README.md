@@ -14,6 +14,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - **Teacher class/subject security:** Implemented
 - **Offline sync foundation:** Implemented
 - **Advanced School Management UI:** Implemented
+- **School Management API/UI contract:** Hardened and CI-aligned
 - **Production-ready:** Not yet — E2E verification, fresh production migration verification, full offline sync verification, desktop connector runtime, Flutter release verification and final UI/accessibility audits remain.
 
 ## Confirmed ERP Requirements
@@ -26,6 +27,8 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Secondary school-PC/NAS/external-folder storage has an explicit permission model.
 - [x] Teacher marks access is restricted by school, branch, academic session, class/section, subject and student enrollment.
 - [x] Offline queued marks remain subject to server-side authorization during synchronization.
+- [x] Super Admin School Management UI is connected to the school list/create/detail/edit endpoints.
+- [x] CI validates the actual nested Super Admin School Management page path.
 - [ ] Full online/offline E2E verification before production sign-off.
 
 ## Implementation Checklist
@@ -55,6 +58,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Super Admin School Management UI
 - [x] School branding/configuration update API
 - [x] School branch creation from platform management
+- [x] CI path validation aligned with actual School Management UI
 - [ ] Fresh PostgreSQL production migration verification
 - [ ] Authenticated create → edit → deactivate smoke test
 
@@ -135,7 +139,8 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Super Admin School Management UI is implemented at `erp/web/super-admin/schools.html`.
 - [x] UI is connected to authenticated school list/create/detail/edit APIs.
 - [x] School Management UI has dynamic online/offline status, animated cards, modal transitions, focus states and responsive layout.
-- [x] README progress tracking updated after verification.
+- [x] CI workflow now validates the actual nested School Management UI path instead of relying on a stale top-level filename.
+- [x] README progress tracking updated after this implementation pass.
 - [ ] Authenticated Super Admin school create → edit → deactivate E2E verification.
 - [ ] Fresh PostgreSQL migration verification.
 - [ ] Full offline push/pull/conflict verification.
