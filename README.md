@@ -144,6 +144,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] School Management UI has dynamic online/offline status, animated cards, modal transitions, focus states and responsive layout.
 - [x] Backend registers the organization, sync, local-storage and teacher-permission modules through the main server.
 - [x] Offline sync conflict-resolution API is registered in the backend and restricted to authorized school-wide administrators.
+- [x] Conflict resolution supports server-wins, local-wins and explicit merged payloads and publishes the resolved value back into the sync journal.
 - [x] README progress marker verified against the current `main` tree on 2026-09-12.
 - [ ] Authenticated Super Admin school create → edit → deactivate E2E verification.
 - [ ] Fresh PostgreSQL migration verification.
