@@ -99,6 +99,8 @@ Multi-school, multi-branch School ERP platform with Web + Flutter mobile clients
 - [x] Add School form
 - [x] School search/list/status
 - [x] School configuration management
+- [x] Dynamic loading/online-offline state motion on School Management
+- [x] Animated cards/modals/focus states on School Management
 - [ ] Unified advanced dynamic animation pass
 - [ ] Mobile-responsive audit
 - [ ] Loading/empty/error/success state audit
@@ -167,5 +169,15 @@ The browser/app cannot silently read the entire computer. A local connector uses
 - [x] Added offline synchronization server foundation and local storage connector model.
 - [x] Added server-side teacher authorization boundary for offline marks synchronization.
 - [x] Updated this README to reflect the current verified implementation state.
+
+**LSKLive website remains separate and is not modified as part of this ERP work.**
+
+
+## Latest Progress — 2026-09-12 (Major Implementation)
+
+- [x] Upgraded the Web ERP offline client with IndexedDB cache, persistent outbox, sync-device registration, journal push/pull and automatic reconnect/periodic synchronization.
+- [x] Added an initial dynamic animation and online/offline interaction pass to Super Admin School Management.
+- [x] Kept offline synchronization subordinate to server-side authorization and PostgreSQL source-of-truth rules.
+- [ ] Runtime/E2E verification remains pending before production items are marked complete.
 
 **LSKLive website remains separate and is not modified as part of this ERP work.**
