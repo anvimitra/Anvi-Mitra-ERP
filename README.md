@@ -139,14 +139,24 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Super Admin School Management UI is implemented at `erp/web/super-admin/schools.html`.
 - [x] UI is connected to authenticated school list/create/detail/edit APIs.
 - [x] School Management UI has dynamic online/offline status, animated cards, modal transitions, focus states and responsive layout.
-- [x] CI workflow now validates the actual nested School Management UI path instead of relying on a stale top-level filename.
-- [x] README progress tracking updated after this implementation pass.
+- [x] CI workflow validates the actual nested School Management UI path.
+- [x] Backend registers the organization, sync, local-storage and teacher-permission modules through the main server.
+- [x] README progress marker verified against the current `main` tree on 2026-09-12.
 - [ ] Authenticated Super Admin school create → edit → deactivate E2E verification.
 - [ ] Fresh PostgreSQL migration verification.
 - [ ] Full offline push/pull/conflict verification.
 - [ ] Desktop/local-folder connector runtime.
 - [ ] Flutter Android build + APK artifact verification.
 - [ ] Advanced dynamic animation/UI pass across remaining ERP screens.
+
+## Next Logical Implementation
+
+1. Run authenticated Super Admin **create → edit → deactivate** E2E flow.
+2. Verify fresh PostgreSQL migrations from a clean database.
+3. Execute full offline **write → reconnect → push → pull** flow.
+4. Complete the desktop/local-folder connector runtime.
+5. Finish Flutter Android build/APK verification.
+6. Apply the advanced dynamic animation pass to the remaining ERP screens.
 
 ## Architecture
 
