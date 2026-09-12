@@ -6,7 +6,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 ## Current Status — 2026-09-12
 
-**Major phase: Multi-school platform implementation → E2E verification → production readiness**
+**Current phase: Multi-school onboarding hardening → offline E2E verification → production readiness**
 
 ### Latest implementation completed
 - [x] Super Admin animated School Management UI
@@ -17,13 +17,16 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] School administrator provisioning during school creation
 - [x] School creation changes recorded in sync journal
 - [x] Offline/online connection state indicator in School Management UI
+- [x] School detail GET/PATCH API alignment with the animated UI
+- [x] School branding/mobile-app configuration can be edited from Super Admin API
+- [x] School administrator credentials are provisioned during tenant creation
 
 ### Major implementation milestones
 - [x] Multi-school / multi-branch foundation
 - [x] Super Admin school provisioning API
 - [x] School-specific branding and mobile-app configuration
 - [x] Main branch provisioning
-- [x] Initial school administrator provisioning foundation
+- [x] Initial school administrator provisioning
 - [x] Staff, teacher and student onboarding foundations
 - [x] Teacher class/subject/section/session marks authorization
 - [x] Offline sync device/journal/cursor foundation
@@ -36,9 +39,9 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Mobile notification routing
 - [x] Super Admin school detail/edit/status API alignment
 
-## Remaining Major Work — verification/hardening
+## Current logical next phase — verification/hardening
 
-- [~] Authenticated school create → edit → deactivate/reactivate E2E
+- [~] Authenticated school create → admin login → edit → deactivate/reactivate E2E
 - [~] Clean PostgreSQL migration verification
 - [~] Full offline write → reconnect → push → pull/conflict E2E
 - [x] Desktop/local-folder connector runtime implementation
