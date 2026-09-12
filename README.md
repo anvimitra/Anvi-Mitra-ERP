@@ -6,9 +6,10 @@ Multi-school, multi-branch School ERP platform with Web + Flutter mobile clients
 
 ## Current Status
 
-**Phase:** Major implementation → Super Admin school management + offline authorization foundation  
+**Phase:** Major implementation → School onboarding + teacher assignment + offline foundation  
 **Architecture foundation:** Complete  
 **Multi-school provisioning:** Implemented  
+**School onboarding foundations:** Implemented  
 **Teacher class/subject security:** Implemented  
 **Offline sync foundation:** Implemented  
 **Production-ready:** Not yet — authenticated end-to-end tests, full offline write/sync tests, local-PC connector runtime, Flutter release verification, UI polish and deployment checks remain.
@@ -50,6 +51,9 @@ Multi-school, multi-branch School ERP platform with Web + Flutter mobile clients
 - [x] Mobile app configuration
 - [x] First school administrator
 - [x] Staff/teacher/student enrollment foundations
+- [x] Teacher identity creation when staff role is teacher
+- [x] Student session/class/section enrollment API
+- [x] Parent account and student-parent linking API
 - [ ] Complete fresh-school onboarding E2E test
 
 ### 4. Teacher marks security
@@ -61,6 +65,7 @@ Multi-school, multi-branch School ERP platform with Web + Flutter mobile clients
 - [x] Batch marks authorization
 - [x] Offline marks re-authorization during sync
 - [x] Shared database teacher authorization helper
+- [x] Teacher assignment create/list/update API
 - [ ] Automated unauthorized offline-sync negative test
 
 ### 5. Offline-first Web + Mobile
@@ -162,22 +167,12 @@ The browser/app cannot silently read the entire computer. A local connector uses
 
 ## Latest Progress — 2026-09-12
 
-- [x] Added Super Admin school provisioning with school profile, branding, main branch, mobile-app configuration and first school administrator.
-- [x] Added Super Admin school list/detail/configuration APIs.
-- [x] Added public non-sensitive school/app branding bootstrap endpoint.
-- [x] Confirmed Super Admin School Management UI at `erp/web/super-admin/schools.html`.
-- [x] Added offline synchronization server foundation and local storage connector model.
-- [x] Added server-side teacher authorization boundary for offline marks synchronization.
-- [x] Updated this README to reflect the current verified implementation state.
-
-**LSKLive website remains separate and is not modified as part of this ERP work.**
-
-
-## Latest Progress — 2026-09-12 (Major Implementation)
-
-- [x] Upgraded the Web ERP offline client with IndexedDB cache, persistent outbox, sync-device registration, journal push/pull and automatic reconnect/periodic synchronization.
-- [x] Added an initial dynamic animation and online/offline interaction pass to Super Admin School Management.
-- [x] Kept offline synchronization subordinate to server-side authorization and PostgreSQL source-of-truth rules.
-- [ ] Runtime/E2E verification remains pending before production items are marked complete.
+- [x] Super Admin school provisioning creates the school tenant, settings/branding, main branch, mobile-app configuration and first school administrator transactionally.
+- [x] Super Admin School Management UI supports school list/search, Add School, configuration editing, status and branch display with dynamic online/offline state and animated interactions.
+- [x] School staff API supports school/branch-scoped staff accounts and automatically initializes teacher identity rows for teacher accounts.
+- [x] Student enrollment API supports session + class + section enrollment, branch validation and parent linking.
+- [x] Teacher assignment API supports teacher + session + section + subject mapping with class/branch validation and mark/attendance permissions.
+- [x] Offline sync foundation includes device registration, journal/cursor, conflict tracking and local storage connector configuration.
+- [x] README checklist marked to distinguish implemented foundations from items still requiring runtime/E2E verification.
 
 **LSKLive website remains separate and is not modified as part of this ERP work.**
