@@ -27,6 +27,9 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Sync idempotency and conflict-resolution API
 - [x] Local storage connector API (read-only/read-write permission model)
 - [x] Super Admin school-management create/edit/branding/status flow
+- [x] Provisioned school administrator login coverage in E2E test
+- [x] Provisioned administrator branch-scope coverage in E2E test
+- [x] School deactivate/reactivate and public-branding isolation coverage in E2E test
 
 ### Major implementation milestones
 - [x] Multi-school / multi-branch foundation
@@ -45,10 +48,11 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] School-branded login bootstrap
 - [x] Mobile notification routing
 - [x] Super Admin school detail/edit/status API alignment
+- [x] School provisioning E2E coverage extended through administrator login and branch scope
 
 ## Current logical next phase — verification/hardening
 
-- [~] Authenticated school create → admin login → edit → deactivate/reactivate E2E
+- [~] Authenticated school create → admin login → edit → deactivate/reactivate E2E **(test implemented; CI/database execution still pending)**
 - [~] Clean PostgreSQL migration verification
 - [~] Full offline write → reconnect → push → pull/conflict E2E
 - [x] Desktop/local-folder connector runtime implementation
@@ -66,7 +70,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 ## Major implementation pass marker
 
-**[x] Major implementation pass — multi-school provisioning, school branding, onboarding foundations, teacher marks access control, offline sync, sync conflicts, local-storage permission model, Super Admin UI and mobile notification routing are implemented in the source tree.**
+**[x] Major implementation pass — multi-school provisioning, school branding, onboarding foundations, teacher marks access control, offline sync, sync conflicts, local-storage permission model, Super Admin UI, mobile notification routing, and hardened school-admin/branch-scope E2E coverage are implemented in the source tree.**
 
 **[~] Integration/E2E verification is intentionally not marked complete until the CI/database/device-backed checks pass.**
 
