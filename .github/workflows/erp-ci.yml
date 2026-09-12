@@ -84,6 +84,12 @@ jobs:
         env:
           DATABASE_URL: postgresql://erp:erp@localhost:5432/anvi_erp_ci
         run: npm run migrate
+      - name: Verify runtime ERP schema contract
+        working-directory: erp
+        env:
+          DATABASE_URL: postgresql://erp:erp@localhost:5432/anvi_erp_ci
+        run: node scripts/verify-schema.js
+
       - name: Verify migration journal
         working-directory: erp
         env:
