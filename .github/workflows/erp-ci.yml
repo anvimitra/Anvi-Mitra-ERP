@@ -21,7 +21,7 @@ jobs:
           node-version: 20
       - name: Install ERP dependencies
         working-directory: erp
-        run: npm ci
+        run: npm install
       - name: Validate server modules
         shell: bash
         run: |
@@ -74,7 +74,7 @@ jobs:
           node-version: 20
       - name: Install ERP dependencies
         working-directory: erp
-        run: npm ci
+        run: npm install
       - name: Run clean PostgreSQL migration
         working-directory: erp
         env:
@@ -90,12 +90,8 @@ jobs:
           const client = new Client({ connectionString: process.env.DATABASE_URL });
           (async () => {
             await client.connect();
-            const { rows } = await client.query(
-              'SELECT count(*)::int AS count FROM schema_migrations'
-            );
-            if (!rows[0] || rows[0].count < 1) {
-              throw new Error('No migrations were recorded');
-            }
+            const { rows } = await client.query('SELECT count(*)::int AS count FROM schema_migrations');
+            if (!rows[0] || rows[0].count < 1) throw new Error('No migrations were recorded');
             console.log('Applied migrations:', rows[0].count);
             await client.end();
           })().catch(async (err) => {
