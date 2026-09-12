@@ -169,7 +169,11 @@ The browser/app cannot silently read the entire computer. A local connector uses
 8. [ ] Finish advanced dynamic animation/UI pass.
 9. [ ] Final regression + deployment health checks.
 
-## Latest Progress — 2026-09-12
+
+
+- [x] Super Admin school provisioning API verified against the current multi-school auth/branch model.
+- [x] School configuration/branding changes are journaled into the offline sync change stream.
+\n## Latest Progress — 2026-09-12
 
 - [x] Super Admin school provisioning creates the school tenant, settings/branding, main branch, mobile-app configuration and first school administrator transactionally.
 - [x] Super Admin School Management UI supports school list/search, Add School, configuration editing, status and branch display with dynamic online/offline state and animated interactions.
