@@ -19,10 +19,16 @@ Updated: **2026-09-12**
 - [ ] Authenticated Super Admin create → edit → deactivate E2E
 - [ ] Clean PostgreSQL migration verification
 - [ ] Full offline write → reconnect → push → pull E2E
-- [ ] Desktop/local-folder connector runtime
+- [x] Desktop/local-folder connector runtime
 - [ ] Flutter Android build + APK artifact verification
-- [ ] Unified advanced dynamic animation pass across remaining ERP screens
+- [~] Unified advanced dynamic animation pass across remaining ERP screens
 - [ ] Final accessibility / security / production audit
+
+## Major implementation pass marker
+
+**[x] Major backend + UI implementation pass completed.** Source tree contains multi-school provisioning, school branding/app configuration, onboarding foundations, teacher access controls, offline sync APIs, conflict handling, local-storage permission APIs/runtime, Super Admin School Management UI, and mobile notification routing.
+
+**[~] E2E, device-backed and production hardening remain intentionally open.**
 
 ## Next logical execution order
 
