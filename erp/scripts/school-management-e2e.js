@@ -35,7 +35,10 @@ async function main() {
   const seedCode = 'E2E-' + stamp;
   const seedEmail = 'superadmin+' + stamp + '@example.test';
   const seedPassword = 'E2E-' + stamp + '-Pass!';
+  const createdAdminEmail = 'admin+' + stamp + '@example.test';
+  const createdAdminPassword = 'School-12345!';
   let child;
+  let createdId;
 
   try {
     const school = await client.query(
@@ -86,8 +89,8 @@ async function main() {
         displayName:'E2E New School',
         appName:'E2E New School',
         appSlug:'e2e-new-' + stamp,
-        adminEmail:'admin+' + stamp + '@example.test',
-        adminPassword:'School-12345!',
+        adminEmail:createdAdminEmail,
+        adminPassword:createdAdminPassword,
         mainBranchName:'Main Campus',
         mainBranchCode:'MAIN',
         timezone:'Asia/Kolkata',
@@ -99,9 +102,10 @@ async function main() {
       throw new Error('School create E2E failed: HTTP ' + create.response.status + ' ' + JSON.stringify(create.data));
     }
 
-    const createdId = create.data.school.id;
+    createdId = create.data.school.id;
+    const createdBranchId = create.data.admin.branchId;
     const detail = await fetchJson('/api/platform/schools/' + createdId, {headers:auth});
-    if (!detail.response.ok || detail.data.school?.code !== createdCode) throw new Error('School detail E2E failed');
+    if (!detail.response.ok || detail.data.school?.code !== createdCode || !detail.data.branches?.length) throw new Error('School detail/branch E2E failed');
 
     const edit = await fetchJson('/api/platform/schools/' + createdId, {
       method:'PATCH',
@@ -127,16 +131,45 @@ async function main() {
     const publicConfig = await fetchJson('/api/public/school-config?schoolCode=' + encodeURIComponent(createdCode));
     if (publicConfig.response.status !== 404) throw new Error('Inactive school leaked through public config: HTTP ' + publicConfig.response.status);
 
+    const reactivate = await fetchJson('/api/platform/schools/' + createdId, {
+      method:'PATCH',
+      headers:auth,
+      body:JSON.stringify({status:'active'})
+    });
+    if (!reactivate.response.ok) throw new Error('School reactivate E2E failed: ' + JSON.stringify(reactivate.data));
+
+    const activeConfig = await fetchJson('/api/public/school-config?schoolCode=' + encodeURIComponent(createdCode));
+    if (!activeConfig.response.ok || activeConfig.data.school?.code !== createdCode) throw new Error('Active public school config E2E failed');
+
+    const adminLogin = await fetchJson('/api/auth/login', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({schoolCode:createdCode,login:createdAdminEmail,password:createdAdminPassword})
+    });
+    if (!adminLogin.response.ok || adminLogin.data.user?.role !== 'admin' || !adminLogin.data.accessToken) {
+      throw new Error('Provisioned school administrator login failed: ' + JSON.stringify(adminLogin.data));
+    }
+
+    const adminBranchSwitch = await fetchJson('/api/auth/switch-branch', {
+      method:'POST',
+      headers:{Authorization:'Bearer '+adminLogin.data.accessToken,'Content-Type':'application/json'},
+      body:JSON.stringify({branchId:createdBranchId})
+    });
+    if (!adminBranchSwitch.response.ok || !adminBranchSwitch.data.accessToken || String(adminBranchSwitch.data.branchId) !== String(createdBranchId)) {
+      throw new Error('Provisioned administrator branch scope failed: ' + JSON.stringify(adminBranchSwitch.data));
+    }
+
     const list = await fetchJson('/api/platform/schools', {headers:auth});
     if (!list.response.ok || !Array.isArray(list.data.schools)) throw new Error('School list E2E failed');
 
-    console.log('Authenticated Super Admin school create -> edit -> branding -> deactivate E2E: PASS');
+    console.log('Authenticated Super Admin create -> edit -> branding -> deactivate/reactivate -> provisioned admin login -> branch scope E2E: PASS');
   } finally {
     if (child) {
       child.kill('SIGTERM');
       await sleep(300);
       if (!child.killed) child.kill('SIGKILL');
     }
+    if (createdId) await client.query("UPDATE schools SET status='inactive' WHERE id=$1", [createdId]).catch(() => {});
     await client.query("UPDATE schools SET status='inactive' WHERE code=$1", [seedCode]).catch(() => {});
     await client.end().catch(() => {});
   }
