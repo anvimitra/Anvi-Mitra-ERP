@@ -16,6 +16,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - **Sync conflict resolution API:** Implemented
 - **Advanced School Management UI:** Implemented
 - **School Management API/UI contract:** Hardened and CI-aligned
+- **School-branded login bootstrap:** Implemented
 - **Production-ready:** Not yet — E2E verification, fresh production migration verification, full offline sync verification, desktop connector runtime, Flutter release verification and final UI/accessibility audits remain.
 
 ## Confirmed ERP Requirements
@@ -23,6 +24,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] One ERP supports multiple schools with strict school-level data isolation.
 - [x] Super Admin can provision a school with profile, logo/branding, contact details, branch and app configuration.
 - [x] Each school's ERP/app branding remains school-specific.
+- [x] School Code dynamically loads the school's public branding on the ERP login screen.
 - [x] Online PostgreSQL/API is the primary source of truth.
 - [x] Web and mobile clients have an offline-first sync foundation.
 - [x] Secondary school-PC/NAS/external-folder storage has an explicit permission model.
@@ -131,6 +133,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Dynamic loading/online-offline state motion on School Management
 - [x] Animated cards/modals/focus states on School Management
 - [x] Advanced dynamic animation pass on School Management
+- [x] School-branded dynamic login screen
 - [x] Responsive base layout
 - [ ] Unified advanced dynamic animation pass across remaining ERP screens
 - [ ] Loading/empty/error/success state audit
@@ -145,7 +148,9 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Backend registers the organization, sync, local-storage and teacher-permission modules through the main server.
 - [x] Offline sync conflict-resolution API is registered in the backend and restricted to authorized school-wide administrators.
 - [x] Conflict resolution supports server-wins, local-wins and explicit merged payloads and publishes the resolved value back into the sync journal.
-- [x] README progress marker verified against the current `main` tree on 2026-09-12.
+- [x] ERP login now loads non-sensitive school branding dynamically from `/api/public/school-config` after School Code entry.
+- [x] Login applies school logo, display name/app name and primary/secondary branding colors.
+- [x] README progress marker updated and verified against the current `main` implementation on 2026-09-12.
 - [ ] Authenticated Super Admin school create → edit → deactivate E2E verification.
 - [ ] Fresh PostgreSQL migration verification.
 - [ ] Full offline push/pull/conflict verification.
