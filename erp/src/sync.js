@@ -117,6 +117,23 @@ function registerSyncRoutes(app, pool) {
         if (['exam_mark','exam_marks'].includes(entityType) && req.auth.role === 'teacher' && !payload.examSubjectId) {
           throw Object.assign(new Error('examSubjectId is required for offline teacher marks sync'), { statusCode: 400 });
         }
+        if (['exam_mark','exam_marks'].includes(entityType)) {
+          const subjectResult = await client.query(`SELECT es.id AS "examSubjectId", es.class_id AS "classId", es.max_marks AS "maxMarks", es.branch_id AS "branchId", e.session_id AS "sessionId", e.status AS "examStatus" FROM exam_subjects es JOIN exams e ON e.id=es.exam_id AND e.school_id=es.school_id WHERE es.id=$1 AND es.school_id=$2`, [payload.examSubjectId, req.auth.schoolId]);
+          if (!subjectResult.rows.length) throw Object.assign(new Error('Exam subject not found for this school'), { statusCode: 404 });
+          const subject = subjectResult.rows[0];
+          if (req.auth.branchId && subject.branchId && subject.branchId !== req.auth.branchId) throw Object.assign(new Error('Exam subject is outside the active branch'), { statusCode: 403 });
+          if (subject.examStatus === 'published') throw Object.assign(new Error('Published exam marks cannot be edited'), { statusCode: 409 });
+          if (req.auth.role === 'teacher') {
+            const permission = await client.query('SELECT teacher_can_edit_exam_subject($1,$2) AS allowed', [req.auth.sub, payload.examSubjectId]);
+            if (!permission.rows[0]?.allowed) throw Object.assign(new Error('Teacher is not assigned to this subject/class'), { statusCode: 403 });
+          }
+          const marks = Number(payload.marks);
+          if (!Number.isFinite(marks) || marks < 0 || (subject.maxMarks !== null && marks > Number(subject.maxMarks))) throw Object.assign(new Error('Invalid marks value for offline sync'), { statusCode: 422 });
+          const enrollment = await client.query(`SELECT 1 FROM enrollments WHERE school_id=$1 AND student_id=$2 AND session_id=$3 AND class_id=$4 AND status='active' AND ($5::uuid IS NULL OR branch_id=$5 OR branch_id IS NULL) LIMIT 1`, [req.auth.schoolId, payload.studentId, subject.sessionId, subject.classId, req.auth.branchId || null]);
+          if (!enrollment.rows.length) throw Object.assign(new Error('Student is not enrolled in this class/session'), { statusCode: 403 });
+          const saved = await client.query(`INSERT INTO exam_marks(school_id,exam_subject_id,student_id,marks,grade,remarks) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(school_id,exam_subject_id,student_id) DO UPDATE SET marks=EXCLUDED.marks,grade=EXCLUDED.grade,remarks=EXCLUDED.remarks,updated_at=now() RETURNING id`, [req.auth.schoolId,payload.examSubjectId,payload.studentId,marks,payload.grade || null,payload.remarks || null]);
+          if (entityId && String(entityId) !== String(saved.rows[0].id)) throw Object.assign(new Error('Offline mark entity does not match the target mark'), { statusCode: 409 });
+        }
         let conflict = false;
         if (baseCursor > 0) {
           const newer = await client.query(
