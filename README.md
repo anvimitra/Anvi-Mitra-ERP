@@ -25,19 +25,24 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Mobile notification routing
 - [x] Super Admin school detail/edit/status API alignment
 
-## Latest Implementation Pass
+## Latest Major Implementation Pass
 
-### Super Admin → School Management
+### School lifecycle + offline architecture hardening
 
-The platform now has an aligned protected lifecycle for school management:
+The platform foundation now treats a school as an isolated tenant and keeps branch scope under that tenant. Super Admin provisioning initializes the school profile/settings, main branch and mobile-app configuration together. The protected school-management API also supports school detail/profile access and lifecycle status changes.
 
-1. Super Admin opens School Management.
-2. Add School creates the tenant, school settings/branding, main branch, mobile-app configuration and first school administrator transactionally.
-3. Super Admin can load a school detail page and edit profile/branding/status.
-4. Branches remain school-scoped.
-5. Deactivation/reactivation is represented by the protected school status API.
+The offline architecture is explicitly **online-first with offline continuity**:
 
-The School Management UI provides animated cards, modal transitions, responsive layout, search, school status and online/offline connection state.
+- PostgreSQL/API remains the primary source of truth.
+- Web and mobile clients use local cache/outbox while offline.
+- Synchronization uses device identity and server cursors/change journals.
+- Conflicts are recorded rather than silently discarded.
+- PC/NAS/external storage is a secondary connector with explicit user-selected-folder permission.
+- Offline operations do not bypass server-side authorization when synchronized.
+
+### Teacher marks authorization
+
+Teacher permissions are enforced server-side by school, branch, academic session, class/section and subject assignment. A teacher cannot gain another class or subject's marks permission simply by changing request IDs.
 
 ## Data Architecture
 
@@ -48,13 +53,13 @@ The School Management UI provides animated cards, modal transitions, responsive 
          |
          v
     CENTRAL ERP API + POSTGRESQL  <-- PRIMARY SOURCE OF TRUTH
-       /        |         \
-      /         |          \
+       /        |         \\
+      /         |          \\
     WEB      MOBILE      SCHOOL PC/NAS
      |          |             |
  IndexedDB   Local DB    Explicitly selected folder
-      \         |             /
-       \        |            /
+      \\         |             /
+       \\        |            /
              AUTO SYNC
                 |
          CONFLICT HANDLING
