@@ -6,7 +6,7 @@ Multi-school, multi-branch School ERP platform with Web + Flutter mobile clients
 
 ## Current Status
 
-**Phase:** Major implementation → School management + onboarding + access control + offline foundation  
+**Phase:** Major implementation → School management + onboarding + access control + offline-first integration  
 **Architecture foundation:** Complete  
 **Multi-school provisioning:** Implemented  
 **School onboarding foundations:** Implemented  
@@ -76,6 +76,7 @@ Multi-school, multi-branch School ERP platform with Web + Flutter mobile clients
 - [x] Server sync journal/cursor
 - [x] Conflict tracking
 - [x] Web offline outbox/client foundation
+- [x] Generic Web API mutation adapter queues transport failures into the offline outbox
 - [x] Mobile notification/action routing
 - [x] Server-side authorization on offline marks sync
 - [ ] Connect every web write form to the outbox
@@ -178,6 +179,7 @@ The browser/app cannot silently read the entire computer. A local connector uses
 - [x] Offline sync foundation includes device registration, journal/cursor, conflict tracking and local storage connector configuration.
 - [x] Super Admin School Management backend completed for list/detail/create/edit/branding/branch operations.
 - [x] First school administrator account is provisioned transactionally during school creation.
+- [x] Generic Web API mutation adapter now queues offline/transport-failed writes for automatic synchronization.
 - [x] README checklist marked to distinguish implemented foundations from items still requiring runtime/E2E verification.
 
 **LSKLive website remains separate and is not modified as part of this ERP work.**
