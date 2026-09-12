@@ -215,3 +215,16 @@ The browser/app cannot silently read the entire computer. Local storage access r
 10. Mark each item above **[x]** only after it is actually verified.\n\n### Latest verified implementation\n- [x] `erp/scripts/contract-smoke.js` added to validate the cross-module ERP contract before runtime testing.\n- [x] `erp/scripts/verify-schema.js` added to validate the clean PostgreSQL schema after migrations.\n- [x] CI wired to run the runtime schema contract against a fresh PostgreSQL 16 service.
 
 **LSKLive website remains separate and is not modified as part of this ERP work.**
+
+
+## Latest Progress — 2026-09-12
+
+- [x] Confirmed Super Admin school-management frontend exists at `super-admin/schools.html` and is wired to school provisioning/detail APIs.
+- [x] Confirmed transactional school provisioning creates the school, main branch, settings, mobile-app configuration and first school administrator.
+- [x] Added the browser offline-sync client: persistent outbox, device identity, server cursor, push/pull synchronization, automatic reconnect retry and sync events.
+- [x] Kept offline synchronization subordinate to server authorization; the backend remains the source of truth.
+- [ ] Connect every existing web write form to the offline outbox (module-by-module).
+- [ ] Add actual browser folder read/write synchronization through explicit user permission.
+- [ ] Run clean-database migrations and full end-to-end smoke tests before marking production readiness.
+
+**README rule:** only verified implementation work is marked `[x]`; test-dependent items remain `[ ]` until CI/runtime verification confirms them.
