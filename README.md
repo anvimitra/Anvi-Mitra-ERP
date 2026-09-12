@@ -14,6 +14,18 @@ Multi-school, multi-branch School ERP platform with Web + Flutter mobile clients
 **Offline sync foundation:** Implemented  
 **Production-ready:** Not yet — authenticated end-to-end tests, full offline write/sync tests, local-PC connector runtime, Flutter release verification, UI polish and deployment checks remain.
 
+## Current ERP requirements — confirmed
+
+- [x] One ERP supports multiple schools with strict school-level data isolation.
+- [x] Super Admin can provision a school with profile, logo/branding, contact details, branch and app configuration foundations.
+- [x] Each school's app/branding configuration can remain school-specific.
+- [x] Online PostgreSQL/API is the primary source of truth.
+- [x] Web and mobile clients have an offline-first sync foundation.
+- [x] Secondary school-PC/NAS/external-folder storage has an explicit permission model.
+- [x] Teacher marks access is restricted by school, branch, academic session, class/section, subject and student enrollment.
+- [x] Offline queued marks remain subject to server-side authorization during synchronization.
+- [ ] Full runtime verification of the complete online/offline flow remains before production sign-off.
+
 ## ERP Implementation Checklist
 
 ### 1. Core platform
@@ -115,10 +127,12 @@ Multi-school, multi-branch School ERP platform with Web + Flutter mobile clients
 - [ ] Loading/empty/error/success state audit
 - [ ] Accessibility/keyboard audit
 
-### 9. Latest implementation marker — 2026-09-12
+### 9. Latest implementation marker — 2026-09-05
 - [x] Teacher Marks Permission Guard UI connected to server-side `/api/teacher-permissions/marks` authorization.
 - [x] Permission result clearly distinguishes allowed vs denied access and explains the authorization reason.
 - [x] Offline state is surfaced in the permission UI; offline writes remain subject to server re-authorization during sync.
+- [x] Multi-school primary/secondary storage and offline-sync requirements are explicitly documented.
+- [x] README now records the confirmed ERP architecture requirements separately from production verification.
 - [ ] Automated permission negative/E2E verification remains before marking this feature production-ready.
 
 ## Architecture
@@ -163,7 +177,7 @@ The browser/app cannot silently read the entire computer. A local connector uses
 - `erp/docs/offline-sync-api.md`
 - `erp/docs/offline-local-storage-implementation.md`
 
-## Latest Progress — 2026-09-12
+## Latest Progress — 2026-09-05
 
 - [x] Super Admin school provisioning API verified against the current multi-school auth/branch model.
 - [x] School configuration/branding changes are journaled into the offline sync change stream.
@@ -171,6 +185,7 @@ The browser/app cannot silently read the entire computer. A local connector uses
 - [x] School UI connects to the authenticated `/api/platform/schools` list/create endpoints.
 - [x] Add School UI includes school identity, branding/logo URL, contact details, main branch and mobile-app configuration.
 - [x] README progress tracking cleaned so implemented foundations are separated from runtime/E2E work.
+- [x] Requested multi-school, offline-first, secondary-storage and teacher-permission requirements marked in this README.
 - [ ] Authenticated Super Admin school create → edit → deactivate E2E verification.
 - [ ] Fresh PostgreSQL migration verification.
 - [ ] Full offline push/pull/conflict verification.
