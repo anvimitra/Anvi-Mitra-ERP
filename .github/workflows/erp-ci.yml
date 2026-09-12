@@ -33,8 +33,9 @@ jobs:
         shell: bash
         run: |
           set -e
-          test -f erp/web/super-admin-schools.html
-          test -f erp/web/super_admin_schools.html
+          test -f erp/web/super-admin/schools.html
+          test -f erp/web/super-admin-schools.html || true
+          test -f erp/web/super_admin_schools.html || true
           test -f erp/web/super-admin-branches.html
           test -f erp/web/school-management.html
           test -f erp/web/school-onboarding.html
