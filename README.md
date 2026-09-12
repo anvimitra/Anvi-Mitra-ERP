@@ -2,243 +2,170 @@
 
 Multi-school, multi-branch School ERP platform with Web + Flutter mobile clients, centralized PostgreSQL data, offline-first synchronization, school-specific branding/app configuration, and role/subject/class-level access control.
 
-> **Process rule:** This README is the live implementation checklist. Completed work is marked **[x]**; remaining work is marked **[ ]**. Update it as each implementation phase is actually verified.
+> **Process rule:** This README is the live implementation checklist. Completed work is marked **[x]**; remaining work is marked **[ ]**. Update it only after implementation or verification.
 
 ## Current Status
 
-**Phase:** Production hardening → API/runtime smoke verification  
+**Phase:** Major implementation → Super Admin school management + offline authorization foundation  
 **Architecture foundation:** Complete  
-**Core school/teacher/offline security foundation:** Complete  
-**Latest implementation:** Added an API contract smoke test that boots the ERP server against the freshly migrated PostgreSQL service, verifies `/api/health`, the Super Admin school page, and protected-route authentication behavior; CI runs it after migration and schema verification.  
-**CI status:** Pending verification after the latest API smoke-test change.  
-**Production-ready:** Not yet — runtime database verification, end-to-end smoke tests, deployment checks and final client build validation remain.
-
----
+**Multi-school provisioning:** Implemented  
+**Teacher class/subject security:** Implemented  
+**Offline sync foundation:** Implemented  
+**Production-ready:** Not yet — authenticated end-to-end tests, full offline write/sync tests, local-PC connector runtime, Flutter release verification, UI polish and deployment checks remain.
 
 ## ERP Implementation Checklist
 
-### 1. Core platform & repository
-- [x] ERP repository structure and Node/PostgreSQL backend foundation
-- [x] GitHub Actions ERP verification workflow
-- [x] JavaScript syntax validation in CI
-- [x] Required web/SQL asset validation in CI
-- [x] Documentation/status tracking under `erp/docs/`
+### 1. Core platform
+- [x] Node/PostgreSQL backend foundation
+- [x] GitHub Actions verification workflow
+- [x] JavaScript syntax validation
+- [x] SQL/schema validation automation
+- [x] API runtime contract smoke test
 - [ ] Final production deployment verification
 
-### 2. Multi-school / multi-branch architecture
+### 2. Multi-school / multi-branch
 - [x] School tenant isolation using `school_id`
-- [x] Branch-aware data model using `branch_id`
-- [x] School settings / branding model
+- [x] Branch-aware model using `branch_id`
+- [x] School settings / branding
 - [x] Branch management API
+- [x] Super Admin school list/detail APIs
 - [x] Super Admin school provisioning API
-- [x] Super Admin school list API
-- [x] Super Admin school detail API
-- [x] Super Admin school configuration update API
-- [x] Super Admin School Management UI integration with provisioning APIs
-- [x] Main branch creation during school provisioning
+- [x] Transactional school provisioning
+- [x] Main branch creation during provisioning
 - [x] School-specific mobile-app configuration
 - [x] Public non-sensitive school/app branding bootstrap
-- [ ] Full production database migration run against the target PostgreSQL instance
-- [ ] Runtime smoke test for create → edit → deactivate school
-
-### 3. Super Admin
-- [x] School list/management UI
-- [x] Add School flow
-- [x] School edit/status management
-- [x] Branch navigation
-- [x] Transactional school provisioning
 - [x] Initial school administrator provisioning
-- [ ] Final UI/UX polish and advanced dynamic animation audit
-- [ ] Final permission/error-state audit
+- [x] Super Admin School Management UI
+- [x] School branding/configuration update API
+- [x] School branch creation from platform management
+- [ ] Fresh PostgreSQL production migration verification
+- [ ] Authenticated create → edit → deactivate smoke test
 
-### 4. School onboarding
-- [x] School basic profile
-- [x] Logo/branding fields
-- [x] Contact/address/website fields
-- [x] Timezone/locale/currency configuration
-- [x] Main branch setup
-- [x] Mobile app name/slug/package/API configuration
-- [x] Staff account management foundation
-- [x] Teacher identity initialization
-- [x] Student enrollment workflow
-- [ ] Complete onboarding end-to-end smoke test with a fresh school tenant
+### 3. School onboarding
+- [x] School name/code/profile
+- [x] Logo and branding
+- [x] Contact/address/website
+- [x] Timezone/locale/currency
+- [x] Main branch
+- [x] Mobile app configuration
+- [x] First school administrator
+- [x] Staff/teacher/student enrollment foundations
+- [ ] Complete fresh-school onboarding E2E test
 
-### 5. Staff / teachers / students
-- [x] Staff management API/UI foundation
-- [x] Teacher identity setup
-- [x] Student enrollment by session/class/section
-- [x] Branch-aware staff scope
-- [x] Teacher subject/class assignment model
-- [x] Teacher permission API
-- [ ] Full school-admin workflow test: create staff → assign teacher → enroll students → assign subjects
-
-### 6. Teacher marks security
-- [x] Teacher + subject + section + session assignment checks
-- [x] Branch scope checks
+### 4. Teacher marks security
+- [x] Teacher + subject + section + session authorization
+- [x] Branch scope authorization
 - [x] Student enrollment validation
 - [x] Maximum-mark validation
 - [x] Published-exam write lock
 - [x] Batch marks authorization
-- [x] Database sync-boundary guard for teacher marks
-- [x] Teacher result-view scope filtering
-- [x] Static contract test covering teacher marks authorization guard
-- [x] Offline sync re-checks teacher class/subject/session authorization before accepting marks
-- [ ] Automated negative tests proving offline sync cannot bypass the same permission
+- [x] Offline marks re-authorization during sync
+- [x] Shared database teacher authorization helper
+- [ ] Automated unauthorized offline-sync negative test
 
-### 7. Offline-first Web + Mobile
-- [x] Sync device registration foundation
-- [x] Server sync journal/cursor model
-- [x] Idempotency metadata
+### 5. Offline-first Web + Mobile
+- [x] Device registration foundation
+- [x] Server sync journal/cursor
 - [x] Conflict tracking
-- [x] Sync conflict administration
-- [x] Web offline-sync client foundation
-- [x] Mobile notification/action handling foundation
-- [ ] Full offline write → reconnect → push → pull → cursor advancement test
-- [ ] Conflict resolution end-to-end test
-- [ ] Mobile offline cache/outbox integration test
+- [x] Web offline outbox/client foundation
+- [x] Mobile notification/action routing
+- [x] Server-side authorization on offline marks sync
+- [ ] Connect every web write form to the outbox
+- [ ] Full offline write → reconnect → push → pull test
+- [ ] Conflict resolution E2E test
+- [ ] Mobile local cache/outbox integration test
 
-### 8. School PC / NAS / external storage
+### 6. School PC / NAS / external storage
 - [x] Local storage connector data model
-- [x] Read-only / read-write permission mode
-- [x] Local storage connector UI
-- [x] Explicit browser folder permission approach
-- [x] Local storage heartbeat/sync foundation
-- [ ] Actual desktop/local connector runtime integration
+- [x] Read-only/read-write permission modes
+- [x] Explicit user-selected folder permission model
+- [x] Local connector heartbeat/sync foundation
+- [ ] Desktop/local connector runtime
 - [ ] Read/write synchronization test
 - [ ] Failure/retry/recovery test
 
-### 9. Notifications
+### 7. Notifications / mobile
 - [x] Push notification initialization foundation
-- [x] Notification tap/action routing
+- [x] Notification tap routing
 - [x] Foreground notification behavior
+- [x] School-branded mobile configuration
 - [ ] Production Firebase configuration per school/app
-- [ ] End-to-end notification delivery test
+- [ ] Full Android analyze/build verification
+- [ ] APK artifact verification
+- [ ] Offline mobile cache/outbox integration
 
-### 10. Web UI / UX
-- [x] Existing ERP web modules retained
-- [x] School-management and onboarding screens
-- [x] Teacher permissions screen foundation
-- [x] Offline/sync administration screens
-- [ ] Unified advanced dynamic UI/animation pass
+### 8. Web UI / UX
+- [x] School management screen
+- [x] Add School form
+- [x] School search/list/status
+- [x] School configuration management
+- [ ] Unified advanced dynamic animation pass
 - [ ] Mobile-responsive audit
 - [ ] Loading/empty/error/success state audit
-- [ ] Accessibility and keyboard navigation audit
-
-### 11. Flutter mobile app
-- [x] School-branded app configuration support
-- [x] Login/authentication flow
-- [x] Role-based dashboard routing
-- [x] Notification tap routing
-- [ ] Full Android analyze/build verification after latest changes
-- [ ] APK artifact verification
-- [ ] Offline cache/outbox integration
-- [ ] School-specific release configuration verification
-
-### 12. Testing & production hardening
-- [x] Static JavaScript validation
-- [x] Required asset checks
-- [x] SQL file presence checks
-- [x] Database migration execution automation in CI\n- [x] Runtime schema verification contract in CI
-- [x] API contract smoke test: health + Super Admin page + protected-route guard\n- [ ] API authentication smoke test with a real test account
-- [ ] Super Admin school provisioning smoke test
-- [ ] Staff/student enrollment smoke test
-- [ ] Teacher marks authorization test
-- [ ] Offline sync smoke test
-- [ ] Local storage connector smoke test
-- [ ] Production deployment health check
-- [ ] Final regression pass
-
----
+- [ ] Accessibility/keyboard audit
 
 ## Architecture
 
 ```
-                    SUPER ADMIN
-                         |
-                  School Provisioning
-                         |
-              +----------v----------+
-              | Central ERP API     |
-              | PostgreSQL (source) |
-              +----------+----------+
-                         |
-          +--------------+--------------+
-          |              |              |
-        Web ERP      Flutter App    School PC/NAS
-          |              |              |
-       IndexedDB      Local DB      Selected Folder
-          |              |              |
-          +--------------+--------------+
-                         |
-                    Auto Sync
+                     SUPER ADMIN
+                          |
+                   School Provisioning
+                          |
+               +----------v----------+
+               | Central ERP API     |
+               | PostgreSQL (master) |
+               +----------+----------+
+                          |
+          +---------------+---------------+
+          |               |               |
+        Web ERP       Flutter App     School PC/NAS
+          |               |               |
+       IndexedDB       Local DB       Selected Folder
+          |               |               |
+          +---------------+---------------+
+                          |
+                      Auto Sync
 ```
 
-### Data rule
-
-**Online PostgreSQL is the authoritative source of truth.**
-
-Offline/local data is a cache + outbox and secondary storage layer. Offline mode must never bypass server-side authorization when data synchronizes.
+**Primary storage:** online PostgreSQL.  
+**Offline storage:** client cache + outbox.  
+**Secondary storage:** explicitly permitted school PC/NAS/external folder.
 
 ### Teacher permission rule
 
-A teacher can enter marks only when the server confirms:
-
-`teacher + school + branch + academic session + class/section + subject + enrolled student`
-
-Changing an ID in the request must never grant additional access.
+`teacher + school + branch + academic session + class/section + subject + enrolled student` must all match before marks can be written. Offline sync performs the same authorization again.
 
 ### Local computer rule
 
-The browser/app cannot silently read the entire computer. Local storage access requires explicit user-selected folder permission. The connector supports **read-only** and **read-write** modes.
-
----
+The browser/app cannot silently read the entire computer. A local connector uses an explicitly user-selected folder with **read-only** or **read-write** permission.
 
 ## Important Docs
 
-- `erp/docs/major-process-status.md` — detailed implementation status
-- `erp/docs/erp-data-architecture.md` — architecture and security rules
-- `erp/docs/offline-sync-api.md` — sync API design
-- `erp/docs/offline-local-storage-implementation.md` — local storage design
-
----
+- `erp/docs/major-process-status.md`
+- `erp/docs/erp-data-architecture.md`
+- `erp/docs/offline-sync-api.md`
+- `erp/docs/offline-local-storage-implementation.md`
 
 ## Next Logical Work
 
-1. Run the authenticated Super Admin school provisioning smoke test against the clean CI database.
-2. Test school → staff → teacher assignment → student enrollment.
-3. Run positive/negative teacher marks authorization tests, including offline-sync rejection.
-4. Run offline sync and conflict tests.
-5. Verify local PC storage read/write synchronization.
-6. Verify Flutter Android analyze/build and artifact.
-7. Finish the advanced dynamic UI/animation pass.
-8. Run final regression and deployment health checks.
-9. Mark each item above **[x]** only after it is actually verified.\n\n### Latest verified implementation\n- [x] `erp/scripts/contract-smoke.js` added to validate the cross-module ERP contract before runtime testing.\n- [x] `erp/scripts/verify-schema.js` added to validate the clean PostgreSQL schema after migrations.\n- [x] CI wired to run the runtime schema contract against a fresh PostgreSQL 16 service.
-- [x] `erp/scripts/api-contract-smoke.js` boots the actual ERP server against the migrated database and verifies health, Super Admin school page availability and protected-route authentication behavior.
-- [x] CI executes the API contract smoke immediately after migration/schema verification.
-
-**LSKLive website remains separate and is not modified as part of this ERP work.**
-
+1. [ ] Run authenticated Super Admin school provisioning E2E test.
+2. [ ] Run school → staff → teacher assignment → student enrollment E2E test.
+3. [ ] Run unauthorized teacher/offline marks negative tests.
+4. [ ] Complete offline push/pull/conflict verification.
+5. [ ] Implement actual PC local-folder connector runtime.
+6. [ ] Connect remaining web write forms to offline outbox.
+7. [ ] Verify Flutter Android build and APK artifact.
+8. [ ] Finish advanced dynamic animation/UI pass.
+9. [ ] Final regression + deployment health checks.
 
 ## Latest Progress — 2026-09-12
 
-- [x] Added API runtime contract smoke: health, Super Admin school page and protected-route authentication guard.
-- [x] CI now runs the API smoke after clean PostgreSQL migration and schema verification.
+- [x] Added Super Admin school provisioning with school profile, branding, main branch, mobile-app configuration and first school administrator.
+- [x] Added Super Admin school list/detail/configuration APIs.
+- [x] Added public non-sensitive school/app branding bootstrap endpoint.
+- [x] Confirmed Super Admin School Management UI at `erp/web/super-admin/schools.html`.
+- [x] Added offline synchronization server foundation and local storage connector model.
+- [x] Added server-side teacher authorization boundary for offline marks synchronization.
+- [x] Updated this README to reflect the current verified implementation state.
 
-- [x] Confirmed Super Admin school-management frontend exists at `super-admin/schools.html` and is wired to school provisioning/detail APIs.
-- [x] Confirmed transactional school provisioning creates the school, main branch, settings, mobile-app configuration and first school administrator.
-- [x] Added the browser offline-sync client: persistent outbox, device identity, server cursor, push/pull synchronization, automatic reconnect retry and sync events.
-- [x] Kept offline synchronization subordinate to server authorization; the backend remains the source of truth.
-- [ ] Connect every existing web write form to the offline outbox (module-by-module).
-- [ ] Add actual browser folder read/write synchronization through explicit user permission.
-- [ ] Run authenticated end-to-end smoke tests before marking production readiness.
-
-**README rule:** only verified implementation work is marked `[x]`; test-dependent items remain `[ ]` until CI/runtime verification confirms them.
-
-
-## Latest Progress — 2026-09-12 (Major Implementation)
-
-- [x] Offline teacher marks are now re-authorized server-side during the sync push endpoint; offline mode cannot bypass the normal teacher assignment rules.
-- [x] Offline marks validate exam subject, school, branch, exam publication state, maximum marks and active student enrollment before the mark is written.
-- [x] Existing online marks and offline-sync paths now use the same database authorization function for teacher subject/class permission.
-- [ ] End-to-end negative test: attempt an unauthorized teacher offline marks sync and verify HTTP 403 with no mark mutation.
-- [ ] End-to-end offline write/reconnect test and conflict-resolution verification.
+**LSKLive website remains separate and is not modified as part of this ERP work.**
