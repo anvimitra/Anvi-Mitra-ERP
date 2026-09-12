@@ -49,6 +49,10 @@ jobs:
           for f in erp/sql/*.sql; do
             test -s "$f"
           done
+      - name: Run ERP contract smoke test
+        working-directory: erp
+        run: node scripts/contract-smoke.js
+
 
   migration-smoke:
     runs-on: ubuntu-latest
