@@ -1,42 +1,44 @@
 # Anvi Mitra ERP
 
-Multi-school, multi-branch School ERP platform with Web + Flutter mobile clients, centralized PostgreSQL data, offline-first synchronization, school-specific branding/app configuration, and role/subject/class-level access control.
+Multi-school, multi-branch School ERP with Web + Flutter mobile clients, centralized PostgreSQL data, offline-first synchronization, school-specific branding/app configuration, and role/subject/class-level access control.
 
-> **Process rule:** This README is the live implementation checklist. Completed work is marked **[x]**; remaining work is marked **[ ]**. Update it only after implementation or verification.
+> **Live implementation checklist:** `[x]` = implemented/verified, `[ ]` = remaining.
 
 ## Current Status
 
-**Phase:** Major implementation → School management + onboarding + access control + offline-first integration  
-**Architecture foundation:** Complete  
-**Multi-school provisioning:** Implemented  
-**School onboarding foundations:** Implemented  
-**Teacher class/subject security:** Implemented  
-**Offline sync foundation:** Implemented  
-**Production-ready:** Not yet — authenticated end-to-end tests, full offline write/sync tests, local-PC connector runtime, Flutter release verification, UI polish and deployment checks remain.
+**Phase:** Major implementation — school management + onboarding + access control + offline-first integration
 
-## Current ERP requirements — confirmed
+- **Architecture foundation:** Complete
+- **Multi-school provisioning:** Implemented
+- **School onboarding foundations:** Implemented
+- **Teacher class/subject security:** Implemented
+- **Offline sync foundation:** Implemented
+- **Advanced School Management UI:** Implemented
+- **Production-ready:** Not yet — E2E verification, fresh production migration verification, full offline sync verification, desktop connector runtime, Flutter release verification and final UI/accessibility audits remain.
+
+## Confirmed ERP Requirements
 
 - [x] One ERP supports multiple schools with strict school-level data isolation.
-- [x] Super Admin can provision a school with profile, logo/branding, contact details, branch and app configuration foundations.
-- [x] Each school's app/branding configuration can remain school-specific.
+- [x] Super Admin can provision a school with profile, logo/branding, contact details, branch and app configuration.
+- [x] Each school's ERP/app branding remains school-specific.
 - [x] Online PostgreSQL/API is the primary source of truth.
 - [x] Web and mobile clients have an offline-first sync foundation.
 - [x] Secondary school-PC/NAS/external-folder storage has an explicit permission model.
 - [x] Teacher marks access is restricted by school, branch, academic session, class/section, subject and student enrollment.
 - [x] Offline queued marks remain subject to server-side authorization during synchronization.
-- [ ] Full runtime verification of the complete online/offline flow remains before production sign-off.
+- [ ] Full online/offline E2E verification before production sign-off.
 
-## ERP Implementation Checklist
+## Implementation Checklist
 
-### 1. Core platform
+### Core Platform
 - [x] Node/PostgreSQL backend foundation
 - [x] GitHub Actions verification workflow
 - [x] JavaScript syntax validation
 - [x] SQL/schema validation automation
-- [x] API runtime contract smoke test
+- [x] API runtime smoke-test foundation
 - [ ] Final production deployment verification
 
-### 2. Multi-school / multi-branch
+### Multi-school / Multi-branch
 - [x] School tenant isolation using `school_id`
 - [x] Branch-aware model using `branch_id`
 - [x] School settings / branding
@@ -50,14 +52,13 @@ Multi-school, multi-branch School ERP platform with Web + Flutter mobile clients
 - [x] School-specific mobile-app configuration
 - [x] Public non-sensitive school/app branding bootstrap
 - [x] Initial school administrator provisioning
-- [x] First school admin account is created transactionally from Add School
 - [x] Super Admin School Management UI
 - [x] School branding/configuration update API
 - [x] School branch creation from platform management
 - [ ] Fresh PostgreSQL production migration verification
 - [ ] Authenticated create → edit → deactivate smoke test
 
-### 3. School onboarding
+### School Onboarding
 - [x] School name/code/profile
 - [x] Logo and branding
 - [x] Contact/address/website
@@ -71,7 +72,7 @@ Multi-school, multi-branch School ERP platform with Web + Flutter mobile clients
 - [x] Parent account and student-parent linking API
 - [ ] Complete fresh-school onboarding E2E test
 
-### 4. Teacher marks security
+### Teacher Marks Security
 - [x] Teacher + subject + section + session authorization
 - [x] Branch scope authorization
 - [x] Student enrollment validation
@@ -83,7 +84,7 @@ Multi-school, multi-branch School ERP platform with Web + Flutter mobile clients
 - [x] Teacher assignment create/list/update API
 - [ ] Automated unauthorized offline-sync negative test
 
-### 5. Offline-first Web + Mobile
+### Offline-first Web + Mobile
 - [x] Device registration foundation
 - [x] Server sync journal/cursor
 - [x] Conflict tracking
@@ -96,7 +97,7 @@ Multi-school, multi-branch School ERP platform with Web + Flutter mobile clients
 - [ ] Conflict resolution E2E test
 - [ ] Mobile local cache/outbox integration test
 
-### 6. School PC / NAS / external storage
+### School PC / NAS / External Storage
 - [x] Local storage connector data model
 - [x] Read-only/read-write permission modes
 - [x] Explicit user-selected folder permission model
@@ -105,7 +106,7 @@ Multi-school, multi-branch School ERP platform with Web + Flutter mobile clients
 - [ ] Read/write synchronization test
 - [ ] Failure/retry/recovery test
 
-### 7. Notifications / mobile
+### Notifications / Mobile
 - [x] Push notification initialization foundation
 - [x] Notification tap routing
 - [x] Foreground notification behavior
@@ -115,56 +116,63 @@ Multi-school, multi-branch School ERP platform with Web + Flutter mobile clients
 - [ ] APK artifact verification
 - [ ] Offline mobile cache/outbox integration
 
-### 8. Web UI / UX
+### Web UI / UX
 - [x] Super Admin School Management screen
 - [x] Add School form
 - [x] School search/list/status
 - [x] School configuration management
 - [x] Dynamic loading/online-offline state motion on School Management
 - [x] Animated cards/modals/focus states on School Management
-- [ ] Unified advanced dynamic animation pass
-- [ ] Mobile-responsive audit
+- [x] Advanced dynamic animation pass on School Management
+- [x] Responsive base layout
+- [ ] Unified advanced dynamic animation pass across remaining ERP screens
 - [ ] Loading/empty/error/success state audit
 - [ ] Accessibility/keyboard audit
 
-### 9. Latest implementation marker — 2026-09-05
-- [x] Teacher Marks Permission Guard UI connected to server-side `/api/teacher-permissions/marks` authorization.
-- [x] Permission result clearly distinguishes allowed vs denied access and explains the authorization reason.
-- [x] Offline state is surfaced in the permission UI; offline writes remain subject to server re-authorization during sync.
-- [x] Multi-school primary/secondary storage and offline-sync requirements are explicitly documented.
-- [x] README now records the confirmed ERP architecture requirements separately from production verification.
-- [ ] Automated permission negative/E2E verification remains before marking this feature production-ready.
+## Latest Implementation Marker — 2026-09-12
+
+- [x] Super Admin school provisioning API creates school + settings + main branch + mobile-app configuration + first school administrator transactionally.
+- [x] Super Admin School Management UI is implemented at `erp/web/super-admin/schools.html`.
+- [x] UI is connected to authenticated school list/create/detail/edit APIs.
+- [x] School Management UI has dynamic online/offline status, animated cards, modal transitions, focus states and responsive layout.
+- [x] README progress tracking updated after verification.
+- [ ] Authenticated Super Admin school create → edit → deactivate E2E verification.
+- [ ] Fresh PostgreSQL migration verification.
+- [ ] Full offline push/pull/conflict verification.
+- [ ] Desktop/local-folder connector runtime.
+- [ ] Flutter Android build + APK artifact verification.
+- [ ] Advanced dynamic animation/UI pass across remaining ERP screens.
 
 ## Architecture
 
-```
-                     SUPER ADMIN
-                          |
-                   School Provisioning
-                          |
-               +----------v----------+
-               | Central ERP API     |
-               | PostgreSQL (master) |
-               +----------+----------+
-                          |
-          +---------------+---------------+
-          |               |               |
-        Web ERP       Flutter App     School PC/NAS
-          |               |               |
-       IndexedDB       Local DB       Selected Folder
-          |               |               |
-          +---------------+---------------+
-                          |
-                      Auto Sync
+```text
+SUPER ADMIN
+     │
+     ▼
+School Provisioning → School-specific Branding/App Config
+     │
+     ▼
+Central ERP API + PostgreSQL (PRIMARY)
+     │
+ ┌───┼──────────────┐
+ ▼   ▼              ▼
+Web Mobile       School PC/NAS
+│   │              │
+IndexedDB/Local DB Selected Folder
+└───┼──────────────┘
+    ▼
+ Auto Sync + Conflict Handling
 ```
 
-**Primary storage:** online PostgreSQL.  
-**Offline storage:** client cache + outbox.  
+**Primary storage:** online PostgreSQL.
+
+**Offline storage:** client cache + outbox.
+
 **Secondary storage:** explicitly permitted school PC/NAS/external folder.
 
 ### Teacher permission rule
 
-`teacher + school + branch + academic session + class/section + subject + enrolled student` must all match before marks can be written. Offline sync performs the same authorization again.
+`teacher + school + branch + academic session + class/section + subject + enrolled student` must all match before marks can be written. Offline synchronization performs the authorization again.
 
 ### Local computer rule
 
@@ -176,21 +184,5 @@ The browser/app cannot silently read the entire computer. A local connector uses
 - `erp/docs/erp-data-architecture.md`
 - `erp/docs/offline-sync-api.md`
 - `erp/docs/offline-local-storage-implementation.md`
-
-## Latest Progress — 2026-09-05
-
-- [x] Super Admin school provisioning API verified against the current multi-school auth/branch model.
-- [x] School configuration/branding changes are journaled into the offline sync change stream.
-- [x] Super Admin School Management UI implemented at `erp/web/super-admin-schools.html`.
-- [x] School UI connects to the authenticated `/api/platform/schools` list/create endpoints.
-- [x] Add School UI includes school identity, branding/logo URL, contact details, main branch and mobile-app configuration.
-- [x] README progress tracking cleaned so implemented foundations are separated from runtime/E2E work.
-- [x] Requested multi-school, offline-first, secondary-storage and teacher-permission requirements marked in this README.
-- [ ] Authenticated Super Admin school create → edit → deactivate E2E verification.
-- [ ] Fresh PostgreSQL migration verification.
-- [ ] Full offline push/pull/conflict verification.
-- [ ] Desktop/local-folder connector runtime.
-- [ ] Flutter Android build + APK artifact verification.
-- [ ] Final advanced dynamic animation/UI pass.
 
 **LSKLive website remains separate and is not modified as part of this ERP work.**
