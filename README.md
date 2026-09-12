@@ -6,7 +6,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 ## Current Status — 2026-09-12
 
-**Current phase: Major implementation pass complete → E2E verification/hardening → production readiness**
+**Current phase: School-management implementation pass complete → E2E verification/hardening → production readiness**
 
 ### Latest implementation completed
 - [x] Super Admin animated School Management UI
@@ -71,7 +71,9 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 ## Major implementation pass marker
 
-**[x] Major implementation pass — multi-school provisioning, school branding, onboarding foundations, teacher marks access control, offline sync, sync conflicts, local-storage permission model, Super Admin UI, mobile notification routing, and hardened school-admin/branch-scope E2E coverage are implemented in the source tree.**
+**[x] School-management implementation pass — Super Admin school provisioning, school-admin provisioning, school branding/mobile configuration, main-branch management, animated UI, and API alignment are implemented.**
+
+**[x] ERP architecture foundation — multi-school isolation, teacher class/subject/session authorization, offline sync journal/conflicts, and permissioned local storage connector foundation are implemented.**
 
 **[~] Integration/E2E verification is intentionally not marked complete until the CI/database/device-backed checks pass.**
 
