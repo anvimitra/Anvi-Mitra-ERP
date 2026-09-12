@@ -15,11 +15,14 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] School detail/branch view
 - [x] Super Admin school configuration edit API
 - [x] School administrator provisioning during school creation
+- [x] School administrator credentials are securely hashed before storage
 - [x] School creation changes recorded in sync journal
 - [x] Offline/online connection state indicator in School Management UI
 - [x] School detail GET/PATCH API alignment with the animated UI
 - [x] School branding/mobile-app configuration can be edited from Super Admin API
-- [x] School administrator credentials are provisioned during tenant creation
+- [x] Main branch provisioning and branch management API
+- [x] Offline sync schema with device registration, change journal, cursors and conflicts
+- [x] Teacher marks authorization guard foundation
 
 ### Major implementation milestones
 - [x] Multi-school / multi-branch foundation
