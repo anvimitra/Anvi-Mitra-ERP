@@ -115,6 +115,12 @@ Multi-school, multi-branch School ERP platform with Web + Flutter mobile clients
 - [ ] Loading/empty/error/success state audit
 - [ ] Accessibility/keyboard audit
 
+### 9. Latest implementation marker — 2026-09-12
+- [x] Teacher Marks Permission Guard UI connected to server-side `/api/teacher-permissions/marks` authorization.
+- [x] Permission result clearly distinguishes allowed vs denied access and explains the authorization reason.
+- [x] Offline state is surfaced in the permission UI; offline writes remain subject to server re-authorization during sync.
+- [ ] Automated permission negative/E2E verification remains before marking this feature production-ready.
+
 ## Architecture
 
 ```
