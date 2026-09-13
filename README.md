@@ -30,17 +30,18 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Unified ERP animation foundation
 - [x] README progress checkpoint updated
 
-### Verification / hardening queue
-- [~] Authenticated school create → admin login → edit → deactivate/reactivate E2E (code path implemented; CI/database execution pending)
-- [~] Provisioned administrator branch-scope E2E (code path implemented; CI/database execution pending)
-- [~] School deactivate/reactivate and public-branding isolation E2E (code path implemented; CI/database execution pending)
-- [~] Clean PostgreSQL migration verification
-- [~] Full offline write → reconnect → push → pull/conflict E2E
-- [~] Sync server API integration execution
-- [~] Desktop read/write sync + recovery integration tests
-- [ ] Flutter production Firebase project/configuration per published school app
+### Next logical implementation queue
+- [~] Finish school provisioning verification against a clean PostgreSQL database
+- [~] Finish school admin onboarding verification: create → login → edit → deactivate/reactivate
+- [~] Finish branch-scope verification for provisioned school administrators
+- [~] Finish full offline write → reconnect → push → pull/conflict flow
+- [~] Finish desktop/local-folder read/write sync and recovery flow
+- [ ] Build staff/teacher/student enrollment workflow end-to-end
+- [ ] Build teacher class/subject/section/session permission management UI
+- [ ] Build marks-entry UI that exposes only the teacher's authorized students
+- [ ] Add offline local cache/outbox integration tests on web and Flutter
+- [ ] Configure production Firebase projects/configuration per published school app
 - [ ] Full Android analyze/build + APK artifact verification
-- [ ] Mobile local cache/outbox integration test on real device
 - [ ] Accessibility audit
 - [ ] Security audit
 - [ ] Backup/restore drill
