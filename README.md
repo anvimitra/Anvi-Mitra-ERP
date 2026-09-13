@@ -6,9 +6,9 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 ## Current Status — 2026-09-13
 
-**Current phase: E2E platform verification → clean database verification → offline sync E2E → desktop connector recovery → mobile release verification**
+**Current phase: Major platform implementation → E2E verification → production hardening**
 
-### Latest implementation checkpoint
+### Latest major implementation checkpoint
 - [x] Super Admin animated School Management UI
 - [x] Add School provisioning with school branding/logo and ERP/mobile-app configuration
 - [x] School list/search, active/inactive state and school detail/branch management
@@ -46,9 +46,10 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Major architecture contract gate for multi-school, offline sync, local-storage permissions and teacher authorization
 - [x] Authenticated Super Admin E2E harness: create → edit → branding → deactivate/reactivate → provisioned admin login → branch scope
 - [x] **Major platform implementation checkpoint: school provisioning + onboarding + authorization + offline foundation**
-- [x] **README progress marker updated for this checkpoint**
+- [x] **Major-process contract gate added to `npm test`**
+- [x] **README progress marker updated for the major-process checkpoint**
 
-### Next logical implementation queue
+### Next major verification queue
 - [~] Run authenticated Super Admin E2E against a clean PostgreSQL database
 - [~] Run all migrations from an empty PostgreSQL database and verify required tables/functions/indexes
 - [~] Run full offline write → reconnect → push → pull → idempotency/conflict E2E
