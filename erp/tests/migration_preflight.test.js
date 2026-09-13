@@ -16,8 +16,8 @@ for (const file of files) {
 }
 
 const server = fs.readFileSync(path.join(root,'src','server.js'),'utf8');
-assert(server.includes("registerOptional('organization'"));
-assert(server.includes("registerOptional('sync_routes'"));
-assert(server.includes("registerOptional('local_storage'"));
+assert(server.includes("['organization','registerOrganizationRoutes']"));
+assert(server.includes("['sync_routes','registerSyncRoutes']"));
+assert(server.includes("['local_storage','registerLocalStorageRoutes']"));
 
 console.log('ERP migration/preflight contract checks: PASS');
