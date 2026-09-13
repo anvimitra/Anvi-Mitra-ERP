@@ -2,7 +2,7 @@
 
 ## Current major phase — Platform hardening & production readiness
 
-Updated: **2026-09-12**
+Updated: **2026-09-13**
 
 - [x] Multi-school / multi-branch foundation
 - [x] Super Admin school provisioning
@@ -16,33 +16,39 @@ Updated: **2026-09-12**
 - [x] Super Admin School Management UI
 - [x] School-branded dynamic login
 - [x] Mobile notification routing
-- [ ] Authenticated Super Admin create → edit → deactivate E2E
-- [ ] Clean PostgreSQL migration verification
-- [ ] Full offline write → reconnect → push → pull E2E
+- [x] Authenticated Super Admin E2E harness
 - [x] Desktop/local-folder connector runtime
-- [ ] Flutter Android build + APK artifact verification
+- [~] Clean PostgreSQL migration verification
+- [~] Full offline write → reconnect → push → pull E2E
+- [~] Desktop/local-folder read/write sync and recovery E2E
+- [~] Staff/teacher/student enrollment E2E
 - [~] Unified advanced dynamic animation pass across remaining ERP screens
-- [ ] Final accessibility / security / production audit
+- [ ] Production Firebase configuration per published school app
+- [ ] Flutter Android build + APK artifact verification
+- [ ] Final accessibility / security / backup-restore audit
+- [ ] Production deployment/sign-off
 
-## Major implementation pass marker
+## Major implementation checkpoint
 
-**[x] Major backend + UI implementation pass completed.** Source tree contains multi-school provisioning, school branding/app configuration, onboarding foundations, teacher access controls, offline sync APIs, conflict handling, local-storage permission APIs/runtime, Super Admin School Management UI, and mobile notification routing.
+**[x] School platform implementation checkpoint completed.**
 
-**[~] E2E, device-backed and production hardening remain intentionally open.**
+The repository now contains the implementation/harness for multi-school provisioning, school-specific branding/app configuration, first-admin onboarding, branch-aware authentication, staff/student onboarding foundations, teacher assignment-based marks authorization, offline sync journal/cursors/idempotency/conflicts, web offline outbox, and permissioned local-storage integration.
+
+**[~] Infrastructure-backed verification remains open.** A harness existing in source code is not the same as a successful clean-DB/device/production run.
 
 ## Next logical execution order
 
-1. **E2E platform smoke test** — create a school, edit branding/config, create branch and deactivate/reactivate it.
-2. **Clean DB verification** — run every migration from an empty PostgreSQL database and verify required functions/tables/indexes.
-3. **Offline E2E** — perform an allowed offline mutation, reconnect, push it, pull the server journal and verify idempotency/conflict behavior.
-4. **Desktop connector** — implement the actual local-folder bridge with explicit read/write permission and retry/recovery.
-5. **Mobile release verification** — analyze, build APK and verify the generated artifact.
-6. **UX finish** — apply the advanced dynamic animation system consistently to the remaining ERP modules without sacrificing accessibility/performance.
-7. **Production sign-off** — security, tenant isolation, backup/restore, error states, accessibility and deployment checks.
+1. **Clean PostgreSQL gate** — execute every migration from an empty database and verify schema/functions/indexes.
+2. **Platform E2E gate** — create a school, verify first-admin login and branch scope, edit branding, deactivate/reactivate and verify public bootstrap behavior.
+3. **Enrollment E2E gate** — provision staff/teacher, enroll students/parents, assign teacher permissions and verify roster isolation.
+4. **Offline E2E gate** — queue allowed offline mutations, reconnect, push, pull, verify idempotency and resolve a conflict.
+5. **Desktop connector gate** — exercise explicit read/write folder permission, sync, retry and recovery.
+6. **Mobile release gate** — Flutter analyze, APK build and artifact verification.
+7. **UX/a11y/security gate** — finish dynamic animation consistently, then audit accessibility, tenant isolation, authorization, backup/restore and production deployment.
 
 ## Security invariants
 
-- Every protected API is tenant-scoped by school_id.
+- Every protected API is tenant-scoped by `school_id`.
 - Branch-scoped users cannot cross their assigned branch.
 - Teacher marks require teacher + subject + class/section + session + enrollment match.
 - Offline queued protected operations are re-authorized at synchronization.
