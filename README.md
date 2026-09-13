@@ -4,9 +4,9 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 > Progress marker: [x] implementation complete · [~] verification/hardening pending · [ ] not implemented
 
-## Current Status — 2026-09-12
+## Current Status — 2026-09-13
 
-**Current phase: School-management implementation pass complete → E2E verification/hardening → production readiness**
+**Current phase: Verification/hardening → production readiness**
 
 ### Latest implementation completed
 - [x] Super Admin animated School Management UI
@@ -27,6 +27,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Sync idempotency and conflict-resolution API
 - [x] Local storage connector API (read-only/read-write permission model)
 - [x] Super Admin school-management create/edit/branding/status API flow
+- [x] ERP sync/tenant contract regression test wired into npm test
 - [~] Provisioned school administrator login coverage in E2E test (implemented; CI/database execution pending)
 - [~] Provisioned administrator branch-scope coverage in E2E test (implemented; CI/database execution pending)
 - [~] School deactivate/reactivate and public-branding isolation coverage in E2E test (implemented; CI/database execution pending)
@@ -52,15 +53,15 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 ## Current logical next phase — verification/hardening
 
-- [~] Authenticated school create → admin login → edit → deactivate/reactivate E2E **(test implemented; CI/database execution still pending)**
+- [~] Authenticated school create → admin login → edit → deactivate/reactivate E2E (test implemented; CI/database execution still pending)
 - [~] Clean PostgreSQL migration verification
 - [~] Full offline write → reconnect → push → pull/conflict E2E
 - [x] Desktop/local-folder connector runtime implementation
 - [x] Desktop read/write safety boundary implementation
 - [x] Flutter notification routing implementation
 - [x] Unified ERP animation foundation
-- [~] Sync server API hardening **(device registration, cursor-based pull, idempotent push, teacher marks authorization and conflict resolution implemented; integration execution pending)**
-- [x] ERP sync/tenant contract regression checks added (`erp/tests/erp_contract.test.js`)
+- [~] Sync server API hardening (device registration, cursor-based pull, idempotent push, teacher marks authorization and conflict resolution implemented; integration execution pending)
+- [x] ERP sync/tenant contract regression checks added (erp/tests/erp_contract.test.js)
 - [ ] Desktop read/write sync + recovery integration tests
 - [ ] Flutter production Firebase project/configuration per published school app
 - [ ] Full Android analyze/build + APK artifact verification
