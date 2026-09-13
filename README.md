@@ -6,7 +6,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 ## Current Status — 2026-09-13
 
-**Current phase: Multi-school administration → offline/local sync hardening**
+**Current phase: Multi-school administration → enrollment → permissions → offline/local sync hardening**
 
 ### Latest implementation checkpoint
 - [x] Super Admin animated School Management UI
@@ -28,6 +28,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] School-branded login bootstrap
 - [x] Mobile notification routing
 - [x] Unified ERP animation foundation
+- [x] Super Admin School Management UI connected to provisioning/detail/update APIs
 - [x] README progress checkpoint updated
 
 ### Next logical implementation queue
