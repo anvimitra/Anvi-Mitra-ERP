@@ -6,17 +6,10 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "check": "for f in src/*.js; do node --check \"$f\"; done",
-    "test": "node tests/erp_contract.test.js && node tests/school_provisioning_contract.test.js",
+    "check": "for f in src/*.js; do node --check \\\"$f\\\"; done",
+    "test": "node tests/erp_contract.test.js && node tests/school_provisioning_contract.test.js && node tests/enrollment_contract.test.js",
     "migrate": "node src/migrate.js"
   },
-  "engines": {
-    "node": ">=20"
-  },
-  "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^16.6.1",
-    "express": "^5.1.0",
-    "pg": "^8.16.3"
-  }
+  "engines": {"node": ">=20"},
+  "dependencies": {"cors": "^2.8.5", "dotenv": "^16.6.1", "express": "^5.1.0", "pg": "^8.16.3"}
 }
