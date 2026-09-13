@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Anvi Mitra ERP — Marks Entry</title>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:#07111f;color:#eef6ff;--a:#55d6be;--b:#6ea8ff;--muted:#9eb2c9}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 10% 0,#16385e,#07111f 48%);min-height:100vh}
+.wrap{width:min(1180px,94vw);margin:auto;padding:24px 0 48px}.panel{background:linear-gradient(145deg,#112640,#091827);border:1px solid #294866;border-radius:24px;padding:22px;box-shadow:0 24px 80px #0008;animation:rise .45s ease both}
+h1{margin:4px 0}.muted{color:var(--muted)}.eyebrow{color:var(--a);font-size:11px;font-weight:900;letter-spacing:.13em;text-transform:uppercase}
+.controls{display:grid;grid-template-columns:1fr auto;gap:12px;margin-top:18px}.input{width:100%;padding:13px;border-radius:12px;border:1px solid #29445f;background:#071522;color:#fff}
+.btn{border:0;border-radius:12px;padding:13px 18px;font-weight:850;cursor:pointer;background:linear-gradient(100deg,var(--a),#78ead5);color:#03201a}
+.status{margin-top:14px;padding:12px;border-radius:12px;background:#0b1b2c;color:var(--muted)}.ok{color:#55d6be}.err{color:#ff9da9}
+.table{width:100%;border-collapse:collapse;margin-top:18px}.table th,.table td{padding:12px;border-bottom:1px solid #203a52;text-align:left}.table th{color:#a9c1d9;font-size:12px}.mark{width:105px}.mark input{width:100%;padding:9px;border-radius:9px;border:1px solid #36526d;background:#071522;color:#fff}
+.save{margin-top:18px;display:flex;justify-content:flex-end;gap:10px}.pill{padding:5px 9px;border-radius:999px;background:#123a39;color:#70ead7;font-size:12px;font-weight:800}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@media(max-width:720px){.controls{grid-template-columns:1fr}.table{font-size:13px}}
+</style>
+</head>
+<body><main class="wrap"><section class="panel">
+<div class="eyebrow">Teacher Workspace</div><h1>Marks Entry</h1>
+<p class="muted">Only students in your authorized class/subject/session roster are returned by the server. Permission is checked again on every save.</p>
+<div class="controls"><input id="examSubjectId" class="input" placeholder="Exam Subject ID"><button class="btn" onclick="loadRoster()">Load Authorized Roster</button></div>
+<div id="status" class="status">Enter an Exam Subject ID.</div>
+<div id="table"></div>
+<div class="save"><button id="save" class="btn" disabled onclick="saveMarks()">Save Marks</button></div>
+</section></main>
+<script>
+const token=sessionStorage.getItem('lsk_access_token'); if(!token) location.href='/erp/web/login.html';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+let roster=null;
+const headers={Authorization:'Bearer '+token,'Content-Type':'application/json'};
+function setStatus(text,cls=''){const e=document.getElementById('status');e.className='status '+cls;e.textContent=text}
+async function loadRoster(){
+ const id=document.getElementById('examSubjectId').value.trim(); if(!id)return setStatus('Exam Subject ID is required.','err');
+ setStatus('Checking teacher authorization and loading roster…');
+ try{
+  const r=await fetch('/api/exam-marks/roster?examSubjectId='+encodeURIComponent(id),{headers});
+  const d=await r.json(); if(!r.ok) throw Error(d.error||'Unable to load roster');
+  roster=d; setStatus('Authorized • '+d.students.length+' students • Max marks: '+(d.examSubject.maxMarks??'—'),'ok');
+  document.getElementById('table').innerHTML='<table class="table"><thead><tr><th>Admission No</th><th>Student</th><th>Class</th><th>Section</th><th>Marks</th><th>Grade</th><th>Remarks</th></tr></thead><tbody>'+
+   d.students.map((s,i)=>'<tr><td>'+esc(s.admissionNo)+'</td><td><strong>'+esc(s.studentName)+'</strong></td><td>'+esc(s.className)+'</td><td>'+esc(s.sectionName)+'</td><td class="mark"><input id="m'+i+'" type="number" min="0" max="'+esc(d.examSubject.maxMarks??9999)+'" step="0.01" value="'+esc(s.marks??'')+'"></td><td><input id="g'+i+'" class="mark" value="'+esc(s.grade??'')+'"></td><td><input id="r'+i+'" class="mark" value="'+esc(s.remarks??'')+'"></td></tr>').join('')+
+   '</tbody></table>'; document.getElementById('save').disabled=!d.students.length;
+ }catch(e){roster=null;document.getElementById('table').innerHTML='';document.getElementById('save').disabled=true;setStatus(e.message,'err')}
+}
+async function saveMarks(){
+ if(!roster)return; const marks=[];
+ roster.students.forEach((s,i)=>{const value=document.getElementById('m'+i).value;if(value!=='')marks.push({examSubjectId:document.getElementById('examSubjectId').value.trim(),studentId:s.studentId,marks:Number(value),grade:document.getElementById('g'+i).value.trim()||null,remarks:document.getElementById('r'+i).value.trim()||null})});
+ if(!marks.length)return setStatus('No marks entered.');
+ setStatus('Saving '+marks.length+' marks…');
+ try{const r=await fetch('/api/exam-marks/batch',{method:'POST',headers,body:JSON.stringify({marks})});const d=await r.json();if(!r.ok)throw Error(d.error||'Save failed');setStatus('Saved '+d.count+' marks successfully.','ok')}catch(e){setStatus(e.message,'err')}
+}
+</script></body></html>
