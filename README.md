@@ -46,21 +46,24 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Major architecture contract gate for multi-school, offline sync, local-storage permissions and teacher authorization
 - [x] Authenticated Super Admin E2E harness: create → edit → branding → deactivate/reactivate → provisioned admin login → branch scope
 - [x] **Major platform implementation checkpoint: school provisioning + onboarding + authorization + offline foundation**
-- [x] **Major-process contract gate added to `npm test`**
+- [x] **Major-process contract gate added to `npm test`
 - [x] **README progress marker updated for the major-process checkpoint**
 
-### Next major verification queue
-- [~] Run authenticated Super Admin E2E against a clean PostgreSQL database
-- [~] Run all migrations from an empty PostgreSQL database and verify required tables/functions/indexes
-- [~] Run full offline write → reconnect → push → pull → idempotency/conflict E2E
-- [~] Complete desktop/local-folder read/write sync and recovery flow
-- [~] Verify staff/teacher/student enrollment end-to-end against a real database
-- [ ] Configure production Firebase projects/configuration per published school app
+### Active next logical process — verification gate
+- [~] **Clean PostgreSQL migration run:** execute every migration from an empty database and verify tables, indexes, functions and constraints
+- [~] **Authenticated Super Admin E2E:** create school → edit → branding → deactivate/reactivate → admin login → branch scope
+- [~] **Offline E2E:** offline write → reconnect → push → pull → idempotency/conflict resolution
+- [~] **Local storage E2E:** permissioned folder read/write → sync → recovery after disconnect
+- [~] **Enrollment E2E:** staff → teacher → student → parent linking → class/section scope
+- [ ] Production Firebase configuration for each published school app
 - [ ] Full Android analyze/build + APK artifact verification
 - [ ] Accessibility audit
 - [ ] Security audit
 - [ ] Backup/restore drill
 - [ ] Production deployment/sign-off
+
+### Progress marker
+**[~] Current active work:** database-backed E2E verification and production hardening. The code foundation is marked complete, but production readiness is intentionally not marked complete until the real infrastructure-backed checks pass.
 
 ## Architecture
 
