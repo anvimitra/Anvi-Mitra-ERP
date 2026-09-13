@@ -30,6 +30,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] School creation changes recorded in the sync journal
 - [x] ERP sync/tenant contract test wired into `npm test`
 - [x] School provisioning/UI contract test wired into `npm test`
+- [x] School provisioning contract test hardened for first-admin fields and branch-aware authentication
 - [x] Staff account + teacher profile provisioning API
 - [x] Student enrollment API: session + class/section + branch scope + parent links
 - [x] Student Enrollment web workflow
