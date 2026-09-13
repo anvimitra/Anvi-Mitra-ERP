@@ -24,6 +24,8 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Authorized teacher marks-entry UI with server-side roster filtering
 - [x] Single + batch marks save API with authorization, enrollment and max-marks validation
 - [x] Marks changes recorded in the sync journal
+- [x] School provisioning events recorded in the sync journal via database trigger
+- [x] School provisioning sync contract test wired into `npm test`
 - [x] Teacher marks UI contract test wired into `npm test`
 - [x] Offline sync schema: devices, change journal/cursors and conflicts
 - [x] Offline sync push/pull/device registration and idempotency/conflict foundation
