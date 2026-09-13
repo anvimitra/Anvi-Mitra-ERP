@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node src/server.js",
     "check": "for f in src/*.js; do node --check \\\"$f\\\"; done",
-    "test": "node tests/erp_contract.test.js && node tests/school_provisioning_contract.test.js && node tests/enrollment_contract.test.js && node tests/teacher_marks_ui_contract.test.js && node tests/offline_web_contract.test.js && node tests/migration_preflight.test.js",
+    "test": "node tests/erp_contract.test.js && node tests/school_provisioning_contract.test.js && node tests/enrollment_contract.test.js && node tests/teacher_marks_ui_contract.test.js && node tests/offline_web_contract.test.js && node tests/migration_preflight.test.js && node tests/architecture_contract.test.js",
     "migrate": "node src/migrate.js"
   },
   "engines": {
