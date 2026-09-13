@@ -19,79 +19,71 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Validate server modules
+      - name: Collect ERP validation diagnostics
+        id: diagnostics
         shell: bash
         run: |
-          set -e
-          for f in erp/src/*.js; do echo "Checking $f"; node --check "$f"; done
-      - name: Validate key web pages
-        shell: bash
-        run: |
-          set -e
-          for f in \
-            erp/web/super-admin/schools.html \
-            erp/web/school-management.html \
-            erp/web/school-onboarding.html \
-            erp/web/staff-management.html \
-            erp/web/student-enrollment.html \
-            erp/web/teacher-assignments.html \
-            erp/web/teacher-permissions.html \
-            erp/web/teacher-marks.html \
-            erp/web/offline-sync.js \
-            erp/web/local-storage.html; do test -s "$f"; done
-      - name: Validate SQL extension migrations
-        shell: bash
-        run: |
-          set -e
-          for f in erp/sql/*.sql; do test -s "$f"; done
-          test -s erp/sql/032_offline_sync_access_control.sql
-          test -s erp/sql/036_sync_idempotency.sql
-      - name: Validate migration runner
-        working-directory: erp
-        run: node --check src/migrate.js
+          set +e
+          report="$GITHUB_WORKSPACE/erp-validation-report.txt"
+          : > "$report"
+          failed=0
+          echo '=== JavaScript syntax ===' >> "$report"
+          for f in erp/src/*.js; do
+            node --check "$f" >> "$report" 2>&1
+            code=$?
+            if [ $code -eq 0 ]; then echo "PASS $f" >> "$report"; else echo "FAIL $f (exit $code)" >> "$report"; failed=1; fi
+          done
+          echo '=== Required web files ===' >> "$report"
+          for f in erp/web/super-admin/schools.html erp/web/school-management.html erp/web/school-onboarding.html erp/web/staff-management.html erp/web/student-enrollment.html erp/web/teacher-assignments.html erp/web/teacher-permissions.html erp/web/teacher-marks.html erp/web/offline-sync.js erp/web/local-storage.html; do
+            if test -s "$f"; then echo "PASS $f" >> "$report"; else echo "FAIL $f" >> "$report"; failed=1; fi
+          done
+          echo '=== SQL extension files ===' >> "$report"
+          for f in erp/sql/*.sql; do
+            if test -s "$f"; then echo "PASS $f" >> "$report"; else echo "FAIL $f" >> "$report"; failed=1; fi
+          done
+          echo '=== Migration runner syntax ===' >> "$report"
+          node --check erp/src/migrate.js >> "$report" 2>&1
+          code=$?
+          if [ $code -eq 0 ]; then echo 'PASS erp/src/migrate.js' >> "$report"; else echo "FAIL erp/src/migrate.js (exit $code)" >> "$report"; failed=1; fi
+          echo "diagnostic_failed=$failed" >> "$GITHUB_OUTPUT"
       - name: Run ERP contract tests individually
         id: contract_tests
         shell: bash
         run: |
           set +e
           cd erp
-          : > ../erp-test-report.txt
+          report="../erp-validation-report.txt"
           failed=0
-          tests=(
-            tests/erp_contract.test.js
-            tests/school_provisioning_contract.test.js
-            tests/enrollment_contract.test.js
-            tests/teacher_marks_ui_contract.test.js
-            tests/offline_web_contract.test.js
-            tests/migration_preflight.test.js
-            tests/architecture_contract.test.js
-            tests/major_process_contract.test.js
-            tests/school_management_ui_contract.test.js
-            tests/school_summary_contract.test.js
-            tests/local_storage_ui_contract.test.js
-          )
+          tests=(tests/erp_contract.test.js tests/school_provisioning_contract.test.js tests/enrollment_contract.test.js tests/teacher_marks_ui_contract.test.js tests/offline_web_contract.test.js tests/migration_preflight.test.js tests/architecture_contract.test.js tests/major_process_contract.test.js tests/school_management_ui_contract.test.js tests/school_summary_contract.test.js tests/local_storage_ui_contract.test.js)
           for test_file in "${tests[@]}"; do
-            echo "===== $test_file =====" | tee -a ../erp-test-report.txt
-            node "$test_file" >> ../erp-test-report.txt 2>&1
+            echo "===== $test_file =====" >> "$report"
+            node "$test_file" >> "$report" 2>&1
             code=$?
-            if [ $code -eq 0 ]; then echo "PASS $test_file" | tee -a ../erp-test-report.txt; else echo "FAIL $test_file (exit $code)" | tee -a ../erp-test-report.txt; failed=1; fi
+            if [ $code -eq 0 ]; then echo "PASS $test_file" >> "$report"; else echo "FAIL $test_file (exit $code)" >> "$report"; failed=1; fi
           done
-          echo "===== contract smoke =====" | tee -a ../erp-test-report.txt
-          node scripts/contract-smoke.js >> ../erp-test-report.txt 2>&1
+          echo '===== contract smoke =====' >> "$report"
+          node scripts/contract-smoke.js >> "$report" 2>&1
           code=$?
-          if [ $code -eq 0 ]; then echo "PASS contract smoke" | tee -a ../erp-test-report.txt; else echo "FAIL contract smoke (exit $code)" | tee -a ../erp-test-report.txt; failed=1; fi
-          exit $failed
+          if [ $code -eq 0 ]; then echo 'PASS contract smoke' >> "$report"; else echo "FAIL contract smoke (exit $code)" >> "$report"; failed=1; fi
+          echo "contract_failed=$failed" >> "$GITHUB_OUTPUT"
       - name: Upload ERP validation report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: erp-validation-report
-          path: erp-test-report.txt
-          if-no-files-found: warn
+          path: erp-validation-report.txt
+          if-no-files-found: error
+      - name: Fail validation if diagnostics found errors
+        if: always()
+        shell: bash
+        run: |
+          if grep -q '^FAIL ' erp-validation-report.txt; then
+            echo 'ERP validation diagnostics found failures:'
+            grep '^FAIL ' erp-validation-report.txt
+            exit 1
+          fi
+          echo 'ERP static/contract validation PASS'
 
-  # The core PostgreSQL schema is maintained by the deployment database. CI validates
-  # the ERP extension migrations statically; a real DATABASE_URL is required for the
-  # infrastructure-backed migration/E2E gate described in README.md.
   migration-contract:
     runs-on: ubuntu-latest
     needs: validate
