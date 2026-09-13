@@ -48,6 +48,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] **Major platform implementation checkpoint: school provisioning + onboarding + authorization + offline foundation**
 - [x] **Major-process contract gate added to `npm test`**
 - [x] **README progress marker updated for the major-process checkpoint**
+- [x] **Super Admin school onboarding authentication aligned with the shared ERP session**
 
 ### Active next logical process — verification gate
 - [~] **Clean PostgreSQL migration run:** execute every migration from an empty database and verify tables, indexes, functions and constraints
