@@ -100,6 +100,22 @@ function registerSyncRoutes(app, pool) {
         const entityId = change.entityId || null;
         const payload = change.payload && typeof change.payload === 'object' ? change.payload : {};
         if (['fee_receipt','fee_payment'].includes(entityType) && req.auth.role === 'teacher') throw Object.assign(new Error('Teacher is not allowed to sync financial records'), { statusCode: 403 });
+        // Detect concurrent edits BEFORE mutating high-risk records.
+        // This prevents an offline client from overwriting a newer server value.
+        if (baseCursor > 0) {
+          const newer = await client.query(
+            'SELECT cursor,payload FROM sync_changes WHERE school_id=$1 AND entity_type=$2 AND entity_id IS NOT DISTINCT FROM $3 AND cursor>$4 ORDER BY cursor ASC LIMIT 1',
+            [req.auth.schoolId, entityType, entityId, baseCursor]
+          );
+          if (newer.rows.length) {
+            const conflictResult = await client.query(
+              "INSERT INTO sync_conflicts(school_id,device_id,entity_type,entity_id,local_payload,server_payload,resolution) VALUES($1,$2,$3,$4,$5,$6,'pending') RETURNING id",
+              [req.auth.schoolId, device.id, entityType, entityId, JSON.stringify(payload), JSON.stringify(newer.rows[0].payload)]
+            );
+            conflicts.push({id: conflictResult.rows[0].id, entityType, entityId, clientChangeId});
+            continue;
+          }
+        }
         if (['exam_mark','exam_marks'].includes(entityType)) {
           if (req.auth.role === 'teacher' && !payload.examSubjectId) throw Object.assign(new Error('examSubjectId is required for offline teacher marks sync'), { statusCode: 400 });
           const subjectResult = await client.query(`SELECT es.id AS "examSubjectId",es.class_id AS "classId",es.max_marks AS "maxMarks",es.branch_id AS "branchId",e.session_id AS "sessionId",e.status AS "examStatus" FROM exam_subjects es JOIN exams e ON e.id=es.exam_id AND e.school_id=es.school_id WHERE es.id=$1 AND es.school_id=$2`, [payload.examSubjectId, req.auth.schoolId]);
@@ -117,14 +133,6 @@ function registerSyncRoutes(app, pool) {
           if (!enrollment.rows.length) throw Object.assign(new Error('Student is not enrolled in this class/session'), { statusCode: 403 });
           const saved = await client.query(`INSERT INTO exam_marks(school_id,exam_subject_id,student_id,marks,grade,remarks) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(school_id,exam_subject_id,student_id) DO UPDATE SET marks=EXCLUDED.marks,grade=EXCLUDED.grade,remarks=EXCLUDED.remarks,updated_at=now() RETURNING id`, [req.auth.schoolId,payload.examSubjectId,payload.studentId,marks,payload.grade || null,payload.remarks || null]);
           if (entityId && String(entityId) !== String(saved.rows[0].id)) throw Object.assign(new Error('Offline mark entity does not match the target mark'), { statusCode: 409 });
-        }
-        if (baseCursor > 0) {
-          const newer = await client.query(`SELECT cursor,payload FROM sync_changes WHERE school_id=$1 AND entity_type=$2 AND entity_id IS NOT DISTINCT FROM $3 AND cursor>$4 ORDER BY cursor ASC LIMIT 1`, [req.auth.schoolId,entityType,entityId,baseCursor]);
-          if (newer.rows.length) {
-            const conflictResult = await client.query(`INSERT INTO sync_conflicts(school_id,device_id,entity_type,entity_id,local_payload,server_payload,resolution) VALUES($1,$2,$3,$4,$5,$6,'pending') RETURNING id`, [req.auth.schoolId,device.id,entityType,entityId,JSON.stringify(payload),JSON.stringify(newer.rows[0].payload)]);
-            conflicts.push({id:conflictResult.rows[0].id,entityType,entityId,clientChangeId});
-            continue;
-          }
         }
         const result = await client.query(`INSERT INTO sync_changes(school_id,device_id,client_change_id,base_cursor,entity_type,entity_id,operation,payload,changed_by) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING cursor,entity_type,entity_id,operation,payload,changed_at,client_change_id,base_cursor`, [req.auth.schoolId,device.id,clientChangeId,baseCursor,entityType,entityId,operation,JSON.stringify(payload),req.auth.sub]);
         accepted.push(result.rows[0]);
