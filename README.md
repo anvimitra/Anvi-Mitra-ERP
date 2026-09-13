@@ -43,8 +43,10 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Unified ERP animation foundation
 - [x] Super Admin School Management UI connected to provisioning/detail/update APIs
 - [x] Super Admin school detail + branding + first-admin API integration
-- [x] README progress checkpoint updated
 - [x] Migration/preflight gate added to `npm test` (duplicate-number + destructive-migration guard + route wiring)
+- [x] **Major architecture checkpoint: multi-school + offline sync + local-storage permissions + teacher authorization contract gate**
+- [x] **Major architecture contract test added and wired into `npm test`**
+- [x] **README progress marker updated for this major checkpoint**
 
 ### Next logical implementation queue
 - [~] Finish school provisioning verification against a clean PostgreSQL database
@@ -54,6 +56,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [~] Finish desktop/local-folder read/write sync and recovery flow
 - [~] Verify staff/teacher/student enrollment workflow end-to-end against a real database
 - [x] Add web IndexedDB offline cache/outbox integration contract test
+- [x] Add major architecture contract gate for route wiring, school provisioning, local storage and teacher authorization
 - [ ] Configure production Firebase projects/configuration per published school app
 - [ ] Full Android analyze/build + APK artifact verification
 - [ ] Accessibility audit
