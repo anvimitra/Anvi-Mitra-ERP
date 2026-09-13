@@ -6,7 +6,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 ## Current Status — 2026-09-13
 
-**Current phase: Multi-school administration → enrollment → permissions → offline/local sync hardening**
+**Current phase: Multi-school administration → enrollment → permissions → marks entry → offline/local sync hardening**
 
 ### Latest implementation checkpoint
 - [x] Super Admin animated School Management UI
@@ -18,6 +18,11 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] School tenant and branch-aware authentication
 - [x] Public school/app branding bootstrap API
 - [x] Teacher marks authorization foundation (teacher + subject + class/section + session + enrollment)
+- [x] Teacher class/subject/section/session permission management UI
+- [x] Authorized teacher marks-entry UI with server-side roster filtering
+- [x] Single + batch marks save API with authorization, enrollment and max-marks validation
+- [x] Marks changes recorded in the sync journal
+- [x] Teacher marks UI contract test wired into `npm test`
 - [x] Offline sync schema: devices, change journal/cursors and conflicts
 - [x] Offline sync push/pull/device registration and idempotency/conflict foundation
 - [x] Local storage connector model with read-only/read-write permission boundary
@@ -42,8 +47,6 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [~] Finish full offline write → reconnect → push → pull/conflict flow
 - [~] Finish desktop/local-folder read/write sync and recovery flow
 - [~] Verify staff/teacher/student enrollment workflow end-to-end against a real database
-- [ ] Build teacher class/subject/section/session permission management UI
-- [ ] Build marks-entry UI that exposes only the teacher's authorized students
 - [ ] Add offline local cache/outbox integration tests on web and Flutter
 - [ ] Configure production Firebase projects/configuration per published school app
 - [ ] Full Android analyze/build + APK artifact verification
@@ -69,8 +72,9 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 3. The first school administrator is provisioned with a securely hashed password.
 4. School administrator creates staff/teacher accounts and enrolls students/parents.
 5. Teachers receive class/subject/section/session assignments.
-6. Teachers can enter marks only for their assigned class/subject scope.
-7. Web/mobile/local clients synchronize through the central ERP API.
+6. Teachers open **Marks Entry** and receive only the students authorized for that subject/class/session.
+7. Marks are validated server-side and written to the sync journal.
+8. Web/mobile/local clients synchronize through the central ERP API.
 
 ## Progress policy
 
