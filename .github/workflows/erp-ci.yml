@@ -26,17 +26,12 @@ jobs:
         shell: bash
         run: |
           set -e
-          for f in erp/src/*.js; do
-            node --check "$f"
-          done
+          for f in erp/src/*.js; do node --check "$f"; done
       - name: Validate key web pages
         shell: bash
         run: |
           set -e
           test -f erp/web/super-admin/schools.html
-          test -f erp/web/super-admin-schools.html || true
-          test -f erp/web/super_admin_schools.html || true
-          test -f erp/web/super-admin-branches.html
           test -f erp/web/school-management.html
           test -f erp/web/school-onboarding.html
           test -f erp/web/staff-management.html
@@ -44,13 +39,13 @@ jobs:
           test -f erp/web/teacher-permissions.html
           test -f erp/web/offline-sync.js
           test -f erp/web/local-storage.html
+          # Branch management is integrated into the Super Admin school-management flow.
+          grep -q "Branches" erp/web/super-admin/schools.html
       - name: Validate SQL files
         shell: bash
         run: |
           set -e
-          for f in erp/sql/*.sql; do
-            test -s "$f"
-          done
+          for f in erp/sql/*.sql; do test -s "$f"; done
       - name: Run ERP contract smoke test
         working-directory: erp
         run: node scripts/contract-smoke.js
