@@ -13,6 +13,8 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Add School provisioning with school branding/logo and ERP/mobile-app configuration
 - [x] School list/search, active/inactive state and school detail/branch management
 - [x] Super Admin school configuration create/edit APIs
+- [x] School detail API for branches and school administrators
+- [x] School branding-specific update API
 - [x] First school administrator provisioning with securely hashed password
 - [x] Main branch provisioning and branch management API
 - [x] School tenant and branch-aware authentication
@@ -39,6 +41,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Mobile notification routing
 - [x] Unified ERP animation foundation
 - [x] Super Admin School Management UI connected to provisioning/detail/update APIs
+- [x] Super Admin school detail + branding + first-admin API integration
 - [x] README progress checkpoint updated
 
 ### Next logical implementation queue
