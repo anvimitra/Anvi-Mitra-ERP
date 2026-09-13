@@ -51,7 +51,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [~] Finish full offline write → reconnect → push → pull/conflict flow
 - [~] Finish desktop/local-folder read/write sync and recovery flow
 - [~] Verify staff/teacher/student enrollment workflow end-to-end against a real database
-- [ ] Add offline local cache/outbox integration tests on web and Flutter
+- [x] Add web IndexedDB offline cache/outbox integration contract test
 - [ ] Configure production Firebase projects/configuration per published school app
 - [ ] Full Android analyze/build + APK artifact verification
 - [ ] Accessibility audit
