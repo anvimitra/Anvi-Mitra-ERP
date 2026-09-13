@@ -27,6 +27,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Teacher marks UI contract test wired into `npm test`
 - [x] Offline sync schema: devices, change journal/cursors and conflicts
 - [x] Offline sync push/pull/device registration and idempotency/conflict foundation
+- [x] Web IndexedDB offline cache + outbox + server-change pull + device registration + reconnect auto-sync
 - [x] Local storage connector model with read-only/read-write permission boundary
 - [x] Permissioned desktop/local-folder connector runtime foundation
 - [x] School creation changes recorded in the sync journal
