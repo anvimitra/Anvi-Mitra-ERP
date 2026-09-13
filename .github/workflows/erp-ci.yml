@@ -19,9 +19,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Install ERP dependencies
-        working-directory: erp
-        run: npm install
       - name: Validate server modules
         shell: bash
         run: |
