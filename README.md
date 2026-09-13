@@ -51,6 +51,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Authenticated Super Admin E2E harness: create → edit → branding → deactivate/reactivate → provisioned admin login → branch scope
 - [x] Major platform implementation checkpoint: school provisioning + onboarding + authorization + offline foundation
 - [x] Major-process contract gate added to `npm test`
+- [x] Offline sync conflict ordering hardened: newer server changes are detected before high-risk record mutation
 - [x] README progress marker updated for the major-process checkpoint
 - [x] Super Admin school onboarding authentication aligned with the shared ERP session
 - [x] **Next implementation: Super Admin School Management UI + provisioning/detail/update integration completed**
@@ -69,7 +70,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [ ] Production deployment/sign-off
 
 ### Progress marker
-**[~] Current active work:** database-backed E2E verification and production hardening. The code foundation is marked complete, but production readiness is intentionally not marked complete until the real infrastructure-backed checks pass.
+**[~] Current active work:** database-backed E2E verification and production hardening. The latest implementation step is complete; production readiness remains [~] until infrastructure-backed verification passes. The code foundation is marked complete, but production readiness is intentionally not marked complete until the real infrastructure-backed checks pass.
 
 ## Architecture
 
