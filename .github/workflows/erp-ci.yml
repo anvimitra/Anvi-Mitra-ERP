@@ -23,10 +23,7 @@ jobs:
         shell: bash
         run: |
           set -e
-          for f in erp/src/*.js; do
-            echo "Checking $f"
-            node --check "$f"
-          done
+          for f in erp/src/*.js; do echo "Checking $f"; node --check "$f"; done
       - name: Validate key web pages
         shell: bash
         run: |
@@ -41,9 +38,7 @@ jobs:
             erp/web/teacher-permissions.html \
             erp/web/teacher-marks.html \
             erp/web/offline-sync.js \
-            erp/web/local-storage.html; do
-            test -s "$f"
-          done
+            erp/web/local-storage.html; do test -s "$f"; done
       - name: Validate SQL extension migrations
         shell: bash
         run: |
@@ -54,12 +49,45 @@ jobs:
       - name: Validate migration runner
         working-directory: erp
         run: node --check src/migrate.js
-      - name: Run full ERP contract suite
-        working-directory: erp
-        run: npm test
-      - name: Run ERP contract smoke test
-        working-directory: erp
-        run: node scripts/contract-smoke.js
+      - name: Run ERP contract tests individually
+        id: contract_tests
+        shell: bash
+        run: |
+          set +e
+          cd erp
+          : > ../erp-test-report.txt
+          failed=0
+          tests=(
+            tests/erp_contract.test.js
+            tests/school_provisioning_contract.test.js
+            tests/enrollment_contract.test.js
+            tests/teacher_marks_ui_contract.test.js
+            tests/offline_web_contract.test.js
+            tests/migration_preflight.test.js
+            tests/architecture_contract.test.js
+            tests/major_process_contract.test.js
+            tests/school_management_ui_contract.test.js
+            tests/school_summary_contract.test.js
+            tests/local_storage_ui_contract.test.js
+          )
+          for test_file in "${tests[@]}"; do
+            echo "===== $test_file =====" | tee -a ../erp-test-report.txt
+            node "$test_file" >> ../erp-test-report.txt 2>&1
+            code=$?
+            if [ $code -eq 0 ]; then echo "PASS $test_file" | tee -a ../erp-test-report.txt; else echo "FAIL $test_file (exit $code)" | tee -a ../erp-test-report.txt; failed=1; fi
+          done
+          echo "===== contract smoke =====" | tee -a ../erp-test-report.txt
+          node scripts/contract-smoke.js >> ../erp-test-report.txt 2>&1
+          code=$?
+          if [ $code -eq 0 ]; then echo "PASS contract smoke" | tee -a ../erp-test-report.txt; else echo "FAIL contract smoke (exit $code)" | tee -a ../erp-test-report.txt; failed=1; fi
+          exit $failed
+      - name: Upload ERP validation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: erp-validation-report
+          path: erp-test-report.txt
+          if-no-files-found: warn
 
   # The core PostgreSQL schema is maintained by the deployment database. CI validates
   # the ERP extension migrations statically; a real DATABASE_URL is required for the
