@@ -1,0 +1,26 @@
+const fs = require('fs');
+const path = require('path');
+const assert = require('assert');
+
+const root = path.join(__dirname, '..');
+const org = fs.readFileSync(path.join(root, 'src', 'organization.js'), 'utf8');
+const sync = fs.readFileSync(path.join(root, 'src', 'sync.js'), 'utf8');
+const local = fs.readFileSync(path.join(root, 'src', 'local_storage.js'), 'utf8');
+const ui = fs.readFileSync(path.join(root, 'web', 'super-admin', 'schools.html'), 'utf8');
+const api = fs.readFileSync(path.join(root, 'web', 'api.js'), 'utf8');
+
+for (const token of [
+  "app.post('/api/platform/schools'",
+  "app.get('/api/platform/schools/:id'",
+  "app.patch('/api/platform/schools/:id'",
+  'school_settings', 'mobile_app_configs', 'branches', 'await hashPassword(adminPassword)'
+]) assert(org.includes(token), 'School provisioning contract missing: '+token);
+for (const token of [
+  "app.post('/api/sync/device'", "app.post('/api/sync/push'", "app.post('/api/sync/pull'",
+  'client_change_id', 'sync_conflicts', 'teacher_can_edit_exam_subject'
+]) assert(sync.includes(token), 'Sync contract missing: '+token);
+for (const token of ["/api/local-storage/connectors", 'read_only', 'read_write']) assert(local.includes(token), 'Local storage contract missing: '+token);
+for (const token of ['School Management','Add School','Admin password','/api/platform/schools','navigator.onLine']) assert(ui.includes(token), 'Super Admin UI contract missing: '+token);
+for (const token of ['indexedDB','queueChange','flushOutbox','syncPull','lsk:sync-complete']) assert(api.includes(token), 'Web offline contract missing: '+token);
+
+console.log('ERP major process contract checks: PASS');
