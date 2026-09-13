@@ -46,6 +46,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Migration/preflight gate added to `npm test` (duplicate-number + destructive-migration guard + route wiring)
 - [x] **Major architecture checkpoint: multi-school + offline sync + local-storage permissions + teacher authorization contract gate**
 - [x] **Major architecture contract test added and wired into `npm test`**
+- [x] **School provisioning hardening: Add School now creates the first school administrator with a securely hashed password and branch scope**
 - [x] **README progress marker updated for this major checkpoint**
 
 ### Next logical implementation queue
@@ -78,7 +79,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 1. Super Admin opens **School Management → Add School**.
 2. School profile, branding, main branch and mobile-app configuration are provisioned together.
-3. The first school administrator is provisioned with a securely hashed password.
+3. The first school administrator is provisioned with a securely hashed password and linked to the school's main branch.
 4. School administrator creates staff/teacher accounts and enrolls students/parents.
 5. Teachers receive class/subject/section/session assignments.
 6. Teachers open **Marks Entry** and receive only the students authorized for that subject/class/session.
