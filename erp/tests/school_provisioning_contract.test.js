@@ -18,7 +18,7 @@ assert(organization.includes("mobile_app_configs"));
 assert(organization.includes("school_settings"));
 assert(organization.includes("branches"));
 assert(organization.includes("INSERT INTO users"));
-assert(organization.includes("role,'active'"));
+assert(organization.includes("role,status) VALUES($1,$2,$3,$4,$5,'admin','active')"), 'Administrator role/status provisioning contract missing');
 
 assert(auth.includes("schoolId"));
 assert(auth.includes("branchId"));
