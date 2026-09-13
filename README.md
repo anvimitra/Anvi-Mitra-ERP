@@ -46,7 +46,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Major architecture contract gate for multi-school, offline sync, local-storage permissions and teacher authorization
 - [x] Authenticated Super Admin E2E harness: create → edit → branding → deactivate/reactivate → provisioned admin login → branch scope
 - [x] **Major platform implementation checkpoint: school provisioning + onboarding + authorization + offline foundation**
-- [x] **Major-process contract gate added to `npm test`
+- [x] **Major-process contract gate added to `npm test`**
 - [x] **README progress marker updated for the major-process checkpoint**
 
 ### Active next logical process — verification gate
