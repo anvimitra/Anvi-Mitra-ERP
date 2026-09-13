@@ -46,6 +46,10 @@ jobs:
         run: |
           set -e
           for f in erp/sql/*.sql; do test -s "$f"; done
+      - name: Run full ERP contract suite
+        working-directory: erp
+        run: npm test
+
       - name: Run ERP contract smoke test
         working-directory: erp
         run: node scripts/contract-smoke.js
