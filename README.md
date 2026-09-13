@@ -6,7 +6,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 ## Current Status — 2026-09-13
 
-**Current phase: Multi-school administration → enrollment → permissions → marks entry → offline/local sync hardening → production verification gates**
+**Current phase: E2E platform verification → clean database verification → offline sync E2E → desktop connector recovery → mobile release verification**
 
 ### Latest implementation checkpoint
 - [x] Super Admin animated School Management UI
@@ -33,7 +33,6 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] School creation changes recorded in the sync journal
 - [x] ERP sync/tenant contract test wired into `npm test`
 - [x] School provisioning/UI contract test wired into `npm test`
-- [x] School provisioning contract test hardened for first-admin fields and branch-aware authentication
 - [x] Staff account + teacher profile provisioning API
 - [x] Student enrollment API: session + class/section + branch scope + parent links
 - [x] Student Enrollment web workflow
@@ -43,21 +42,18 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Unified ERP animation foundation
 - [x] Super Admin School Management UI connected to provisioning/detail/update APIs
 - [x] Super Admin school detail + branding + first-admin API integration
-- [x] Migration/preflight gate added to `npm test` (duplicate-number + destructive-migration guard + route wiring)
-- [x] **Major architecture checkpoint: multi-school + offline sync + local-storage permissions + teacher authorization contract gate**
-- [x] **Major architecture contract test added and wired into `npm test`**
-- [x] **School provisioning hardening: Add School now creates the first school administrator with a securely hashed password and branch scope**
-- [x] **README progress marker updated for this major checkpoint**
+- [x] Migration/preflight gate added to `npm test`
+- [x] Major architecture contract gate for multi-school, offline sync, local-storage permissions and teacher authorization
+- [x] Authenticated Super Admin E2E harness: create → edit → branding → deactivate/reactivate → provisioned admin login → branch scope
+- [x] **Major platform implementation checkpoint: school provisioning + onboarding + authorization + offline foundation**
+- [x] **README progress marker updated for this checkpoint**
 
 ### Next logical implementation queue
-- [~] Finish school provisioning verification against a clean PostgreSQL database
-- [~] Finish school admin onboarding verification: create → login → edit → deactivate/reactivate
-- [~] Finish branch-scope verification for provisioned school administrators
-- [~] Finish full offline write → reconnect → push → pull/conflict flow
-- [~] Finish desktop/local-folder read/write sync and recovery flow
-- [~] Verify staff/teacher/student enrollment workflow end-to-end against a real database
-- [x] Add web IndexedDB offline cache/outbox integration contract test
-- [x] Add major architecture contract gate for route wiring, school provisioning, local storage and teacher authorization
+- [~] Run authenticated Super Admin E2E against a clean PostgreSQL database
+- [~] Run all migrations from an empty PostgreSQL database and verify required tables/functions/indexes
+- [~] Run full offline write → reconnect → push → pull → idempotency/conflict E2E
+- [~] Complete desktop/local-folder read/write sync and recovery flow
+- [~] Verify staff/teacher/student enrollment end-to-end against a real database
 - [ ] Configure production Firebase projects/configuration per published school app
 - [ ] Full Android analyze/build + APK artifact verification
 - [ ] Accessibility audit
@@ -88,6 +84,6 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 ## Progress policy
 
-Implementation is marked [x] when the code foundation is present. Integration/production verification remains [~] until automated database/device/infrastructure-backed checks pass. The contract tests are wired through `erp/package.json` as `npm test`; they should not be treated as full database/device E2E passes.
+Implementation is marked [x] when the code foundation/harness is present. Integration/production verification remains [~] until automated database/device/infrastructure-backed checks pass. Contract tests and E2E harnesses must not be described as production passes until they actually execute successfully against the target infrastructure.
 
 **LSKLive website remains separate and is not modified as part of ERP work.**
