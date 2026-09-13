@@ -47,7 +47,7 @@ function registerSyncRoutes(app, pool) {
       const result = await pool.query(`SELECT cursor,entity_type,entity_id,operation,payload,changed_by,changed_at,client_change_id,base_cursor FROM sync_changes WHERE school_id=$1 AND cursor>$2 ORDER BY cursor ASC LIMIT $3`, [req.auth.schoolId, Number(cursor) || 0, safeLimit]);
       const changes = result.rows;
       const nextCursor = changes.length ? Number(changes[changes.length - 1].cursor) : Number(cursor) || 0;
-      await pool.query(`UPDATE sync_devices SET last_cursor=GREATEST(last_cursor,$2), last_seen_at=now() WHERE id=$1`, [device.id, nextCursor]);
+      // Pull does not acknowledge durable application; the client must call /api/sync/ack after applying changes.
       res.json({ changes, nextCursor, hasMore: changes.length === safeLimit });
     } catch (err) { next(err); }
   }
@@ -59,6 +59,18 @@ function registerSyncRoutes(app, pool) {
     req.query.cursor = req.body?.cursor ?? 0;
     req.query.limit = req.body?.limit ?? 200;
     return pullChanges(req, res, next);
+  });
+
+  app.post('/api/sync/ack', authenticate, async (req,res,next) => {
+    try {
+      const {deviceKey,cursor=0}=req.body||{};
+      if(!deviceKey) return res.status(400).json({error:'deviceKey is required'});
+      const device=await resolveDevice(pool,req.auth.schoolId,deviceKey);
+      if(!device || device.status!=='active') return res.status(403).json({error:'Sync device is not registered or is revoked'});
+      const nextCursor=Math.max(Number(cursor)||0,0);
+      const {rows}=await pool.query('UPDATE sync_devices SET last_cursor=GREATEST(last_cursor,$2),last_seen_at=now() WHERE id=$1 RETURNING last_cursor',[device.id,nextCursor]);
+      res.json({acknowledgedCursor:Number(rows[0].last_cursor)});
+    } catch(err){next(err)}
   });
 
   app.post('/api/sync/push', authenticate, async (req, res, next) => {
