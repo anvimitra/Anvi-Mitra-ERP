@@ -4,9 +4,9 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 > Progress marker: [x] implementation complete · [~] verification/hardening pending · [ ] not implemented
 
-## Current Status — 2026-09-05
+## Current Status — 2026-09-13
 
-**Current phase: Verification / hardening → production readiness**
+**Current phase: Multi-school administration → offline/local sync hardening**
 
 ### Latest implementation checkpoint
 - [x] Super Admin animated School Management UI
@@ -16,6 +16,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] First school administrator provisioning with securely hashed password
 - [x] Main branch provisioning and branch management API
 - [x] School tenant and branch-aware authentication
+- [x] Public school/app branding bootstrap API
 - [x] Teacher marks authorization foundation (teacher + subject + class/section + session + enrollment)
 - [x] Offline sync schema: devices, change journal/cursors and conflicts
 - [x] Offline sync push/pull/device registration and idempotency/conflict foundation
@@ -23,6 +24,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Permissioned desktop/local-folder connector runtime foundation
 - [x] School creation changes recorded in the sync journal
 - [x] ERP sync/tenant contract test wired into `npm test`
+- [x] School provisioning/UI contract test wired into `npm test`
 - [x] School-branded login bootstrap
 - [x] Mobile notification routing
 - [x] Unified ERP animation foundation
@@ -35,7 +37,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [~] Clean PostgreSQL migration verification
 - [~] Full offline write → reconnect → push → pull/conflict E2E
 - [~] Sync server API integration execution
-- [ ] Desktop read/write sync + recovery integration tests
+- [~] Desktop read/write sync + recovery integration tests
 - [ ] Flutter production Firebase project/configuration per published school app
 - [ ] Full Android analyze/build + APK artifact verification
 - [ ] Mobile local cache/outbox integration test on real device
@@ -66,6 +68,6 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 ## Progress policy
 
-Implementation is marked [x] when the code foundation is present. Integration/production verification remains [~] until automated database/device/infrastructure-backed checks pass. The contract test is wired through `erp/package.json` as `npm test`; it should not be treated as a full database/device E2E pass.
+Implementation is marked [x] when the code foundation is present. Integration/production verification remains [~] until automated database/device/infrastructure-backed checks pass. The contract tests are wired through `erp/package.json` as `npm test`; they should not be treated as full database/device E2E passes.
 
 **LSKLive website remains separate and is not modified as part of ERP work.**
