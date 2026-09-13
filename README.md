@@ -25,6 +25,10 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] School creation changes recorded in the sync journal
 - [x] ERP sync/tenant contract test wired into `npm test`
 - [x] School provisioning/UI contract test wired into `npm test`
+- [x] Staff account + teacher profile provisioning API
+- [x] Student enrollment API: session + class/section + branch scope + parent links
+- [x] Student Enrollment web workflow
+- [x] Staff/student enrollment contract test wired into `npm test`
 - [x] School-branded login bootstrap
 - [x] Mobile notification routing
 - [x] Unified ERP animation foundation
@@ -37,7 +41,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [~] Finish branch-scope verification for provisioned school administrators
 - [~] Finish full offline write → reconnect → push → pull/conflict flow
 - [~] Finish desktop/local-folder read/write sync and recovery flow
-- [ ] Build staff/teacher/student enrollment workflow end-to-end
+- [~] Verify staff/teacher/student enrollment workflow end-to-end against a real database
 - [ ] Build teacher class/subject/section/session permission management UI
 - [ ] Build marks-entry UI that exposes only the teacher's authorized students
 - [ ] Add offline local cache/outbox integration tests on web and Flutter
@@ -63,7 +67,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 1. Super Admin opens **School Management → Add School**.
 2. School profile, branding, main branch and mobile-app configuration are provisioned together.
 3. The first school administrator is provisioned with a securely hashed password.
-4. School administrator enrolls staff, teachers, students and parents.
+4. School administrator creates staff/teacher accounts and enrolls students/parents.
 5. Teachers receive class/subject/section/session assignments.
 6. Teachers can enter marks only for their assigned class/subject scope.
 7. Web/mobile/local clients synchronize through the central ERP API.
