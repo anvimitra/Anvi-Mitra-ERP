@@ -1,0 +1,28 @@
+const fs = require('fs');
+const path = require('path');
+const assert = require('assert');
+
+const organization = fs.readFileSync(path.join(__dirname, '..', 'src', 'organization.js'), 'utf8');
+const auth = fs.readFileSync(path.join(__dirname, '..', 'src', 'auth.js'), 'utf8');
+const schoolUi = fs.readFileSync(path.join(__dirname, '..', 'web', 'super-admin', 'schools.html'), 'utf8');
+
+assert(organization.includes("app.get('/api/public/school-config'"));
+assert(organization.includes("app.post('/api/platform/schools'"));
+assert(organization.includes("app.patch('/api/platform/schools/:id'"));
+assert(organization.includes("app.patch('/api/platform/schools/:id/branding'"));
+assert(organization.includes("app.get('/api/platform/schools/:id'"));
+assert(organization.includes("await hashPassword(adminPassword)"));
+assert(organization.includes("mobile_app_configs"));
+assert(organization.includes("school_settings"));
+assert(organization.includes("branches"));
+
+assert(auth.includes("schoolId"));
+assert(auth.includes("branchId"));
+
+assert(schoolUi.includes("School Management"));
+assert(schoolUi.includes("Add School"));
+assert(schoolUi.includes("/api/platform/schools"));
+assert(schoolUi.includes("navigator.onLine"));
+assert(schoolUi.includes("cached data and pending changes"));
+
+console.log('ERP school provisioning/UI contract checks: PASS');
