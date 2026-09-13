@@ -15,7 +15,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] School detail/branch view
 - [x] Super Admin school configuration edit API
 - [x] School administrator provisioning during school creation
-- [x] School administrator credentials are securely hashed before storage
+- [x] School administrator credentials securely hashed before storage
 - [x] School creation changes recorded in sync journal
 - [x] Offline/online connection state indicator in School Management UI
 - [x] School detail GET/PATCH API alignment with the animated UI
@@ -25,43 +25,23 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Teacher marks authorization guard foundation
 - [x] Offline sync push/pull/device registration API
 - [x] Sync idempotency and conflict-resolution API
-- [x] Local storage connector API (read-only/read-write permission model)
+- [x] Local storage connector API with read-only/read-write permission model
+- [x] Permissioned desktop/local-folder connector runtime
+- [x] Desktop read/write safety boundary
 - [x] Super Admin school-management create/edit/branding/status API flow
 - [x] ERP sync/tenant contract regression test wired into npm test
-- [~] Provisioned school administrator login coverage in E2E test (implemented; CI/database execution pending)
-- [~] Provisioned administrator branch-scope coverage in E2E test (implemented; CI/database execution pending)
-- [~] School deactivate/reactivate and public-branding isolation coverage in E2E test (implemented; CI/database execution pending)
-
-### Major implementation milestones
-- [x] Multi-school / multi-branch foundation
-- [x] Super Admin school provisioning API
-- [x] School-specific branding and mobile-app configuration
-- [x] Main branch provisioning
-- [x] Initial school administrator provisioning
-- [x] Staff, teacher and student onboarding foundations
-- [x] Teacher class/subject/section/session marks authorization
-- [x] Offline sync device/journal/cursor foundation
-- [x] Conflict tracking and conflict-resolution foundation
-- [x] Web offline cache/outbox foundation
-- [x] PC/NAS/external storage permission model
-- [x] Permissioned desktop/local-folder connector runtime
 - [x] Super Admin School Management UI with dynamic animation
 - [x] School-branded login bootstrap
 - [x] Mobile notification routing
-- [x] Super Admin school detail/edit/status API alignment
-- [x] School provisioning E2E coverage extended through administrator login and branch scope
+- [x] Unified ERP animation foundation
 
-## Current logical next phase — verification/hardening
-
-- [~] Authenticated school create → admin login → edit → deactivate/reactivate E2E (test implemented; CI/database execution still pending)
+### Verification / hardening queue
+- [~] Authenticated school create → admin login → edit → deactivate/reactivate E2E (implemented; CI/database execution pending)
+- [~] Provisioned administrator branch-scope E2E (implemented; CI/database execution pending)
+- [~] School deactivate/reactivate and public-branding isolation E2E (implemented; CI/database execution pending)
 - [~] Clean PostgreSQL migration verification
 - [~] Full offline write → reconnect → push → pull/conflict E2E
-- [x] Desktop/local-folder connector runtime implementation
-- [x] Desktop read/write safety boundary implementation
-- [x] Flutter notification routing implementation
-- [x] Unified ERP animation foundation
-- [~] Sync server API hardening (device registration, cursor-based pull, idempotent push, teacher marks authorization and conflict resolution implemented; integration execution pending)
-- [x] ERP sync/tenant contract regression checks added (erp/tests/erp_contract.test.js)
+- [~] Sync server API integration execution
 - [ ] Desktop read/write sync + recovery integration tests
 - [ ] Flutter production Firebase project/configuration per published school app
 - [ ] Full Android analyze/build + APK artifact verification
@@ -71,16 +51,28 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [ ] Backup/restore drill
 - [ ] Production deployment/sign-off
 
-## Major implementation pass marker
+## Architecture
 
-**[x] School-management implementation pass — Super Admin school provisioning, school-admin provisioning, school branding/mobile configuration, main-branch management, animated UI, and API alignment are implemented.**
+**Primary data:** Online PostgreSQL/API is the source of truth.
 
-**[x] ERP architecture foundation — multi-school isolation, teacher class/subject/session authorization, offline sync journal/conflicts, and permissioned local storage connector foundation are implemented.**
+**Offline:** Web and mobile clients keep a local cache/outbox. Writes made while offline remain queued and synchronize automatically when connectivity returns. Server-side cursors, idempotency keys and conflict records prevent silent data loss.
 
-**[~] Integration/E2E verification is intentionally not marked complete until the CI/database/device-backed checks pass.**
+**Secondary storage:** School PC/NAS/external-drive storage is accessed only through an explicitly permissioned local connector. The connector supports read_only and read_write; a website never receives unrestricted filesystem access.
 
-## Verification rule
+**Security:** Tenant isolation is enforced with school_id, and branch-aware users are restricted by branch_id. Teacher marks are authorized by teacher + subject + class/section + academic session + enrollment, and the same authorization is rechecked when offline changes synchronize.
 
-Implementation items are marked [x] only when the code foundation is present. Items marked [~] still need automated/infrastructure-backed E2E verification. Production Ready will not be marked until the remaining verification and deployment checks pass.
+## Multi-school workflow
+
+1. Super Admin opens School Management → Add School.
+2. School profile, branding, main branch and mobile-app configuration are provisioned together.
+3. The first school administrator is provisioned with a securely hashed password.
+4. School administrator enrolls staff, teachers, students and parents.
+5. Teachers receive class/subject/section/session assignments.
+6. Teachers can enter marks only for their assigned class/subject scope.
+7. Web/mobile/local clients synchronize through the central ERP API.
+
+## Progress policy
+
+Implementation is marked [x] when the code foundation is present. Integration/production verification remains [~] until automated database/device/infrastructure-backed checks pass.
 
 **LSKLive website remains separate and is not modified as part of ERP work.**
