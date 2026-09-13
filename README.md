@@ -42,6 +42,8 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Unified ERP animation foundation
 - [x] Super Admin School Management UI connected to provisioning/detail/update APIs
 - [x] Super Admin school detail + branding + first-admin API integration
+- [x] Super Admin school summary/counts API
+- [x] Super Admin school summary contract test wired into `npm test`
 - [x] Migration/preflight gate added to `npm test`
 - [x] Major architecture contract gate for multi-school, offline sync, local-storage permissions and teacher authorization
 - [x] Authenticated Super Admin E2E harness: create → edit → branding → deactivate/reactivate → provisioned admin login → branch scope
