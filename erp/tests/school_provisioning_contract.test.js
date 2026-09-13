@@ -12,16 +12,24 @@ assert(organization.includes("app.patch('/api/platform/schools/:id'"));
 assert(organization.includes("app.patch('/api/platform/schools/:id/branding'"));
 assert(organization.includes("app.get('/api/platform/schools/:id'"));
 assert(organization.includes("await hashPassword(adminPassword)"));
+assert(organization.includes("adminEmail"));
+assert(organization.includes("adminPhone"));
 assert(organization.includes("mobile_app_configs"));
 assert(organization.includes("school_settings"));
 assert(organization.includes("branches"));
+assert(organization.includes("INSERT INTO users"));
+assert(organization.includes("role,'active'"));
 
 assert(auth.includes("schoolId"));
 assert(auth.includes("branchId"));
+assert(auth.includes("resolveBranch"));
 
 assert(schoolUi.includes("School Management"));
 assert(schoolUi.includes("Add School"));
+assert(schoolUi.includes("Admin email"));
+assert(schoolUi.includes("Admin password"));
 assert(schoolUi.includes("/api/platform/schools"));
+assert(schoolUi.includes("/api/platform/schools/"));
 assert(schoolUi.includes("navigator.onLine"));
 assert(schoolUi.includes("cached data and pending changes"));
 
