@@ -6,7 +6,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 ## Current Status — 2026-09-13
 
-**Current phase: Multi-school administration → enrollment → permissions → marks entry → offline/local sync hardening**
+**Current phase: Multi-school administration → enrollment → permissions → marks entry → offline/local sync hardening → production verification gates**
 
 ### Latest implementation checkpoint
 - [x] Super Admin animated School Management UI
@@ -43,6 +43,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Super Admin School Management UI connected to provisioning/detail/update APIs
 - [x] Super Admin school detail + branding + first-admin API integration
 - [x] README progress checkpoint updated
+- [x] Migration/preflight gate added to `npm test` (duplicate-number + destructive-migration guard + route wiring)
 
 ### Next logical implementation queue
 - [~] Finish school provisioning verification against a clean PostgreSQL database
