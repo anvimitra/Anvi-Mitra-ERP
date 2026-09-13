@@ -30,8 +30,8 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Web IndexedDB offline cache + outbox + server-change pull + device registration + reconnect auto-sync
 - [x] Local storage connector model with read-only/read-write permission boundary
 - [x] Permissioned desktop/local-folder connector runtime foundation
-- [x] **Local Storage Management UI: connector create/edit, permission mode, status and sync heartbeat**
-- [x] **Local Storage UI contract test wired into `npm test`**
+- [x] Local Storage Management UI: connector create/edit, permission mode, status and sync heartbeat
+- [x] Local Storage UI contract test wired into `npm test`
 - [x] School creation changes recorded in the sync journal
 - [x] ERP sync/tenant contract test wired into `npm test`
 - [x] School provisioning/UI contract test wired into `npm test`
@@ -49,10 +49,11 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Migration/preflight gate added to `npm test`
 - [x] Major architecture contract gate for multi-school, offline sync, local-storage permissions and teacher authorization
 - [x] Authenticated Super Admin E2E harness: create → edit → branding → deactivate/reactivate → provisioned admin login → branch scope
-- [x] **Major platform implementation checkpoint: school provisioning + onboarding + authorization + offline foundation**
-- [x] **Major-process contract gate added to `npm test`
-- [x] **README progress marker updated for the major-process checkpoint**
-- [x] **Super Admin school onboarding authentication aligned with the shared ERP session**
+- [x] Major platform implementation checkpoint: school provisioning + onboarding + authorization + offline foundation
+- [x] Major-process contract gate added to `npm test`
+- [x] README progress marker updated for the major-process checkpoint
+- [x] Super Admin school onboarding authentication aligned with the shared ERP session
+- [x] **Next implementation: Super Admin School Management UI + provisioning/detail/update integration completed**
 
 ### Active next logical process — verification gate
 - [~] **Clean PostgreSQL migration run:** execute every migration from an empty database and verify tables, indexes, functions and constraints
