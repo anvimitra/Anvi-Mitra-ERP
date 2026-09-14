@@ -8,76 +8,40 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 **Current phase: Major platform implementation → E2E verification → production hardening**
 
-### Latest major implementation checkpoint
+### Latest implementation checkpoint
 - [x] Super Admin animated School Management UI
 - [x] Add School provisioning with school branding/logo and ERP/mobile-app configuration
-- [x] School list/search, active/inactive state and school detail/branch management
-- [x] Super Admin school configuration create/edit APIs
-- [x] School detail API for branches and school administrators
-- [x] School branding-specific update API
-- [x] First school administrator provisioning with securely hashed password
-- [x] Main branch provisioning and branch management API
+- [x] School list/search and active/inactive status
+- [x] Super Admin school provisioning/detail/update APIs
+- [x] First school administrator provisioning
+- [x] Main branch provisioning and branch management
 - [x] School tenant and branch-aware authentication
-- [x] Public school/app branding bootstrap API
-- [x] Teacher marks authorization foundation (teacher + subject + class/section + session + enrollment)
-- [x] Teacher class/subject/section/session permission management UI
-- [x] Authorized teacher marks-entry UI with server-side roster filtering
-- [x] Single + batch marks save API with authorization, enrollment and max-marks validation
-- [x] Marks changes recorded in the sync journal
-- [x] School provisioning events recorded in the sync journal via database trigger
-- [x] School provisioning sync contract test wired into `npm test`
-- [x] Teacher marks UI contract test wired into `npm test`
-- [x] Offline sync schema: devices, change journal/cursors and conflicts
-- [x] Offline sync push/pull/device registration and idempotency/conflict foundation
-- [x] Web IndexedDB offline cache + outbox + server-change pull + device registration + reconnect auto-sync
-- [x] Local storage connector model with read-only/read-write permission boundary
-- [x] Permissioned desktop/local-folder connector runtime foundation
-- [x] Local Storage Management UI: connector create/edit, permission mode, status and sync heartbeat
-- [x] Local Storage UI contract test wired into `npm test`
-- [x] School creation changes recorded in the sync journal
-- [x] ERP sync/tenant contract test wired into `npm test`
-- [x] School provisioning/UI contract test wired into `npm test`
-- [x] Staff account + teacher profile provisioning API
-- [x] Student enrollment API: session + class/section + branch scope + parent links
-- [x] Student Enrollment web workflow
-- [x] Staff/student enrollment contract test wired into `npm test`
-- [x] School-branded login bootstrap
+- [x] Teacher class/subject/section/session permission management
+- [x] Server-side teacher marks authorization and roster filtering
+- [x] Marks save + sync journal integration
+- [x] Staff account + teacher profile provisioning
+- [x] Student enrollment + parent linking
+- [x] Offline sync schema, device registration, push/pull, idempotency and conflict foundation
+- [x] Web IndexedDB cache + outbox + reconnect auto-sync
+- [x] Permissioned local storage connector model/runtime/UI
 - [x] Mobile notification routing
 - [x] Unified ERP animation foundation
-- [x] Super Admin School Management UI connected to provisioning/detail/update APIs
-- [x] Super Admin school detail + branding + first-admin API integration
-- [x] Super Admin school summary/counts API
-- [x] Super Admin school summary contract test wired into `npm test`
-- [x] Migration/preflight gate added to `npm test`
-- [x] Major architecture contract gate for multi-school, offline sync, local-storage permissions and teacher authorization
-- [x] Major architecture implementation checkpoint
-- [x] Authenticated Super Admin E2E harness: create → edit → branding → deactivate/reactivate → provisioned admin login → branch scope
-- [x] Major platform implementation checkpoint: school provisioning + onboarding + authorization + offline foundation
-- [x] Major-process contract gate added to `npm test`
-- [x] Offline sync conflict ordering hardened: newer server changes are detected before high-risk record mutation
-- [x] Sync journal device-link migration added before device-scoped idempotency indexes
-- [x] README progress marker updated for the major-process checkpoint
-- [x] Super Admin school onboarding authentication aligned with the shared ERP session
-- [x] **Super Admin School Management UI + provisioning/detail/update integration completed**
+- [x] Migration/preflight and architecture contract gates
+- [x] Super Admin School Management UI connected to the provisioning API
+- [x] **Next implementation: polished Super Admin school-management workflow completed**
 
-### Active next logical process — verification gate
-
-**Latest completed implementation step:** [x] Sync migration dependency/order hardening. The device-aware sync journal is now introduced before the device-scoped idempotency indexes, removing a known migration-order failure in the CI/preflight path.
-
-- [~] **Clean PostgreSQL migration run:** execute every migration from an empty database and verify tables, indexes, functions and constraints
-- [~] **Authenticated Super Admin E2E:** create school → edit → branding → deactivate/reactivate → admin login → branch scope
-- [~] **Offline E2E:** offline write → reconnect → push → pull → idempotency/conflict resolution
-- [~] **Local storage E2E:** permissioned folder read/write → sync → recovery after disconnect
-- [~] **Enrollment E2E:** staff → teacher → student → parent linking → class/section scope
+### Current verification / hardening
+- [~] Clean PostgreSQL migration run against an empty database
+- [~] Authenticated Super Admin E2E: create → edit → branding → deactivate/reactivate → admin login → branch scope
+- [~] Offline E2E: offline write → reconnect → push → pull → idempotency/conflict resolution
+- [~] Local storage E2E: permissioned folder read/write → sync → recovery after disconnect
+- [~] Enrollment E2E: staff → teacher → student → parent linking → class/section scope
 - [ ] Production Firebase configuration for each published school app
 - [ ] Full Android analyze/build + APK artifact verification
 - [ ] Accessibility audit
 - [ ] Security audit
 - [ ] Backup/restore drill
 - [ ] Production deployment/sign-off
-
-### Progress marker
-**[~] Current active work:** database-backed E2E verification and production hardening. The latest implementation step is complete; production readiness remains [~] until infrastructure-backed verification passes. The code foundation is marked complete, but production readiness is intentionally not marked complete until the real infrastructure-backed checks pass.
 
 ## Architecture
 
@@ -102,6 +66,8 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 ## Progress policy
 
-Implementation is marked [x] when the code foundation/harness is present. Integration/production verification remains [~] until automated database/device/infrastructure-backed checks pass. Contract tests and E2E harnesses must not be described as production passes until they actually execute successfully against the target infrastructure.
+Implementation is marked [x] when the code foundation/UI/harness is present. Integration/production verification remains [~] until automated database/device/infrastructure-backed checks pass. Contract tests and E2E harnesses must not be described as production passes until they actually execute successfully against the target infrastructure.
+
+**README checkpoint rule:** after each completed logical implementation checkpoint, this README is updated with an [x] marker; verification items remain [~] until genuinely verified.
 
 **LSKLive website remains separate and is not modified as part of ERP work.**
