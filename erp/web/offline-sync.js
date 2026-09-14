@@ -148,7 +148,9 @@
     await registerDevice(opts).catch(() => null);
 
     const queue = await pending();
-    let pushed = { accepted: [], conflicts: [], nextCursor: await getMeta('serverCursor', 0) };
+    // Keep the last applied server cursor separate from cursors assigned to our own pushed changes.
+    const appliedCursor = await getMeta('serverCursor', 0);
+    let pushed = { accepted: [], conflicts: [], nextCursor: appliedCursor };
     if (queue.length) {
       const response = await global.fetch((opts.apiBaseUrl || '') + '/api/sync/push', {
         method: 'POST',
@@ -159,9 +161,18 @@
       if (!response.ok) throw new Error(result.error || 'Offline synchronization failed');
       const conflicts = new Set((result.conflicts || []).map(item => item.clientChangeId).filter(Boolean));
       await clear(queue.filter(item => !conflicts.has(item.clientId)).map(item => item.clientId));
-      pushed = { offline: false, accepted: result.accepted || [], conflicts: result.conflicts || [], nextCursor: Number(result.nextCursor || 0) };
+      pushed = { offline: false, accepted: result.accepted || [], conflicts: result.conflicts || [], nextCursor: appliedCursor };
     }
-    const pulled = await pull({ ...opts, cursor: pushed.nextCursor || await getMeta('serverCursor', 0) }).catch(() => null);
+    // Pull from the previously applied cursor, not from a cursor assigned to our pushed writes.
+    // This prevents missing other devices' changes that were created before/around our push.
+    const pulled = await pull({ ...opts, cursor: appliedCursor }).catch(() => null);
+    if (pulled && !pulled.offline) {
+      await global.fetch((opts.apiBaseUrl || '') + '/api/sync/ack', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + opts.accessToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceKey: opts.deviceKey, cursor: pulled.nextCursor })
+      }).catch(() => null);
+    }
     return {
       offline: false,
       accepted: pushed.accepted,
