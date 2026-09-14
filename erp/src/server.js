@@ -19,6 +19,7 @@ const superAdminPage = path.join(__dirname,'../web/super-admin/schools.html');
 app.get('/', (_req,res) => res.sendFile(superAdminPage));
 app.get('/super-admin/schools', (_req,res) => res.sendFile(superAdminPage));
 app.get('/super-admin/school-onboarding', (_req,res) => res.sendFile(superAdminPage));
+app.get('/super-admin/school', (_req,res) => res.sendFile(path.join(__dirname,'../web/super-admin/school.html')));
 
 app.get('/api/health', async (_req, res) => {
   let database = 'not-configured';
