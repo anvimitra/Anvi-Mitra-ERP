@@ -4,7 +4,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 > Progress marker: [x] implementation complete · [~] verification/hardening pending · [ ] not implemented
 
-## Current Status — 2026-09-13
+## Current Status — 2026-09-14
 
 **Current phase: Major platform implementation → E2E verification → production hardening**
 
@@ -55,13 +55,15 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Major platform implementation checkpoint: school provisioning + onboarding + authorization + offline foundation
 - [x] Major-process contract gate added to `npm test`
 - [x] Offline sync conflict ordering hardened: newer server changes are detected before high-risk record mutation
+- [x] Sync journal device-link migration added before device-scoped idempotency indexes
 - [x] README progress marker updated for the major-process checkpoint
 - [x] Super Admin school onboarding authentication aligned with the shared ERP session
-- [x] **Next implementation: Super Admin School Management UI + provisioning/detail/update integration completed**
+- [x] **Super Admin School Management UI + provisioning/detail/update integration completed**
 
 ### Active next logical process — verification gate
 
-**Latest completed implementation step — Super Admin School Management:** [x] School Management UI + school detail/branding/update APIs + first-admin provisioning integration. The contract test `school_management_ui_contract.test.js` covers the UI/API wiring.
+**Latest completed implementation step:** [x] Sync migration dependency/order hardening. The device-aware sync journal is now introduced before the device-scoped idempotency indexes, removing a known migration-order failure in the CI/preflight path.
+
 - [~] **Clean PostgreSQL migration run:** execute every migration from an empty database and verify tables, indexes, functions and constraints
 - [~] **Authenticated Super Admin E2E:** create school → edit → branding → deactivate/reactivate → admin login → branch scope
 - [~] **Offline E2E:** offline write → reconnect → push → pull → idempotency/conflict resolution
