@@ -32,6 +32,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] **School Manager UI hardened: authenticated role gate, search, status dashboard, online/offline indicator, provisioning form, school detail/edit workflow and branch visibility**
 - [x] **School onboarding API/UI integration hardened: first school administrator is now created with a securely hashed password and main-branch scope**
 - [x] **Migration numbering hardening completed: duplicate extension migration numbers removed and teacher assignment migration renumbered to 038**
+- [x] **School Management implementation checkpoint re-verified: Super Admin school UI, onboarding/provisioning flow, branch visibility and offline/online indicators are present in the repository**
 
 ### Current verification / hardening
 - [~] Clean PostgreSQL migration run against an empty database
