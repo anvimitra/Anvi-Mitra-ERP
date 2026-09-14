@@ -6,7 +6,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 ## Current Status — 2026-09-14
 
-**Current phase: Core implementation checkpoint complete → E2E verification → production hardening**
+**Current phase: Core implementation checkpoint complete → School Management API checkpoint complete → E2E verification → production hardening**
 
 ### Latest implementation checkpoint
 - [x] Super Admin animated School Management UI
@@ -33,6 +33,8 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] **School Manager supports authenticated role gate, search, status dashboard, online/offline indicator, provisioning and detail/edit workflow**
 - [x] **Offline sync cursor semantics hardened: push does not advance the applied-server cursor; pull is acknowledged after local application**
 - [x] **Teacher offline marks are re-authorized server-side during synchronization**
+- [x] **School Management platform routes registered for Super Admin list/create/detail/update/branding workflows**
+- [x] **Latest implementation checkpoint completed (2026-09-14): backend school-management provisioning/detail/update integration**
 
 ### Current verification / hardening
 - [~] Clean PostgreSQL migration run against an empty database
