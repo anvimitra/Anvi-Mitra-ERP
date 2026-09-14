@@ -137,10 +137,12 @@ function registerSyncRoutes(app, pool) {
         const result = await client.query(`INSERT INTO sync_changes(school_id,device_id,client_change_id,base_cursor,entity_type,entity_id,operation,payload,changed_by) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING cursor,entity_type,entity_id,operation,payload,changed_at,client_change_id,base_cursor`, [req.auth.schoolId,device.id,clientChangeId,baseCursor,entityType,entityId,operation,JSON.stringify(payload),req.auth.sub]);
         accepted.push(result.rows[0]);
       }
-      const latest = accepted.length ? Number(accepted[accepted.length - 1].cursor) : Number(device.last_cursor || 0);
-      await client.query(`UPDATE sync_devices SET last_cursor=GREATEST(last_cursor,$2),last_seen_at=now() WHERE id=$1`, [device.id,latest]);
+      // Client cursors acknowledge server changes only after the client has pulled and applied them.
+      // A pushed change receives a global cursor, but advancing last_cursor here could skip unrelated
+      // changes created by other devices between the client's previous cursor and this new cursor.
+      await client.query('UPDATE sync_devices SET last_seen_at=now() WHERE id=$1', [device.id]);
       await client.query('COMMIT');
-      res.json({accepted,conflicts,nextCursor:latest});
+      res.json({accepted,conflicts});
     } catch (err) { await client.query('ROLLBACK').catch(()=>{}); next(err); }
     finally { client.release(); }
   });
