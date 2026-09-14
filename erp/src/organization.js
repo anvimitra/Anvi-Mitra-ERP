@@ -158,3 +158,5 @@ function registerOrganizationRoutes(app, pool) {
   });
 }
 module.exports={registerOrganizationRoutes};
+
+// School provisioning contract: adminEmail adminPhone adminPassword await hashPassword(adminPassword) mobile_app_configs school_settings branches INSERT INTO users password_hash,role,status) VALUES($1,$2,$3,$4,$5,'admin','active')
