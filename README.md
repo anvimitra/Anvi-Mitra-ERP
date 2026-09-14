@@ -6,7 +6,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 ## Current Status — 2026-09-14
 
-**Current phase: Major platform implementation → E2E verification → production hardening**
+**Current phase: Core implementation checkpoint complete → E2E verification → production hardening**
 
 ### Latest implementation checkpoint
 - [x] Super Admin animated School Management UI
@@ -28,12 +28,11 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Unified ERP animation foundation
 - [x] Migration/preflight and architecture contract gates
 - [x] Super Admin School Management UI connected to the provisioning API
-- [x] **Polished Super Admin school-management workflow completed**
-- [x] **School Manager UI hardened: authenticated role gate, search, status dashboard, online/offline indicator, provisioning form, school detail/edit workflow and branch visibility**
-- [x] **School onboarding API/UI integration hardened: first school administrator is now created with a securely hashed password and main-branch scope**
-- [x] **Migration numbering hardening completed: duplicate extension migration numbers removed and teacher assignment migration renumbered to 038**
-- [x] **School Management implementation checkpoint re-verified: Super Admin school UI, onboarding/provisioning flow, branch visibility and offline/online indicators are present in the repository**
-- [x] **Offline sync cursor semantics hardened: push no longer advances the applied-server cursor; pull is acknowledged only after local application**
+- [x] **Core multi-school ERP implementation checkpoint completed**
+- [x] **School onboarding provisions school profile, branding, main branch, mobile configuration and first administrator**
+- [x] **School Manager supports authenticated role gate, search, status dashboard, online/offline indicator, provisioning and detail/edit workflow**
+- [x] **Offline sync cursor semantics hardened: push does not advance the applied-server cursor; pull is acknowledged after local application**
+- [x] **Teacher offline marks are re-authorized server-side during synchronization**
 
 ### Current verification / hardening
 - [~] Clean PostgreSQL migration run against an empty database
@@ -41,6 +40,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [~] Offline E2E: offline write → reconnect → push → pull → idempotency/conflict resolution
 - [~] Local storage E2E: permissioned folder read/write → sync → recovery after disconnect
 - [~] Enrollment E2E: staff → teacher → student → parent linking → class/section scope
+- [~] CI/static contract verification after the latest implementation commit
 - [ ] Production Firebase configuration for each published school app
 - [ ] Full Android analyze/build + APK artifact verification
 - [ ] Accessibility audit
