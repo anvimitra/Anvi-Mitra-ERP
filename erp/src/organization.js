@@ -2,6 +2,23 @@ const { authenticate, requireRoles } = require('./auth');
 const { hashPassword } = require('./security');
 
 function registerOrganizationRoutes(app, pool) {
+  app.get('/api/public/school-config', async (req, res, next) => {
+    try {
+      const code = String(req.query.schoolCode || req.query.code || '').trim().toUpperCase();
+      if (!code) return res.status(400).json({ error: 'schoolCode is required' });
+      const { rows } = await pool.query(`
+        SELECT s.id,s.name,s.code,s.status,ss.display_name AS "displayName",ss.logo_url AS "logoUrl",
+               ss.primary_color AS "primaryColor",ss.secondary_color AS "secondaryColor",
+               ss.address,ss.phone,ss.email,ss.website,ss.timezone,ss.currency_code AS "currencyCode",ss.locale,ss.date_format AS "dateFormat",
+               mac.app_name AS "appName",mac.app_slug AS "appSlug",mac.api_base_url AS "apiBaseUrl",mac.logo_url AS "appLogoUrl"
+        FROM schools s LEFT JOIN school_settings ss ON ss.school_id=s.id
+        LEFT JOIN mobile_app_configs mac ON mac.school_id=s.id
+        WHERE s.code=$1 AND s.status='active'
+      `, [code]);
+      if (!rows.length) return res.status(404).json({ error: 'School not found' });
+      res.json({ school: rows[0] });
+    } catch (err) { next(err); }
+  });
   const platformRoles = ['super_admin'];
   const schoolRoles = ['super_admin', 'principal', 'admin'];
 
