@@ -1,4 +1,5 @@
 const { authenticate, requireRoles } = require('./auth');
+const { hashPassword } = require('./security');
 
 function registerPlatformSchoolManagementRoutes(app, pool) {
   app.get('/api/platform/schools/:id', authenticate, requireRoles('super_admin'), async (req, res, next) => {
@@ -16,7 +17,10 @@ function registerPlatformSchoolManagementRoutes(app, pool) {
       const { rows: branches } = await pool.query(
         `SELECT id,name,code,address,phone,email,logo_url AS "logoUrl",status,is_main AS "isMain"
          FROM branches WHERE school_id=$1 ORDER BY is_main DESC,name`, [req.params.id]);
-      res.json({ school: rows[0], branches });
+      const { rows: admins } = await pool.query(
+        `SELECT id,email,phone,role,status,branch_id AS "branchId" FROM users
+         WHERE school_id=$1 AND role IN ('principal','admin') ORDER BY role,email`, [req.params.id]);
+      res.json({ school: rows[0], branches, admins });
     } catch (err) { next(err); }
   });
 
@@ -24,14 +28,13 @@ function registerPlatformSchoolManagementRoutes(app, pool) {
     const client = await pool.connect();
     try {
       const b = req.body || {};
-      const school = [];
-      const schoolValues = [];
+      const school = [], schoolValues = [];
       if (Object.prototype.hasOwnProperty.call(b, 'name')) { school.push('name=$1'); schoolValues.push(String(b.name).trim()); }
       if (Object.prototype.hasOwnProperty.call(b, 'code')) { school.push(`code=$${schoolValues.length + 1}`); schoolValues.push(String(b.code).trim().toUpperCase()); }
       if (Object.prototype.hasOwnProperty.call(b, 'status')) { school.push(`status=$${schoolValues.length + 1}`); schoolValues.push(b.status); }
       const settingsMap = {displayName:'display_name',logoUrl:'logo_url',primaryColor:'primary_color',secondaryColor:'secondary_color',address:'address',phone:'phone',email:'email',website:'website',timezone:'timezone',currencyCode:'currency_code',locale:'locale',dateFormat:'date_format'};
       const appMap = {appName:'app_name',appSlug:'app_slug',androidPackage:'android_package',iosBundleId:'ios_bundle_id',apiBaseUrl:'api_base_url',appLogoUrl:'logo_url',appPrimaryColor:'primary_color',appSecondaryColor:'secondary_color',supportEmail:'support_email',supportPhone:'support_phone',minAppVersion:'min_app_version',forceUpdate:'force_update',appStatus:'status'};
-      const build = map => { const set=[]; const vals=[]; for (const [key,col] of Object.entries(map)) if (Object.prototype.hasOwnProperty.call(b,key)) { set.push(`${col}=$${vals.length+1}`); vals.push(key==='appSlug' ? String(b[key]).trim().toLowerCase() : (b[key] ?? null)); } return {set,vals}; };
+      const build = map => { const set=[],vals=[]; for (const [key,col] of Object.entries(map)) if (Object.prototype.hasOwnProperty.call(b,key)) { set.push(`${col}=$${vals.length+1}`); vals.push(key==='appSlug' ? String(b[key]).trim().toLowerCase() : (b[key] ?? null)); } return {set,vals}; };
       const settings=build(settingsMap), appConfig=build(appMap);
       if (b.appSlug && !/^[a-z0-9][a-z0-9-]{2,98}$/.test(String(b.appSlug).trim().toLowerCase())) return res.status(400).json({error:'Invalid appSlug'});
       if (!school.length && !settings.set.length && !appConfig.set.length) return res.status(400).json({error:'No supported fields supplied'});
@@ -44,6 +47,34 @@ function registerPlatformSchoolManagementRoutes(app, pool) {
       res.json({school:sr.rows[0],message:'School configuration updated'});
     } catch (err) { await client.query('ROLLBACK').catch(()=>{}); next(err); } finally { client.release(); }
   });
-}
 
+  // Platform-level onboarding: create the first school administrator without
+  // temporarily switching the Super Admin's tenant context.
+  app.post('/api/platform/schools/:id/admin', authenticate, requireRoles('super_admin'), async (req,res,next) => {
+    const client = await pool.connect();
+    try {
+      const b=req.body||{};
+      const email=String(b.email||'').trim().toLowerCase();
+      const phone=String(b.phone||'').trim();
+      const password=String(b.password||'');
+      const role=String(b.role||'admin').trim().toLowerCase();
+      if ((!email&&!phone)||password.length<6||!['admin','principal'].includes(role)) return res.status(400).json({error:'email or phone, password (min 6), and admin/principal role are required'});
+      await client.query('BEGIN');
+      const school=await client.query(`SELECT id FROM schools WHERE id=$1 AND status='active'`,[req.params.id]);
+      if(!school.rowCount){await client.query('ROLLBACK');return res.status(404).json({error:'School not found or inactive'});}
+      let branchId=b.branchId||null;
+      if(branchId){
+        const branch=await client.query(`SELECT id FROM branches WHERE id=$1 AND school_id=$2 AND status='active'`,[branchId,req.params.id]);
+        if(!branch.rowCount){await client.query('ROLLBACK');return res.status(400).json({error:'Invalid school branch'});}
+      } else {
+        const branch=await client.query(`SELECT id FROM branches WHERE school_id=$1 AND status='active' ORDER BY is_main DESC LIMIT 1`,[req.params.id]);
+        branchId=branch.rows[0]?.id||null;
+      }
+      const u=await client.query(`INSERT INTO users(school_id,branch_id,email,phone,password_hash,role,status) VALUES($1,$2,$3,$4,$5,$6,'active') RETURNING id,email,phone,role,status,branch_id AS "branchId"`,[req.params.id,branchId,email||null,phone||null,await hashPassword(password),role]);
+      await client.query(`INSERT INTO sync_changes(school_id,entity_type,entity_id,operation,payload,changed_by) VALUES($1,'staff',$2,'create',$3::jsonb,$4)`,[req.params.id,u.rows[0].id,JSON.stringify(u.rows[0]),req.auth.sub]);
+      await client.query('COMMIT');
+      res.status(201).json({admin:u.rows[0]});
+    }catch(err){await client.query('ROLLBACK').catch(()=>{});if(err.code==='23505')return res.status(409).json({error:'Administrator email/phone already exists'});next(err)}finally{client.release()}
+  });
+}
 module.exports={registerPlatformSchoolManagementRoutes};
