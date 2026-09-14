@@ -28,7 +28,8 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Unified ERP animation foundation
 - [x] Migration/preflight and architecture contract gates
 - [x] Super Admin School Management UI connected to the provisioning API
-- [x] **Next implementation: polished Super Admin school-management workflow completed**
+- [x] **Polished Super Admin school-management workflow completed**
+- [x] **School Manager UI hardened: authenticated role gate, search, status dashboard, online/offline indicator, provisioning form, school detail/edit workflow and branch visibility**
 
 ### Current verification / hardening
 - [~] Clean PostgreSQL migration run against an empty database
