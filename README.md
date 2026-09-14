@@ -60,6 +60,8 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] **Next implementation: Super Admin School Management UI + provisioning/detail/update integration completed**
 
 ### Active next logical process — verification gate
+
+**Latest completed implementation step — Super Admin School Management:** [x] School Management UI + school detail/branding/update APIs + first-admin provisioning integration. The contract test `school_management_ui_contract.test.js` covers the UI/API wiring.
 - [~] **Clean PostgreSQL migration run:** execute every migration from an empty database and verify tables, indexes, functions and constraints
 - [~] **Authenticated Super Admin E2E:** create school → edit → branding → deactivate/reactivate → admin login → branch scope
 - [~] **Offline E2E:** offline write → reconnect → push → pull → idempotency/conflict resolution
