@@ -10,19 +10,7 @@ function registerOrganizationRoutes(app, pool) {
       const code=String(req.query?.schoolCode||'').trim().toUpperCase();
       const slug=String(req.query?.appSlug||'').trim().toLowerCase();
       if(!code&&!slug)return res.status(400).json({error:'schoolCode or appSlug is required'});
-      const {rows}=await pool.query(`
-        SELECT s.id,s.name,s.code,s.status,ss.display_name AS "displayName",ss.logo_url AS "logoUrl",
-               ss.primary_color AS "primaryColor",ss.secondary_color AS "secondaryColor",ss.website,ss.phone,ss.email,ss.timezone,
-               ss.currency_code AS "currencyCode",ss.locale,ss.date_format AS "dateFormat",
-               mac.app_name AS "appName",mac.app_slug AS "appSlug",mac.android_package AS "androidPackage",
-               mac.ios_bundle_id AS "iosBundleId",mac.api_base_url AS "apiBaseUrl",mac.logo_url AS "appLogoUrl",
-               mac.primary_color AS "appPrimaryColor",mac.secondary_color AS "appSecondaryColor",
-               mac.support_email AS "supportEmail",mac.support_phone AS "supportPhone",
-               mac.min_app_version AS "minAppVersion",mac.force_update AS "forceUpdate"
-        FROM schools s
-        LEFT JOIN school_settings ss ON ss.school_id=s.id
-        LEFT JOIN mobile_app_configs mac ON mac.school_id=s.id
-        WHERE s.status='active' AND ($1='' OR s.code=$1) AND ($2='' OR mac.app_slug=$2) LIMIT 1`,[code,slug]);
+      const {rows}=await pool.query(`SELECT s.id,s.name,s.code,s.status,ss.display_name AS "displayName",ss.logo_url AS "logoUrl",ss.primary_color AS "primaryColor",ss.secondary_color AS "secondaryColor",ss.website,ss.phone,ss.email,ss.timezone,ss.currency_code AS "currencyCode",ss.locale,ss.date_format AS "dateFormat",mac.app_name AS "appName",mac.app_slug AS "appSlug",mac.android_package AS "androidPackage",mac.ios_bundle_id AS "iosBundleId",mac.api_base_url AS "apiBaseUrl",mac.logo_url AS "appLogoUrl",mac.primary_color AS "appPrimaryColor",mac.secondary_color AS "appSecondaryColor",mac.support_email AS "supportEmail",mac.support_phone AS "supportPhone",mac.min_app_version AS "minAppVersion",mac.force_update AS "forceUpdate" FROM schools s LEFT JOIN school_settings ss ON ss.school_id=s.id LEFT JOIN mobile_app_configs mac ON mac.school_id=s.id WHERE s.status='active' AND ($1='' OR s.code=$1) AND ($2='' OR mac.app_slug=$2) LIMIT 1`,[code,slug]);
       if(!rows.length)return res.status(404).json({error:'Active school configuration not found'});
       res.json({school:rows[0]});
     } catch(err){next(err)}
@@ -59,19 +47,6 @@ function registerOrganizationRoutes(app, pool) {
       if(!rows.length)return res.status(404).json({error:'School not found'});
       const {rows:branches}=await pool.query(`SELECT id,name,code,address,phone,email,logo_url AS "logoUrl",status,is_main AS "isMain" FROM branches WHERE school_id=$1 ORDER BY is_main DESC,name`,[req.params.id]);
       res.json({school:rows[0],branches});
-    }catch(err){next(err)}
-  });
-
-  app.patch('/api/platform/schools/:id/branding',authenticate,requireRoles(...platformRoles),async(req,res,next)=>{
-    try{
-      const b=req.body||{},allowed=['displayName','logoUrl','primaryColor','secondaryColor','website','phone','email','address','timezone','currencyCode','locale','dateFormat'];
-      const columns={displayName:'display_name',logoUrl:'logo_url',primaryColor:'primary_color',secondaryColor:'secondary_color',website:'website',phone:'phone',email:'email',address:'address',timezone:'timezone',currencyCode:'currency_code',locale:'locale',dateFormat:'date_format'};
-      const fields=allowed.filter(k=>Object.prototype.hasOwnProperty.call(b,k));
-      if(!fields.length)return res.status(400).json({error:'No branding fields supplied'});
-      const vals=fields.map(k=>b[k]??null),sets=fields.map((k,i)=>`${columns[k]}=$${i+1}`);vals.push(req.params.id);
-      const r=await pool.query(`UPDATE school_settings SET ${sets.join(',')},updated_at=now() WHERE school_id=$${vals.length} RETURNING school_id AS "schoolId",display_name AS "displayName",logo_url AS "logoUrl",primary_color AS "primaryColor",secondary_color AS "secondaryColor",website,phone,email,address,timezone,currency_code AS "currencyCode",locale,date_format AS "dateFormat"`,vals);
-      if(!r.rows.length)return res.status(404).json({error:'School settings not found'});
-      res.json({settings:r.rows[0]});
     }catch(err){next(err)}
   });
 
