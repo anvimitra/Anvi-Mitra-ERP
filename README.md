@@ -79,3 +79,254 @@ Implementation is marked [x] when the code foundation/UI/harness is present. Int
 **README checkpoint rule:** after each completed logical implementation checkpoint, this README is updated with an [x] marker; verification items remain [~] until genuinely verified.
 
 **LSKLive website remains separate and is not modified as part of ERP work.**
+
+
+## Master ERP Roadmap & Completion Tracker
+
+**Completion rule:** ERP is **100% complete only when every implementation item is [x] and every verification/production item is [x].**
+
+### 1. Platform & Multi-School
+- [x] Central PostgreSQL/API
+- [x] Multi-school tenant isolation
+- [x] Multi-branch structure
+- [x] School settings/branding/logo
+- [x] School-specific mobile-app configuration
+- [x] Super Admin authentication
+- [x] Super Admin School Management
+- [x] Add School provisioning
+- [x] Main branch provisioning
+- [x] First school administrator provisioning
+- [ ] Bulk school import
+- [ ] SaaS subscription/billing
+
+### 2. Roles & Security
+- [x] Super Admin
+- [x] Principal/Admin
+- [x] Teacher
+- [x] Student
+- [x] Parent
+- [x] Driver
+- [x] Server-side authorization
+- [x] Teacher → class → section → subject → session permissions
+- [x] Server-side marks authorization
+- [x] Enrollment/roster authorization
+- [ ] MFA/2FA
+- [ ] Complete security audit
+- [ ] Complete audit-log coverage
+
+### 3. People & Enrollment
+- [x] Staff accounts
+- [x] Teacher profiles
+- [x] Student profiles
+- [x] Parent profiles
+- [x] Student enrollment
+- [x] Parent-student linking
+- [ ] Bulk student/staff import
+- [ ] Document/KYC attachments
+- [ ] ID-card generation
+- [ ] Student promotion/session rollover
+
+### 4. Academics
+- [x] Academic sessions
+- [x] Classes
+- [x] Sections
+- [x] Subjects
+- [x] Teacher assignments
+- [ ] Timetable
+- [ ] Period management
+- [ ] Teacher substitution
+- [ ] Homework/assignments
+- [ ] Study material
+- [ ] Academic calendar
+- [ ] Syllabus/progress tracking
+
+### 5. Attendance
+- [ ] Student attendance
+- [ ] Staff/teacher attendance
+- [ ] Daily/monthly reports
+- [ ] Leave/late/half-day
+- [ ] Parent attendance view
+- [ ] Attendance notifications
+- [ ] Offline attendance + sync
+- [ ] Attendance audit trail
+
+### 6. Exams, Marks & Results
+- [x] Exam foundation
+- [x] Teacher marks permissions
+- [x] Marks save/sync journal
+- [ ] Exam scheduling
+- [ ] Marks validation
+- [ ] FA1
+- [ ] FA2
+- [ ] FA3
+- [ ] Half Yearly
+- [ ] Yearly
+- [ ] Grades/totals
+- [ ] Result processing
+- [ ] Report cards
+- [ ] PDF/print report cards
+- [ ] Rank/position rules
+- [ ] Result publishing
+
+### 7. Fees & Finance
+- [ ] Fee heads/structures
+- [ ] Class-wise fee plans
+- [ ] Student fee assignment
+- [ ] Installments
+- [ ] Discounts/concessions
+- [ ] Late fees
+- [ ] Fee collection
+- [ ] Online payments
+- [ ] Receipts/receipt numbering
+- [ ] Outstanding dues
+- [ ] Collection/reconciliation reports
+- [ ] Finance audit trail
+
+### 8. Parent Portal & Mobile
+- [ ] Parent dashboard
+- [ ] Child switching
+- [ ] Attendance
+- [ ] Marks/results
+- [ ] Homework
+- [ ] Fees/receipts
+- [ ] Notices
+- [ ] Communication
+- [ ] Profile/documents
+- [x] Notification tap routing foundation
+- [ ] Production Firebase configuration per school
+
+### 9. Notifications & Communication
+- [x] Push notification foundation
+- [x] Notification action routing
+- [ ] Fee notifications
+- [ ] Attendance notifications
+- [ ] Exam/result notifications
+- [ ] Homework notifications
+- [ ] Announcements
+- [ ] Targeted role/class/section notifications
+- [ ] Notification history
+- [ ] Read/unread state
+- [ ] Notification preferences
+
+### 10. Dashboards & Reports
+- [x] Role-aware dashboard foundation
+- [ ] Super Admin analytics
+- [ ] School/Principal dashboard
+- [ ] Teacher dashboard
+- [ ] Parent dashboard
+- [ ] Student dashboard
+- [ ] Attendance analytics
+- [ ] Fee analytics
+- [ ] Result analytics
+- [ ] Enrollment analytics
+- [ ] CSV/Excel/PDF exports
+- [ ] Scheduled reports
+
+### 11. Transport
+- [ ] Vehicles
+- [ ] Drivers
+- [ ] Routes/stops
+- [ ] Student transport assignment
+- [ ] Driver mobile workflow
+- [ ] Route attendance
+- [ ] Transport notifications
+- [ ] Transport fees
+
+### 12. Library
+- [ ] Book catalogue
+- [ ] Categories/authors/publishers
+- [ ] Copies/barcodes
+- [ ] Issue/return
+- [ ] Fines
+- [ ] Library reports
+- [ ] Availability/search
+
+### 13. Inventory & Assets
+- [ ] Categories/items/stock
+- [ ] Purchases
+- [ ] Issue/return
+- [ ] Vendors
+- [ ] Asset register
+- [ ] Asset assignment
+- [ ] Stock reports
+- [ ] Low-stock alerts
+
+### 14. HR & Payroll
+- [ ] Employee master
+- [ ] Staff documents
+- [ ] Departments/designations
+- [ ] Leave management
+- [ ] Attendance integration
+- [ ] Salary structures
+- [ ] Payroll
+- [ ] Payslips
+- [ ] HR/payroll reports
+
+### 15. Offline-First Sync
+- [x] Sync database foundation
+- [x] Device registration
+- [x] Server change cursor
+- [x] Change journal
+- [x] Conflict foundation
+- [x] Web cache/outbox foundation
+- [x] Reconnect auto-sync foundation
+- [x] Offline marks re-authorization
+- [ ] Complete entity push/pull adapters
+- [ ] Conflict-resolution UI
+- [ ] Offline attendance
+- [ ] Offline fees/receipts
+- [ ] Offline exams/marks
+- [ ] Offline enrollment
+- [ ] Sync monitoring/retry dashboard
+- [ ] Device revoke/reset
+
+### 16. School PC/NAS Storage
+- [x] Permissioned connector model
+- [x] Read-only/read-write model
+- [ ] Desktop connector implementation
+- [ ] User-selected folder permission
+- [ ] Local backup/export
+- [ ] Incremental file sync
+- [ ] Disconnect/recovery
+- [ ] Local-file conflict handling
+- [ ] Connector health UI
+- [ ] NAS support
+
+### 17. White-Label / School Apps
+- [x] Per-school app config foundation
+- [x] Per-school branding foundation
+- [ ] Per-school app build pipeline
+- [ ] School-specific icon/splash
+- [ ] School-specific Firebase config
+- [ ] School-specific Android package
+- [ ] School-specific iOS bundle
+- [ ] Automated release pipeline
+- [ ] White-label web branding
+
+### 18. Production Hardening
+- [~] Clean database migration verification
+- [~] Super Admin school onboarding E2E
+- [~] Admin login/branch-scope E2E
+- [~] Offline push/pull/idempotency/conflict E2E
+- [~] Local storage E2E
+- [~] Enrollment E2E
+- [~] CI/static contract verification
+- [ ] Full Android analyze/build + APK artifact verification
+- [ ] Flutter integration tests
+- [ ] Accessibility audit
+- [ ] Security audit
+- [ ] Backup/restore drill
+- [ ] Disaster recovery drill
+- [ ] Load/performance test
+- [ ] Monitoring/alerting
+- [ ] Production deployment
+- [ ] Final ERP sign-off
+
+### Implementation Tracking Rule
+
+After every **logical implementation checkpoint**, this README must be updated:
+- implementation genuinely completed → change [ ] to [x]
+- implementation exists but verification is pending → use [~]
+- do **not** mark production/E2E work [x] until it has actually passed against the target infrastructure.
+
+**LSKLive website remains separate and is not modified as part of ERP development.**
