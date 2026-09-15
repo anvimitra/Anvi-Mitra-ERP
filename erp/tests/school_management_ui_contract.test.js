@@ -5,6 +5,7 @@ const assert = require('assert');
 const root = path.join(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'web/super-admin/schools.html'), 'utf8');
 const organization = fs.readFileSync(path.join(root, 'src/organization.js'), 'utf8');
+const platform = fs.readFileSync(path.join(root, 'src/platform_school_management.js'), 'utf8');
 
 for (const marker of [
   '/api/platform/schools',
@@ -17,17 +18,27 @@ for (const marker of [
   'primaryColor',
   'mainBranchName',
   'mainBranchCode',
+  'cached data and pending changes',
 ]) assert(html.includes(marker), 'School management UI missing: ' + marker);
 
 for (const marker of [
   "app.get('/api/platform/schools'",
-  "app.get('/api/platform/schools/:id'",
-  "app.patch('/api/platform/schools/:id'",
   "app.post('/api/platform/schools'",
   "adminEmail",
   "adminPassword",
   "hashPassword",
+  "mobile_app_configs",
+  "school_settings",
+  "branches",
+  "INSERT INTO users",
 ]) assert(organization.includes(marker), 'School provisioning API missing: ' + marker);
+
+for (const marker of [
+  "app.get('/api/platform/schools/:id'",
+  "app.patch('/api/platform/schools/:id'",
+  "app.post('/api/platform/schools/:id/admin'",
+  "app.post('/api/platform/schools/:id/logo'",
+]) assert(platform.includes(marker), 'School management API missing: ' + marker);
 
 assert(html.includes('/api/platform/schools/'), 'School detail route is not wired');
 assert(html.includes('navigator.onLine'), 'UI does not expose online/offline state');
