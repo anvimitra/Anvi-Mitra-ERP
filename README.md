@@ -6,7 +6,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 ## Current Status — 2026-09-15
 
-**Current phase: Core implementation checkpoint complete → sync conflict UI checkpoint complete → E2E verification → production sign-off**
+**Current phase: Core implementation checkpoint complete → sync conflict UI checkpoint complete → school onboarding/tenant hardening checkpoint complete → E2E verification → production sign-off**
 
 ### Latest implementation checkpoint
 - [x] Super Admin animated School Management UI
@@ -36,13 +36,14 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] **Offline sync cursor semantics hardened: push does not advance the applied-server cursor; pull is acknowledged after local application**
 - [x] **Teacher offline marks are re-authorized server-side during synchronization**
 - [x] **School Management platform routes registered for Super Admin list/create/detail/update/branding workflows**
-- [x] **Latest implementation checkpoint completed (2026-09-15): Add School now provisions the first administrator atomically with the school**
-- [x] **Latest implementation checkpoint completed (2026-09-15): Local Storage now persists the user-selected folder handle in browser IndexedDB and re-checks read/write permission before connector save**
+- [x] **Latest implementation checkpoint completed (2026-09-15): Add School provisions the first administrator atomically with the school**
+- [x] **Latest implementation checkpoint completed (2026-09-15): Local Storage persists the user-selected folder handle in browser IndexedDB and re-checks read/write permission before connector save**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Teacher Permission Management page added and routed to assignment API**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Timetable + period management API, schema, slot-conflict protection and timetable viewer UI added**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Student Enrollment page added and routed to school/branch-aware enrollment APIs**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Reusable browser offline-sync client added under `erp/web/assets/offline-sync.js`**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Sync Conflict Center UI added and routed to authenticated conflict-resolution API**
+- [x] **Latest implementation checkpoint completed (2026-09-15): Super Admin school provisioning contract now includes school profile, branding, main branch, mobile configuration and first administrator in one atomic transaction**
 
 ### Current verification / hardening
 - [~] Clean PostgreSQL migration run against an empty database
@@ -282,8 +283,8 @@ Implementation is marked [x] when the code foundation/UI/harness is present. Int
 - [x] Reconnect auto-sync foundation
 - [x] Offline marks re-authorization
 - [x] Reusable web offline sync client
-- [ ] Complete entity push/pull adapters
 - [x] Conflict-resolution UI
+- [ ] Complete entity push/pull adapters
 - [ ] Offline attendance
 - [ ] Offline fees/receipts
 - [ ] Offline exams/marks
