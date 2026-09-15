@@ -34,7 +34,7 @@ function registerOptional(moduleName, registerName) {
   try { file = require.resolve('./' + moduleName); } catch (_) { console.warn('Optional ERP module not present: ' + moduleName + '.js'); return false; }
   try {
     const mod = require(file);
-    if (typeof mod[registerName) !== 'function') { console.warn('ERP module ' + moduleName + '.js does not export ' + registerName); return false; }
+    if (typeof mod[registerName] !== 'function') { console.warn('ERP module ' + moduleName + '.js does not export ' + registerName); return false; }
     mod[registerName](app, pool);
     return true;
   } catch (error) {
