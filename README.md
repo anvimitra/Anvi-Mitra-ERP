@@ -6,7 +6,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 ## Current Status — 2026-09-15
 
-**Current phase: Core implementation checkpoint complete → teacher-permission UI checkpoint complete → enrollment UI checkpoint complete → E2E verification → production sign-off**
+**Current phase: Core implementation checkpoint complete → sync conflict UI checkpoint complete → E2E verification → production sign-off**
 
 ### Latest implementation checkpoint
 - [x] Super Admin animated School Management UI
@@ -42,6 +42,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] **Latest implementation checkpoint completed (2026-09-15): Timetable + period management API, schema, slot-conflict protection and timetable viewer UI added**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Student Enrollment page added and routed to school/branch-aware enrollment APIs**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Reusable browser offline-sync client added under `erp/web/assets/offline-sync.js`**
+- [x] **Latest implementation checkpoint completed (2026-09-15): Sync Conflict Center UI added and routed to authenticated conflict-resolution API**
 
 ### Current verification / hardening
 - [~] Clean PostgreSQL migration run against an empty database
@@ -78,6 +79,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 7. Teachers open **Marks Entry** and receive only the students authorized for that subject/class/session.
 8. Marks are validated server-side and written to the sync journal.
 9. Web/mobile/local clients synchronize through the central ERP API.
+10. Concurrent offline changes appear in **Sync Conflict Center** for authorized administrators to resolve.
 
 ## Progress policy
 
@@ -281,7 +283,7 @@ Implementation is marked [x] when the code foundation/UI/harness is present. Int
 - [x] Offline marks re-authorization
 - [x] Reusable web offline sync client
 - [ ] Complete entity push/pull adapters
-- [ ] Conflict-resolution UI
+- [x] Conflict-resolution UI
 - [ ] Offline attendance
 - [ ] Offline fees/receipts
 - [ ] Offline exams/marks
