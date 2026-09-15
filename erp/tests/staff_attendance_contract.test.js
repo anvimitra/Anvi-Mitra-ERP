@@ -1,0 +1,11 @@
+const fs = require('fs');
+const path = require('path');
+const api = fs.readFileSync(path.join(__dirname,'../src/staff_attendance.js'),'utf8');
+const schema = fs.readFileSync(path.join(__dirname,'../sql/041_staff_attendance.sql'),'utf8');
+if (!api.includes('/api/staff-attendance/roster')) throw new Error('staff attendance roster route missing');
+if (!api.includes('/api/staff-attendance/bulk')) throw new Error('staff attendance bulk route missing');
+if (!api.includes('req.auth.schoolId')) throw new Error('staff attendance tenant scope missing');
+if (!api.includes('req.auth.branchId')) throw new Error('staff attendance branch scope missing');
+if (!schema.includes('UNIQUE (school_id,user_id,attendance_date)')) throw new Error('staff attendance uniqueness missing');
+if (!schema.includes("status IN ('present','absent','late','half_day','leave')")) throw new Error('staff attendance status guard missing');
+console.log('staff attendance contract ok');
