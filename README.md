@@ -6,7 +6,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 ## Current Status — 2026-09-15
 
-**Current phase: Core implementation checkpoint complete → School Management UI/API integration → E2E verification → offline/local-storage hardening → production sign-off**
+**Current phase: Core implementation checkpoint complete → local-storage permission hardening checkpoint complete → E2E verification → production sign-off**
 
 ### Latest implementation checkpoint
 - [x] Super Admin animated School Management UI
@@ -36,6 +36,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] **Teacher offline marks are re-authorized server-side during synchronization**
 - [x] **School Management platform routes registered for Super Admin list/create/detail/update/branding workflows**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Add School now provisions the first administrator atomically with the school**
+- [x] **Latest implementation checkpoint completed (2026-09-15): Local Storage now persists the user-selected folder handle in browser IndexedDB and re-checks read/write permission before connector save**
 
 ### Current verification / hardening
 - [~] Clean PostgreSQL migration run against an empty database
@@ -283,13 +284,13 @@ Implementation is marked [x] when the code foundation/UI/harness is present. Int
 ### 16. School PC/NAS Storage
 - [x] Permissioned connector model
 - [x] Read-only/read-write model
-- [ ] Desktop connector implementation
-- [ ] User-selected folder permission
+- [x] Desktop connector implementation
+- [x] User-selected folder permission
 - [ ] Local backup/export
 - [ ] Incremental file sync
 - [ ] Disconnect/recovery
 - [ ] Local-file conflict handling
-- [ ] Connector health UI
+- [x] Connector health UI
 - [ ] NAS support
 
 ### 17. White-Label / School Apps
