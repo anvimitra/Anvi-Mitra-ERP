@@ -6,7 +6,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 ## Current Status — 2026-09-15
 
-**Current phase: Core implementation checkpoint complete → teacher-permission UI checkpoint complete → E2E verification → production sign-off**
+**Current phase: Core implementation checkpoint complete → teacher-permission UI checkpoint complete → enrollment UI checkpoint complete → E2E verification → production sign-off**
 
 ### Latest implementation checkpoint
 - [x] Super Admin animated School Management UI
@@ -22,6 +22,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Marks save + sync journal integration
 - [x] Staff account + teacher profile provisioning
 - [x] Student enrollment + parent linking
+- [x] **School enrollment management UI connected to authenticated enrollment APIs**
 - [x] Offline sync schema, device registration, push/pull, idempotency and conflict foundation
 - [x] Web IndexedDB cache + outbox + reconnect auto-sync
 - [x] Permissioned local storage connector model/runtime/UI
@@ -39,6 +40,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] **Latest implementation checkpoint completed (2026-09-15): Local Storage now persists the user-selected folder handle in browser IndexedDB and re-checks read/write permission before connector save**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Teacher Permission Management page added and routed to assignment API**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Timetable + period management API, schema, slot-conflict protection and timetable viewer UI added**
+- [x] **Latest implementation checkpoint completed (2026-09-15): Student Enrollment page added and routed to school/branch-aware enrollment APIs**
 
 ### Current verification / hardening
 - [~] Clean PostgreSQL migration run against an empty database
@@ -69,11 +71,12 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 1. Super Admin opens **School Management → Add School**.
 2. School profile, branding, main branch and mobile-app configuration are provisioned together.
 3. The first school administrator is provisioned atomically with the school using a securely hashed password and linked to the school's main branch.
-4. School administrator creates staff/teacher accounts and enrolls students/parents.
-5. School management opens **Teacher Permissions** and assigns teacher → session → class/section → subject access.
-6. Teachers open **Marks Entry** and receive only the students authorized for that subject/class/session.
-7. Marks are validated server-side and written to the sync journal.
-8. Web/mobile/local clients synchronize through the central ERP API.
+4. School administrator creates staff/teacher accounts and opens **Student Enrollment**.
+5. Enrollment selects the correct branch/session/class/section and can link an existing parent.
+6. School management opens **Teacher Permissions** and assigns teacher → session → class/section → subject access.
+7. Teachers open **Marks Entry** and receive only the students authorized for that subject/class/session.
+8. Marks are validated server-side and written to the sync journal.
+9. Web/mobile/local clients synchronize through the central ERP API.
 
 ## Progress policy
 
@@ -124,6 +127,7 @@ Implementation is marked [x] when the code foundation/UI/harness is present. Int
 - [x] Parent profiles
 - [x] Student enrollment
 - [x] Parent-student linking
+- [x] Enrollment management UI
 - [ ] Bulk student/staff import
 - [ ] Document/KYC attachments
 - [ ] ID-card generation
@@ -221,7 +225,7 @@ Implementation is marked [x] when the code foundation/UI/harness is present. Int
 - [ ] Attendance analytics
 - [ ] Fee analytics
 - [ ] Result analytics
-- [ ] Enrollment analytics
+- [x] Enrollment analytics foundation
 - [ ] CSV/Excel/PDF exports
 - [ ] Scheduled reports
 
