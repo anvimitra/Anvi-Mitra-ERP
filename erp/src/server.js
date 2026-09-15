@@ -20,6 +20,7 @@ app.get('/super-admin/schools', (_req,res) => res.sendFile(superAdminPage));
 app.get('/super-admin/school-onboarding', (_req,res) => res.sendFile(path.join(__dirname,'../web/super-admin/school-onboarding.html')));
 app.get('/super-admin/school', (_req,res) => res.sendFile(path.join(__dirname,'../web/super-admin/school.html')));
 app.get('/super-admin/teacher-permissions', (_req,res) => res.sendFile(path.join(__dirname,'../web/super-admin/teacher-assignments.html')));
+app.get('/super-admin/sync-conflicts', (_req,res) => res.sendFile(path.join(__dirname,'../web/super-admin/sync-conflicts.html')));
 app.get('/school/enrollment', (_req,res) => res.sendFile(path.join(__dirname,'../web/school/enrollment.html')));
 
 app.get('/api/health', async (_req, res) => {
@@ -33,7 +34,7 @@ function registerOptional(moduleName, registerName) {
   try { file = require.resolve('./' + moduleName); } catch (_) { console.warn('Optional ERP module not present: ' + moduleName + '.js'); return false; }
   try {
     const mod = require(file);
-    if (typeof mod[registerName] !== 'function') { console.warn('ERP module ' + moduleName + '.js does not export ' + registerName); return false; }
+    if (typeof mod[registerName) !== 'function') { console.warn('ERP module ' + moduleName + '.js does not export ' + registerName); return false; }
     mod[registerName](app, pool);
     return true;
   } catch (error) {
