@@ -6,7 +6,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 ## Current Status — 2026-09-15
 
-**Current phase: Core implementation checkpoint complete → staff attendance checkpoint complete → E2E verification → production sign-off**
+**Current phase: Core implementation checkpoint complete → attendance/offline-sync checkpoint complete → CI verification → E2E verification → production sign-off**
 
 ### Latest implementation checkpoint
 - [x] Super Admin animated School Management UI
@@ -44,6 +44,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] **Latest implementation checkpoint completed (2026-09-15): Reusable browser offline-sync client added under `erp/web/assets/offline-sync.js`**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Sync Conflict Center UI added and routed to authenticated conflict-resolution API**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Staff/teacher attendance schema, branch-aware roster, bulk marking and daily reporting API added and registered in the server**
+- [x] **Latest implementation checkpoint completed (2026-09-15): Offline student attendance changes are applied during synchronization with school/branch/enrollment validation**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Super Admin school provisioning contract now includes school profile, branding, main branch, mobile configuration and first administrator in one atomic transaction**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Student attendance API added with branch/session/roster scope, bulk upsert, daily reporting and server-side authorization**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Super Admin school branding endpoint added for secure logo update across school profile and mobile-app configuration**
@@ -165,7 +166,7 @@ Implementation is marked [x] when the code foundation/UI/harness is present. Int
 - [x] Leave/late/half-day
 - [ ] Parent attendance view
 - [ ] Attendance notifications
-- [ ] Offline attendance + sync
+- [x] Offline attendance + sync
 - [x] Attendance audit trail
 
 ### 6. Exams, Marks & Results
