@@ -6,7 +6,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 ## Current Status — 2026-09-15
 
-**Current phase: Core implementation checkpoint complete → sync conflict UI checkpoint complete → school onboarding/tenant hardening checkpoint complete → E2E verification → production sign-off**
+**Current phase: Core implementation checkpoint complete → sync conflict UI checkpoint complete → school onboarding/tenant hardening checkpoint complete → school branding upload checkpoint complete → E2E verification → production sign-off**
 
 ### Latest implementation checkpoint
 - [x] Super Admin animated School Management UI
@@ -45,6 +45,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] **Latest implementation checkpoint completed (2026-09-15): Sync Conflict Center UI added and routed to authenticated conflict-resolution API**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Super Admin school provisioning contract now includes school profile, branding, main branch, mobile configuration and first administrator in one atomic transaction**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Student attendance API added with branch/session/roster scope, bulk upsert, daily reporting and server-side authorization**
+- [x] **Latest implementation checkpoint completed (2026-09-15): Super Admin school branding endpoint added for secure logo update across school profile and mobile-app configuration**
 
 ### Current verification / hardening
 - [~] Clean PostgreSQL migration run against an empty database
