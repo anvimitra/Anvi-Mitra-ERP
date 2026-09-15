@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Anvi Mitra ERP • Sync Conflicts</title>
+<style>
+:root{--p:#4f46e5;--bg:#f5f7fb;--ink:#172033;--muted:#667085;--line:#e5e7eb}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:radial-gradient(circle at 10% 0,#dbeafe,transparent 30%),var(--bg);color:var(--ink)}
+.wrap{max-width:1150px;margin:auto;padding:28px}.hero{padding:30px;border-radius:26px;color:#fff;background:linear-gradient(135deg,#111827,#4338ca,#0891b2);box-shadow:0 18px 45px #11182722}
+h1{margin:0 0 7px}.muted{color:var(--muted)}.hero .muted{color:#dbeafe}
+.bar{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:20px 0}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;margin:12px 0;box-shadow:0 8px 25px #1118270b}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.box{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:12px;overflow:auto;white-space:pre-wrap;word-break:break-word;max-height:220px}
+button{border:0;border-radius:11px;padding:10px 14px;font-weight:800;cursor:pointer}.server{background:#e0e7ff}.local{background:#dcfce7}.merge{background:#fef3c7}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+</style></head><body><main class="wrap"><section class="hero"><h1>Sync Conflict Center</h1><div class="muted">Super Admin / Principal / Admin • Review concurrent offline changes before they overwrite one another.</div></section>
+<div class="bar"><strong id="count">Loading…</strong><button onclick="load()">↻ Refresh</button></div><div id="list"></div></main>
+<script>
+const token=()=>sessionStorage.getItem('lsk_access_token')||localStorage.getItem('accessToken')||localStorage.getItem('token')||'';
+async function api(url,opt={}){opt.headers={...(opt.headers||{}),Authorization:'Bearer '+token(),'Content-Type':'application/json'};const r=await fetch(url,opt),d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||'Request failed');return d}
+const pretty=x=>JSON.stringify(x??{},null,2);
+function card(c){return '<article class="card"><div class="bar"><div><b>'+c.entity_type+'</b><div class="muted">'+(c.entity_id||'no entity id')+'</div></div><small>'+new Date(c.created_at).toLocaleString()+'</small></div><div class="grid"><div><b>Local</b><div class="box local">'+pretty(c.local_payload)+'</div></div><div><b>Server</b><div class="box server">'+pretty(c.server_payload)+'</div></div></div><div class="bar"><div class="muted">Choose the authoritative version, or merge both payloads.</div><div><button class="server" onclick="resolve(\''+c.id+'\',\'server_wins\')">Server wins</button> <button class="local" onclick="resolve(\''+c.id+'\',\'local_wins\')">Local wins</button></div></div></article>'}
+async function load(){try{const d=await api('/api/sync/conflicts');count.textContent=(d.conflicts||[]).length+' pending conflict(s)';list.innerHTML=(d.conflicts||[]).map(card).join('')||'<div class="card">✓ No pending conflicts.</div>'}catch(e){count.textContent=e.message}}
+async function resolve(id,resolution){if(!confirm('Resolve this conflict with '+resolution.replace('_',' ')+'?'))return;try{await api('/api/sync/conflicts/'+id,{method:'PATCH',body:JSON.stringify({resolution})});load()}catch(e){alert(e.message)}}
+load();
+</script></body></html>
