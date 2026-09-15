@@ -41,6 +41,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] **Latest implementation checkpoint completed (2026-09-15): Teacher Permission Management page added and routed to assignment API**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Timetable + period management API, schema, slot-conflict protection and timetable viewer UI added**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Student Enrollment page added and routed to school/branch-aware enrollment APIs**
+- [x] **Latest implementation checkpoint completed (2026-09-15): Reusable browser offline-sync client added under `erp/web/assets/offline-sync.js`**
 
 ### Current verification / hardening
 - [~] Clean PostgreSQL migration run against an empty database
@@ -278,6 +279,7 @@ Implementation is marked [x] when the code foundation/UI/harness is present. Int
 - [x] Web cache/outbox foundation
 - [x] Reconnect auto-sync foundation
 - [x] Offline marks re-authorization
+- [x] Reusable web offline sync client
 - [ ] Complete entity push/pull adapters
 - [ ] Conflict-resolution UI
 - [ ] Offline attendance
