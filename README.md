@@ -4,7 +4,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 > Progress marker: [x] implementation complete · [~] verification/hardening pending · [ ] not implemented
 
-## Current Status — 2026-09-14
+## Current Status — 2026-09-15
 
 **Current phase: Core implementation checkpoint complete → School Management UI/API integration → E2E verification → offline/local-storage hardening → production sign-off**
 
@@ -14,6 +14,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] School list/search and active/inactive status
 - [x] Super Admin school provisioning/detail/update APIs
 - [x] First school administrator provisioning
+- [x] **Atomic Add School onboarding: school + profile + main branch + mobile configuration + first administrator are created in one transaction**
 - [x] Main branch provisioning and branch management
 - [x] School tenant and branch-aware authentication
 - [x] Teacher class/subject/section/session permission management
@@ -34,8 +35,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] **Offline sync cursor semantics hardened: push does not advance the applied-server cursor; pull is acknowledged after local application**
 - [x] **Teacher offline marks are re-authorized server-side during synchronization**
 - [x] **School Management platform routes registered for Super Admin list/create/detail/update/branding workflows**
-- [x] **Latest implementation checkpoint completed (2026-09-14): backend school-management provisioning/detail/update integration**
-- [x] **Latest implementation checkpoint completed (2026-09-14): fixed School Manager authentication-token compatibility and duplicate administrator creation flow**
+- [x] **Latest implementation checkpoint completed (2026-09-15): Add School now provisions the first administrator atomically with the school**
 
 ### Current verification / hardening
 - [~] Clean PostgreSQL migration run against an empty database
@@ -65,7 +65,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 1. Super Admin opens **School Management → Add School**.
 2. School profile, branding, main branch and mobile-app configuration are provisioned together.
-3. The first school administrator is provisioned with a securely hashed password and linked to the school's main branch.
+3. The first school administrator is provisioned atomically with the school using a securely hashed password and linked to the school's main branch.
 4. School administrator creates staff/teacher accounts and enrolls students/parents.
 5. Teachers receive class/subject/section/session assignments.
 6. Teachers open **Marks Entry** and receive only the students authorized for that subject/class/session.
