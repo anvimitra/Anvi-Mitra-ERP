@@ -6,7 +6,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 ## Current Status — 2026-09-15
 
-**Current phase: Core implementation checkpoint complete → local-storage permission hardening checkpoint complete → E2E verification → production sign-off**
+**Current phase: Core implementation checkpoint complete → teacher-permission UI checkpoint complete → E2E verification → production sign-off**
 
 ### Latest implementation checkpoint
 - [x] Super Admin animated School Management UI
@@ -37,6 +37,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] **School Management platform routes registered for Super Admin list/create/detail/update/branding workflows**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Add School now provisions the first administrator atomically with the school**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Local Storage now persists the user-selected folder handle in browser IndexedDB and re-checks read/write permission before connector save**
+- [x] **Latest implementation checkpoint completed (2026-09-15): Teacher Permission Management page added and routed to assignment API**
 
 ### Current verification / hardening
 - [~] Clean PostgreSQL migration run against an empty database
@@ -68,7 +69,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 2. School profile, branding, main branch and mobile-app configuration are provisioned together.
 3. The first school administrator is provisioned atomically with the school using a securely hashed password and linked to the school's main branch.
 4. School administrator creates staff/teacher accounts and enrolls students/parents.
-5. Teachers receive class/subject/section/session assignments.
+5. School management opens **Teacher Permissions** and assigns teacher → session → class/section → subject access.
 6. Teachers open **Marks Entry** and receive only the students authorized for that subject/class/session.
 7. Marks are validated server-side and written to the sync journal.
 8. Web/mobile/local clients synchronize through the central ERP API.
@@ -80,7 +81,6 @@ Implementation is marked [x] when the code foundation/UI/harness is present. Int
 **README checkpoint rule:** after each completed logical implementation checkpoint, this README is updated with an [x] marker; verification items remain [~] until genuinely verified.
 
 **LSKLive website remains separate and is not modified as part of ERP work.**
-
 
 ## Master ERP Roadmap & Completion Tracker
 
@@ -109,6 +109,7 @@ Implementation is marked [x] when the code foundation/UI/harness is present. Int
 - [x] Driver
 - [x] Server-side authorization
 - [x] Teacher → class → section → subject → session permissions
+- [x] Teacher permission management UI
 - [x] Server-side marks authorization
 - [x] Enrollment/roster authorization
 - [ ] MFA/2FA
