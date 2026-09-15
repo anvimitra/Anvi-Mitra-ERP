@@ -48,8 +48,6 @@ function registerPlatformSchoolManagementRoutes(app, pool) {
     } catch (err) { await client.query('ROLLBACK').catch(()=>{}); next(err); } finally { client.release(); }
   });
 
-  // Platform-level onboarding: create the first school administrator without
-  // temporarily switching the Super Admin's tenant context.
   app.post('/api/platform/schools/:id/admin', authenticate, requireRoles('super_admin'), async (req,res,next) => {
     const client = await pool.connect();
     try {
@@ -75,6 +73,27 @@ function registerPlatformSchoolManagementRoutes(app, pool) {
       await client.query('COMMIT');
       res.status(201).json({admin:u.rows[0]});
     }catch(err){await client.query('ROLLBACK').catch(()=>{});if(err.code==='23505')return res.status(409).json({error:'Administrator email/phone already exists'});next(err)}finally{client.release()}
+  });
+
+  // Upload a school logo as a data URL. This endpoint intentionally limits
+  // uploads to small branding assets; larger media should use object storage.
+  app.post('/api/platform/schools/:id/logo', authenticate, requireRoles('super_admin'), async (req,res,next)=>{
+    try {
+      const logoUrl=String(req.body?.logoUrl||'').trim();
+      if(!logoUrl) return res.status(400).json({error:'logoUrl is required'});
+      if(logoUrl.length>700000) return res.status(413).json({error:'Logo is too large'});
+      if(!/^data:image\/(png|jpeg|webp|svg\+xml);base64,[A-Za-z0-9+/=]+$/.test(logoUrl) && !/^https:\/\//.test(logoUrl)) return res.status(400).json({error:'Logo must be a PNG/JPEG/WebP/SVG data URL or HTTPS URL'});
+      const client=await pool.connect();
+      try{
+        await client.query('BEGIN');
+        const s=await client.query('UPDATE school_settings SET logo_url=$1,updated_at=now() WHERE school_id=$2 RETURNING school_id,logo_url AS "logoUrl"',[logoUrl,req.params.id]);
+        if(!s.rowCount){await client.query('ROLLBACK');return res.status(404).json({error:'School settings not found'});}
+        await client.query('UPDATE mobile_app_configs SET logo_url=$1,updated_at=now() WHERE school_id=$2',[logoUrl,req.params.id]);
+        await client.query('INSERT INTO sync_changes(school_id,entity_type,operation,payload,changed_by) VALUES($1,\'school_branding\',\'update\',$2::jsonb,$3)',[req.params.id,JSON.stringify({logoUrl}),req.auth.sub]);
+        await client.query('COMMIT');
+        res.json({logoUrl,message:'School and mobile-app logo updated'});
+      }catch(err){await client.query('ROLLBACK').catch(()=>{});throw err}finally{client.release()}
+    } catch(err){next(err)}
   });
 }
 module.exports={registerPlatformSchoolManagementRoutes};
