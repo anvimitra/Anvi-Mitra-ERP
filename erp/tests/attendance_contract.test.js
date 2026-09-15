@@ -1,0 +1,12 @@
+const fs=require('fs');
+const path=require('path');
+const attendance=fs.readFileSync(path.join(__dirname,'../src/attendance.js'),'utf8');
+const server=fs.readFileSync(path.join(__dirname,'../src/server.js'),'utf8');
+const migration=fs.readFileSync(path.join(__dirname,'../sql/040_student_attendance.sql'),'utf8');
+if(!attendance.includes('/api/attendance/sections')) throw new Error('attendance sections API missing');
+if(!attendance.includes('/api/attendance/roster')) throw new Error('attendance roster API missing');
+if(!attendance.includes('/api/attendance/bulk')) throw new Error('attendance bulk API missing');
+if(!attendance.includes('student_attendance')) throw new Error('attendance table not used');
+if(!server.includes("['attendance','registerAttendanceRoutes']")) throw new Error('attendance module not registered');
+if(!migration.includes('UNIQUE (school_id, student_id, attendance_date)')) throw new Error('attendance idempotency constraint missing');
+console.log('attendance contract ok');
