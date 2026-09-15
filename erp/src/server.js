@@ -22,6 +22,8 @@ app.get('/super-admin/school', (_req,res) => res.sendFile(path.join(__dirname,'.
 app.get('/super-admin/teacher-permissions', (_req,res) => res.sendFile(path.join(__dirname,'../web/super-admin/teacher-assignments.html')));
 app.get('/super-admin/sync-conflicts', (_req,res) => res.sendFile(path.join(__dirname,'../web/super-admin/sync-conflicts.html')));
 app.get('/school/enrollment', (_req,res) => res.sendFile(path.join(__dirname,'../web/school/enrollment.html')));
+app.get('/attendance', (_req,res) => res.sendFile(path.join(__dirname,'../../attendance.html')));
+app.get('/attendance-report', (_req,res) => res.sendFile(path.join(__dirname,'../../attendance-report.html')));
 
 app.get('/api/health', async (_req, res) => {
   let database = 'not-configured';
