@@ -38,6 +38,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] **Latest implementation checkpoint completed (2026-09-15): Add School now provisions the first administrator atomically with the school**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Local Storage now persists the user-selected folder handle in browser IndexedDB and re-checks read/write permission before connector save**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Teacher Permission Management page added and routed to assignment API**
+- [x] **Latest implementation checkpoint completed (2026-09-15): Timetable + period management API, schema, slot-conflict protection and timetable viewer UI added**
 
 ### Current verification / hardening
 - [~] Clean PostgreSQL migration run against an empty database
@@ -134,8 +135,8 @@ Implementation is marked [x] when the code foundation/UI/harness is present. Int
 - [x] Sections
 - [x] Subjects
 - [x] Teacher assignments
-- [ ] Timetable
-- [ ] Period management
+- [x] Timetable
+- [x] Period management
 - [ ] Teacher substitution
 - [ ] Homework/assignments
 - [ ] Study material
