@@ -3,7 +3,6 @@ const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
-
 const { registerAuthRoutes } = require('./auth');
 
 const app = express();
@@ -21,20 +20,17 @@ app.get('/super-admin/schools', (_req,res) => res.sendFile(superAdminPage));
 app.get('/super-admin/school-onboarding', (_req,res) => res.sendFile(path.join(__dirname,'../web/super-admin/school-onboarding.html')));
 app.get('/super-admin/school', (_req,res) => res.sendFile(path.join(__dirname,'../web/super-admin/school.html')));
 app.get('/super-admin/teacher-permissions', (_req,res) => res.sendFile(path.join(__dirname,'../web/super-admin/teacher-assignments.html')));
+app.get('/school/enrollment', (_req,res) => res.sendFile(path.join(__dirname,'../web/school/enrollment.html')));
 
 app.get('/api/health', async (_req, res) => {
   let database = 'not-configured';
-  if (pool) {
-    try { await pool.query('SELECT 1'); database = 'ok'; }
-    catch (_) { database = 'unavailable'; }
-  }
+  if (pool) { try { await pool.query('SELECT 1'); database = 'ok'; } catch (_) { database = 'unavailable'; } }
   res.json({ ok: true, service: 'anvi-mitra-erp-api', product: 'Anvi Mitra ERP', database, timestamp: new Date().toISOString() });
 });
 
 function registerOptional(moduleName, registerName) {
   let file;
-  try { file = require.resolve('./' + moduleName); }
-  catch (_) { console.warn('Optional ERP module not present: ' + moduleName + '.js'); return false; }
+  try { file = require.resolve('./' + moduleName); } catch (_) { console.warn('Optional ERP module not present: ' + moduleName + '.js'); return false; }
   try {
     const mod = require(file);
     if (typeof mod[registerName] !== 'function') { console.warn('ERP module ' + moduleName + '.js does not export ' + registerName); return false; }
@@ -52,16 +48,14 @@ if (pool) {
   const modules = [
     ['routes','registerRoutes'], ['people','registerPeopleRoutes'], ['staff','registerStaffRoutes'], ['attendance','registerAttendanceRoutes'],
     ['attendance_reports','registerAttendanceReportRoutes'], ['exams','registerExamRoutes'], ['exam_results','registerExamResultRoutes'], ['exam_marks','registerExamMarkRoutes'],
-    ['fees','registerFeeRoutes'], ['fee_ledger','registerFeeLedgerRoutes'], ['fee_assignments','registerFeeAssignmentRoutes'],
-    ['fee_receipts','registerFeeReceiptRoutes'], ['notifications','registerNotificationRoutes'], ['reportcard_engine_route','registerReportCardEngineRoute'],
-    ['reportcard_result_sync','registerReportCardResultSyncRoutes'], ['reportcards','registerReportCardRoutes'], ['reportcard_context','registerReportCardContextRoutes'],
-    ['reportcard_list','registerReportCardListRoutes'], ['reportcard_bulk','registerReportCardBulkRoutes'], ['academics','registerAcademicRoutes'], ['timetable','registerTimetableRoutes'],
-    ['academic_master','registerAcademicMasterRoutes'], ['admissions','registerAdmissionRoutes'], ['portal','registerPortalRoutes'],
+    ['fees','registerFeeRoutes'], ['fee_ledger','registerFeeLedgerRoutes'], ['fee_assignments','registerFeeAssignmentRoutes'], ['fee_receipts','registerFeeReceiptRoutes'],
+    ['notifications','registerNotificationRoutes'], ['reportcard_engine_route','registerReportCardEngineRoute'], ['reportcard_result_sync','registerReportCardResultSyncRoutes'],
+    ['reportcards','registerReportCardRoutes'], ['reportcard_context','registerReportCardContextRoutes'], ['reportcard_list','registerReportCardListRoutes'], ['reportcard_bulk','registerReportCardBulkRoutes'],
+    ['academics','registerAcademicRoutes'], ['timetable','registerTimetableRoutes'], ['academic_master','registerAcademicMasterRoutes'], ['admissions','registerAdmissionRoutes'], ['portal','registerPortalRoutes'],
     ['student_crud','registerStudentCrudRoutes'], ['student_enrollment','registerStudentEnrollmentRoutes'], ['enrollment','registerEnrollmentRoutes'], ['teacher_assignments','registerTeacherAssignmentRoutes'],
-    ['organization','registerOrganizationRoutes'], ['platform_school_management','registerPlatformSchoolManagementRoutes'], ['school_summary','registerSchoolSummaryRoutes'], ['mobile','registerMobileRoutes'], ['mobile_dashboards','registerMobileDashboardRoutes'],
-    ['transport','registerTransportRoutes'], ['sync_routes','registerSyncRoutes'], ['sync_admin','registerSyncAdminRoutes'],
-    ['sync_conflict_resolution','registerSyncConflictResolutionRoutes'],
-    ['local_storage','registerLocalStorageRoutes'], ['teacher_permissions','registerTeacherPermissionRoutes']
+    ['organization','registerOrganizationRoutes'], ['platform_school_management','registerPlatformSchoolManagementRoutes'], ['school_summary','registerSchoolSummaryRoutes'],
+    ['mobile','registerMobileRoutes'], ['mobile_dashboards','registerMobileDashboardRoutes'], ['transport','registerTransportRoutes'], ['sync_routes','registerSyncRoutes'], ['sync_admin','registerSyncAdminRoutes'],
+    ['sync_conflict_resolution','registerSyncConflictResolutionRoutes'], ['local_storage','registerLocalStorageRoutes'], ['teacher_permissions','registerTeacherPermissionRoutes']
   ];
   for (const [moduleName, registerName] of modules) registerOptional(moduleName, registerName);
   try { require('./notification_worker').startNotificationWorker(pool); } catch (_) { console.warn('Notification worker unavailable'); }
