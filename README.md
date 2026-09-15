@@ -49,6 +49,8 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 - [x] **Latest implementation checkpoint completed (2026-09-15): Super Admin school status toggle and direct logo-file upload workflow connected to secure branding API**
 
+- [x] **Latest implementation checkpoint completed (2026-09-15): Super Admin school detail now exposes direct Onboarding, Teacher Permissions and Sync Center actions.**
+
 ### Current verification / hardening
 - [~] Clean PostgreSQL migration run against an empty database
 - [~] Authenticated Super Admin E2E: create → edit → branding → deactivate/reactivate → admin login → branch scope
