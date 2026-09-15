@@ -116,6 +116,31 @@ function registerSyncRoutes(app, pool) {
             continue;
           }
         }
+        if (entityType === 'student_attendance') {
+          if (!payload.studentId || !/^\\d{4}-\\d{2}-\\d{2}$/.test(String(payload.date || ''))) {
+            throw Object.assign(new Error('studentId and valid attendance date are required for offline attendance sync'), { statusCode: 400 });
+          }
+          if (!['present','absent','late','half_day','leave'].includes(String(payload.status || ''))) {
+            throw Object.assign(new Error('Invalid offline attendance status'), { statusCode: 422 });
+          }
+          const enrollment = await client.query(
+            `SELECT 1 FROM enrollments e
+               JOIN students s ON s.id=e.student_id AND s.school_id=e.school_id
+              WHERE e.school_id=$1 AND e.student_id=$2 AND e.status='active' AND s.status='active'
+                AND ($3::uuid IS NULL OR e.session_id=$3)
+                AND ($4::uuid IS NULL OR s.branch_id=$4 OR s.branch_id IS NULL)
+              LIMIT 1`,
+            [req.auth.schoolId, payload.studentId, payload.sessionId || null, req.auth.branchId || null]
+          );
+          if (!enrollment.rows.length) throw Object.assign(new Error('Student is not enrolled in this school/branch'), { statusCode: 403 });
+          await client.query(
+            `INSERT INTO student_attendance(school_id,branch_id,student_id,session_id,attendance_date,status,note,marked_by,updated_at)
+             VALUES($1,$2,$3,$4,$5,$6,$7,$8,now())
+             ON CONFLICT(school_id,student_id,attendance_date) DO UPDATE
+             SET branch_id=EXCLUDED.branch_id,session_id=EXCLUDED.session_id,status=EXCLUDED.status,note=EXCLUDED.note,marked_by=EXCLUDED.marked_by,updated_at=now()`,
+            [req.auth.schoolId, req.auth.branchId || null, payload.studentId, payload.sessionId || null, payload.date, payload.status, payload.note || null, req.auth.sub]
+          );
+        }
         if (['exam_mark','exam_marks'].includes(entityType)) {
           if (req.auth.role === 'teacher' && !payload.examSubjectId) throw Object.assign(new Error('examSubjectId is required for offline teacher marks sync'), { statusCode: 400 });
           const subjectResult = await client.query(`SELECT es.id AS "examSubjectId",es.class_id AS "classId",es.max_marks AS "maxMarks",es.branch_id AS "branchId",e.session_id AS "sessionId",e.status AS "examStatus" FROM exam_subjects es JOIN exams e ON e.id=es.exam_id AND e.school_id=es.school_id WHERE es.id=$1 AND es.school_id=$2`, [payload.examSubjectId, req.auth.schoolId]);
