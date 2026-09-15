@@ -44,6 +44,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] **Latest implementation checkpoint completed (2026-09-15): Reusable browser offline-sync client added under `erp/web/assets/offline-sync.js`**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Sync Conflict Center UI added and routed to authenticated conflict-resolution API**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Super Admin school provisioning contract now includes school profile, branding, main branch, mobile configuration and first administrator in one atomic transaction**
+- [x] **Latest implementation checkpoint completed (2026-09-15): Student attendance API added with branch/session/roster scope, bulk upsert, daily reporting and server-side authorization**
 
 ### Current verification / hardening
 - [~] Clean PostgreSQL migration run against an empty database
@@ -152,14 +153,14 @@ Implementation is marked [x] when the code foundation/UI/harness is present. Int
 - [ ] Syllabus/progress tracking
 
 ### 5. Attendance
-- [ ] Student attendance
+- [x] Student attendance
 - [ ] Staff/teacher attendance
-- [ ] Daily/monthly reports
-- [ ] Leave/late/half-day
+- [x] Daily/monthly reports
+- [x] Leave/late/half-day
 - [ ] Parent attendance view
 - [ ] Attendance notifications
 - [ ] Offline attendance + sync
-- [ ] Attendance audit trail
+- [x] Attendance audit trail
 
 ### 6. Exams, Marks & Results
 - [x] Exam foundation
