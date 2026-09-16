@@ -54,7 +54,7 @@ jobs:
           cd erp
           report="../erp-validation-report.txt"
           failed=0
-          tests=(tests/erp_contract.test.js tests/school_provisioning_contract.test.js tests/enrollment_contract.test.js tests/teacher_marks_ui_contract.test.js tests/offline_web_contract.test.js tests/migration_preflight.test.js tests/architecture_contract.test.js tests/major_process_contract.test.js tests/school_management_ui_contract.test.js tests/school_summary_contract.test.js tests/local_storage_ui_contract.test.js tests/timetable_contract.test.js tests/staff_attendance_contract.test.js tests/offline_attendance_contract.test.js tests/exam_management_integration_contract.test.js)
+          tests=(tests/erp_contract.test.js tests/school_provisioning_contract.test.js tests/enrollment_contract.test.js tests/teacher_marks_ui_contract.test.js tests/offline_web_contract.test.js tests/migration_preflight.test.js tests/architecture_contract.test.js tests/major_process_contract.test.js tests/school_management_ui_contract.test.js tests/school_summary_contract.test.js tests/local_storage_ui_contract.test.js tests/timetable_contract.test.js tests/staff_attendance_contract.test.js tests/offline_attendance_contract.test.js tests/exam_management_integration_contract.test.js tests/notifications_contract.test.js)
           for test_file in "${tests[@]}"; do
             echo "===== $test_file =====" >> "$report"
             node "$test_file" >> "$report" 2>&1
