@@ -44,6 +44,41 @@ function registerExamMarkRoutes(app, pool) {
     } catch (err) { next(err); }
   });
 
+  // Compatibility read endpoints used by the existing exam-management UI. Both are
+  // still protected by the same tenant/teacher authorization as the roster endpoint.
+  app.get('/api/exam-marks', authenticate, requireRoles(...roles), async (req,res,next) => {
+    try {
+      const { examSubjectId } = req.query || {};
+      if (!examSubjectId) return res.status(400).json({ error: 'examSubjectId is required' });
+      const authz = await authorizeExamSubject(pool, req.auth, examSubjectId);
+      if (authz.error) return res.status(authz.status || 404).json({ error: authz.error });
+      const { rows } = await pool.query(
+        'SELECT id,school_id AS "schoolId",exam_subject_id AS "examSubjectId",student_id AS "studentId",marks,grade,remarks FROM exam_marks WHERE school_id=$1 AND exam_subject_id=$2',
+        [req.auth.schoolId, examSubjectId],
+      );
+      res.json({ marks: rows });
+    } catch (err) { next(err); }
+  });
+
+  app.get('/api/exam-students', authenticate, requireRoles(...roles), async (req,res,next) => {
+    try {
+      const { examSubjectId } = req.query || {};
+      if (!examSubjectId) return res.status(400).json({ error: 'examSubjectId is required' });
+      const authz = await authorizeExamSubject(pool, req.auth, examSubjectId);
+      if (authz.error) return res.status(authz.status || 404).json({ error: authz.error });
+      const { subject } = authz;
+      const { rows } = await pool.query(
+        `SELECT s.id,s.admission_no AS "admissionNo",s.full_name AS "fullName"
+         FROM enrollments en JOIN students s ON s.id=en.student_id AND s.school_id=en.school_id
+         WHERE en.school_id=$1 AND en.session_id=$2 AND en.class_id=$3 AND en.status='active'
+           AND ($4::uuid IS NULL OR en.branch_id=$4 OR en.branch_id IS NULL)
+         ORDER BY s.full_name`,
+        [req.auth.schoolId, subject.sessionId, subject.classId, req.auth.branchId || null],
+      );
+      res.json({ students: rows });
+    } catch (err) { next(err); }
+  });
+
   app.post('/api/exam-marks', authenticate, requireRoles(...roles), async (req,res,next) => {
     const client = await pool.connect();
     try {
