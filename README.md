@@ -8,6 +8,8 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 **Current phase: Core implementation checkpoint → CI contract repair → E2E verification → production sign-off**
 
+- [x] **Core multi-school ERP implementation checkpoint completed** — multi-school provisioning, enrollment, teacher-scoped marks, offline sync foundation, local storage connector and academic-content foundation are implemented; remaining unchecked items are verification/production or explicitly deferred modules.
+
 ### Latest implementation checkpoints
 - [x] Parent Portal APIs connected to the existing Parent Dashboard.
 - [x] Multi-school Super Admin provisioning: school + settings + main branch + mobile configuration + optional first administrator are provisioned atomically.
