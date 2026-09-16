@@ -22,5 +22,5 @@ assert(local.includes("read_write"));
 assert(org.includes("/api/public/school-config"));
 assert(platform.includes("/api/platform/schools"));
 assert(platform.includes("requireRoles('super_admin')"));
-assert(readme.includes('[x] Major architecture implementation checkpoint'));
+assert(readme.includes('[x] Core multi-school ERP implementation checkpoint completed'));
 console.log('ERP major architecture contract checks: PASS');
