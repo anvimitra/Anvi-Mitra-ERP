@@ -57,6 +57,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] **Latest implementation checkpoint completed (2026-09-16): Fee installment model + invoice installment endpoints added with net-total validation.**
 - [x] **Latest implementation checkpoint completed (2026-09-16): Configurable late-fee rules and invoice late-fee charging endpoint added with grace-period, percentage/daily/fixed and cap support.**
 - [x] **Next implementation checkpoint completed (2026-09-16): Provider-neutral online payment intent + idempotent webhook foundation added; provider secrets remain outside PostgreSQL.**
+- [x] **Latest implementation checkpoint completed (2026-09-16): Finance audit trail foundation added for immutable fee/payment business events; live provider adapter and production verification remain pending.**
 
 ### Current verification / hardening
 - [~] Clean PostgreSQL migration run against an empty database
@@ -205,7 +206,7 @@ Implementation is marked [x] when the code foundation/UI/harness is present. Int
 - [x] Receipts/receipt numbering
 - [x] Outstanding dues
 - [x] Collection/reconciliation reports foundation
-- [ ] Finance audit trail
+- [x] **Finance audit trail foundation**
 
 ### 8. Parent Portal & Mobile
 - [ ] Parent dashboard
