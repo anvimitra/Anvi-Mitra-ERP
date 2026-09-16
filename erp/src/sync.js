@@ -116,6 +116,97 @@ function registerSyncRoutes(app, pool) {
             continue;
           }
         }
+        if (entityType === 'fee_payment') {
+          if (!['super_admin','principal','admin','accountant','office_staff'].includes(req.auth.role)) {
+            throw Object.assign(new Error('User is not allowed to sync fee payments'), { statusCode: 403 });
+          }
+          const invoiceId = payload.invoiceId;
+          const amount = Number(payload.amount);
+          if (!invoiceId || !Number.isFinite(amount) || amount <= 0) {
+            throw Object.assign(new Error('invoiceId and positive amount are required'), { statusCode: 400 });
+          }
+          const invoice = await client.query(
+            'SELECT id,branch_id,net_amount,paid_amount,balance_amount,status FROM fee_invoices WHERE id=$1 AND school_id=$2 FOR UPDATE',
+            [invoiceId, req.auth.schoolId]
+          );
+          if (!invoice.rowCount) throw Object.assign(new Error('Invoice not found'), { statusCode: 404 });
+          const inv = invoice.rows[0];
+          if (inv.status === 'cancelled') throw Object.assign(new Error('Cancelled invoice cannot receive payment'), { statusCode: 409 });
+          if (amount > Number(inv.balance_amount) + 0.005) throw Object.assign(new Error('Payment exceeds invoice balance'), { statusCode: 422 });
+          const duplicate = await client.query(
+            'SELECT id FROM fee_payments WHERE school_id=$1 AND transaction_ref=$2 AND transaction_ref IS NOT NULL LIMIT 1',
+            [req.auth.schoolId, payload.transactionRef || null]
+          );
+          if (payload.transactionRef && duplicate.rowCount) {
+            throw Object.assign(new Error('Payment transaction already exists'), { statusCode: 409 });
+          }
+          const seq=(await client.query("SELECT nextval('fee_receipt_no_seq')")).rows[0].nextval;
+          const receiptNo=payload.receiptNo || 'RCT-'+new Date().getFullYear()+'-'+String(seq).padStart(6,'0');
+          const payment=await client.query(
+            'INSERT INTO fee_payments(school_id,branch_id,invoice_id,receipt_no,amount,method,transaction_ref,collected_by) VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id',
+            [req.auth.schoolId,inv.branch_id,invoiceId,receiptNo,amount,payload.method||'cash',payload.transactionRef||null,req.auth.sub]
+          );
+          const paid=Number(inv.paid_amount)+amount;
+          const balance=Math.max(0,Number(inv.net_amount)-paid);
+          const status=balance<=0.005?'paid':'partial';
+          await client.query('UPDATE fee_invoices SET paid_amount=$1,balance_amount=$2,status=$3,updated_at=now() WHERE id=$4 AND school_id=$5',[paid,balance,status,invoiceId,req.auth.schoolId]);
+          payload = {...payload, paymentId: payment.rows[0].id, receiptNo, balanceAmount: balance, status};
+        }
+
+        if (entityType === 'fee_invoice') {
+          if (!['super_admin','principal','admin','accountant','office_staff'].includes(req.auth.role)) {
+            throw Object.assign(new Error('User is not allowed to sync fee invoices'), { statusCode: 403 });
+          }
+          if (!payload.studentId || !payload.sessionId || !Array.isArray(payload.items) || !payload.items.length) {
+            throw Object.assign(new Error('studentId, sessionId and invoice items are required'), { statusCode: 400 });
+          }
+          const enrollment = await client.query(
+            'SELECT e.id FROM enrollments e WHERE e.school_id=$1 AND e.student_id=$2 AND e.session_id=$3 AND e.status=\'active\' AND ($4::uuid IS NULL OR e.branch_id=$4 OR e.branch_id IS NULL) LIMIT 1',
+            [req.auth.schoolId,payload.studentId,payload.sessionId,req.auth.branchId||null]
+          );
+          if (!enrollment.rowCount) throw Object.assign(new Error('Student is not enrolled in this session/branch'), { statusCode: 403 });
+          const gross=payload.items.reduce((sum,item)=>sum+Number(item.amount||0),0);
+          const discount=Math.max(0,Number(payload.discountAmount||0));
+          if (!Number.isFinite(gross)||gross<0||discount>gross) throw Object.assign(new Error('Invalid invoice totals'), { statusCode: 422 });
+          const net=Math.max(0,gross-discount);
+          const seq=(await client.query("SELECT nextval('fee_invoice_no_seq')")).rows[0].nextval;
+          const invoiceNo=payload.invoiceNo || 'INV-'+new Date().getFullYear()+'-'+String(seq).padStart(6,'0');
+          const invoice=await client.query(
+            'INSERT INTO fee_invoices(school_id,branch_id,student_id,session_id,invoice_no,due_date,gross_amount,discount_amount,net_amount,balance_amount,created_by) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$9,$10) RETURNING id',
+            [req.auth.schoolId,req.auth.branchId||null,payload.studentId,payload.sessionId,invoiceNo,payload.dueDate||null,gross,discount,net,req.auth.sub]
+          );
+          for(const item of payload.items) {
+            const amount=Number(item.amount||0);
+            if(!Number.isFinite(amount)||amount<0) throw Object.assign(new Error('Invalid invoice item amount'), { statusCode: 422 });
+            await client.query('INSERT INTO fee_invoice_items(school_id,invoice_id,fee_head_id,description,amount) VALUES($1,$2,$3,$4,$5)',[req.auth.schoolId,invoice.rows[0].id,item.feeHeadId||null,String(item.description||'Fee').slice(0,200),amount]);
+          }
+          payload={...payload,invoiceId:invoice.rows[0].id,invoiceNo,netAmount:net,balanceAmount:net};
+        }
+
+        if (entityType === 'student_enrollment') {
+          if (!['super_admin','principal','admin','office_staff'].includes(req.auth.role)) {
+            throw Object.assign(new Error('User is not allowed to sync enrollment'), { statusCode: 403 });
+          }
+          const p=payload;
+          if(!p.studentId||!p.sessionId||!p.sectionId) throw Object.assign(new Error('studentId, sessionId and sectionId are required'), { statusCode:400 });
+          const valid=await client.query(
+            'SELECT sec.id,c.id AS class_id,c.branch_id AS class_branch_id FROM sections sec JOIN classes c ON c.id=sec.class_id AND c.school_id=sec.school_id WHERE sec.id=$1 AND sec.school_id=$2',
+            [p.sectionId,req.auth.schoolId]
+          );
+          if(!valid.rowCount) throw Object.assign(new Error('Target section not found'), { statusCode:404 });
+          if(req.auth.branchId && valid.rows[0].class_branch_id && valid.rows[0].class_branch_id!==req.auth.branchId) throw Object.assign(new Error('Target section is outside active branch'), { statusCode:403 });
+          const student=await client.query('SELECT id FROM students WHERE id=$1 AND school_id=$2 AND status=\'active\'',[p.studentId,req.auth.schoolId]);
+          if(!student.rowCount) throw Object.assign(new Error('Student not found'), { statusCode:404 });
+          const enrollment=await client.query(
+            `INSERT INTO enrollments(school_id,branch_id,student_id,session_id,section_id,roll_no,status)
+             VALUES($1,$2,$3,$4,$5,$6,'active')
+             ON CONFLICT(student_id,session_id) DO UPDATE SET branch_id=EXCLUDED.branch_id,section_id=EXCLUDED.section_id,roll_no=EXCLUDED.roll_no,status='active'
+             RETURNING id`,
+            [req.auth.schoolId,req.auth.branchId||valid.rows[0].class_branch_id||null,p.studentId,p.sessionId,p.sectionId,p.rollNo||null]
+          );
+          payload={...payload,enrollmentId:enrollment.rows[0].id};
+        }
+
         if (entityType === 'student_attendance') {
           if (!payload.studentId || !/^\\d{4}-\\d{2}-\\d{2}$/.test(String(payload.date || ''))) {
             throw Object.assign(new Error('studentId and valid attendance date are required for offline attendance sync'), { statusCode: 400 });
