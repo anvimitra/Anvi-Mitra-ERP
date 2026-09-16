@@ -16,6 +16,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [~] **Next verification:** execute clean migration + authenticated E2E against PostgreSQL and validate the new module under CI/infrastructure.
 
 ### Latest implementation checkpoint
+- [x] **Sync device management contract checkpoint (2026-09-16):** added CI coverage for administrator-only device listing, revoke/reactivate controls and cursor reset recovery.
 - [x] **Sync Device Management checkpoint (2026-09-16):** authorized school administrators can list registered devices, revoke/reactivate a device, and reset its server cursor so a client can safely re-pull changes after recovery.
 - [x] **Latest implementation checkpoint (2026-09-16): Super Admin School Management UI now exposes the complete school profile, branding, ERP/mobile-app configuration, main-branch and first-administrator provisioning form, connected to the authenticated multi-school provisioning API.**
 - [x] **Core multi-school ERP implementation checkpoint completed**
@@ -82,6 +83,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [~] Enrollment E2E: staff → teacher → student → parent linking → class/section scope
 - [~] Staff onboarding E2E: create teacher → assign class/subject → marks access
 - [x] CI/static contract verification after the latest implementation commit
+- [x] Sync device management contract verification
 - [ ] Production Firebase configuration for each published school app
 - [ ] Full Android analyze/build + APK artifact verification
 - [ ] Accessibility audit
@@ -322,7 +324,7 @@ Implementation is marked [x] when the code foundation/UI/harness is present. Int
 - [ ] Offline exams/marks
 - [ ] Offline enrollment
 - [ ] Sync monitoring/retry dashboard
-- [ ] Device revoke/reset
+- [x] Device revoke/reset
 
 ### 16. School PC/NAS Storage
 - [x] Permissioned connector model
