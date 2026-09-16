@@ -52,6 +52,8 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] **Latest implementation checkpoint completed (2026-09-15): Super Admin school detail now exposes direct Onboarding, Teacher Permissions and Sync Center actions.**
 - [x] **Latest implementation checkpoint completed (2026-09-16): CI contract suite aligned with the split School Management route modules and migration numbering normalized.**
 - [x] **Next verification checkpoint completed (2026-09-16): ERP CI contract/static verification passes after the repair checkpoint.**
+- [x] **Next implementation checkpoint completed (2026-09-16): Core Fee Management API + PostgreSQL model added for fee heads, class/session structures, student invoices, payments/receipts and finance reports.**
+- [x] **Next implementation checkpoint completed (2026-09-16): Fee management contract test added and server registration already wired through the optional `fees` route module.**
 
 ### Current verification / hardening
 - [~] Clean PostgreSQL migration run against an empty database
@@ -188,17 +190,18 @@ Implementation is marked [x] when the code foundation/UI/harness is present. Int
 - [ ] Result publishing
 
 ### 7. Fees & Finance
-- [ ] Fee heads/structures
-- [ ] Class-wise fee plans
-- [ ] Student fee assignment
+- [x] Fee heads/structures
+- [x] Class-wise fee plans
+- [x] Student fee assignment foundation
+- [x] Invoice generation
+- [x] Discounts/concessions foundation
 - [ ] Installments
-- [ ] Discounts/concessions
 - [ ] Late fees
-- [ ] Fee collection
+- [x] Fee collection
 - [ ] Online payments
-- [ ] Receipts/receipt numbering
-- [ ] Outstanding dues
-- [ ] Collection/reconciliation reports
+- [x] Receipts/receipt numbering
+- [x] Outstanding dues
+- [x] Collection/reconciliation reports foundation
 - [ ] Finance audit trail
 
 ### 8. Parent Portal & Mobile
