@@ -23,7 +23,7 @@ function registerNotificationRoutes(app, pool) {
                           AND en.session_id IS NOT NULL
                           AND (n.class_id IS NULL OR EXISTS (SELECT 1 FROM sections sx WHERE sx.id=en.section_id AND sx.class_id=n.class_id))
                           AND (n.section_id IS NULL OR en.section_id=n.section_id)
-                          AND (st.user_id=$2 OR EXISTS (
+                          AND (EXISTS (
                             SELECT 1 FROM student_portal_profiles spp
                             WHERE spp.school_id=st.school_id AND spp.student_id=st.id AND spp.user_id=$2 AND spp.status='active'
                           ))
