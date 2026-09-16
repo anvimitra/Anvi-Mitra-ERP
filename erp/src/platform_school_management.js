@@ -2,6 +2,39 @@ const { authenticate, requireRoles } = require('./auth');
 const { hashPassword } = require('./security');
 
 function registerPlatformSchoolManagementRoutes(app, pool) {
+
+  app.get('/api/platform/schools/:id/branches', authenticate, requireRoles('super_admin'), async (req,res,next) => {
+    try {
+      const { rows } = await pool.query(
+        `SELECT id,name,code,address,phone,email,logo_url AS "logoUrl",status,is_main AS "isMain"
+         FROM branches WHERE school_id=$1 ORDER BY is_main DESC,name`, [req.params.id]);
+      res.json({branches:rows});
+    } catch(err){ next(err); }
+  });
+
+  app.post('/api/platform/schools/:id/branches', authenticate, requireRoles('super_admin'), async (req,res,next) => {
+    try {
+      const b=req.body||{};
+      const name=String(b.name||'').trim(), code=String(b.code||'').trim().toUpperCase();
+      if(!name||!code)return res.status(400).json({error:'name and code are required'});
+      const school=await pool.query(`SELECT id FROM schools WHERE id=$1`,[req.params.id]);
+      if(!school.rowCount)return res.status(404).json({error:'School not found'});
+      const {rows}=await pool.query(
+        `INSERT INTO branches(school_id,name,code,address,phone,email,logo_url,is_main)
+         VALUES($1,$2,$3,$4,$5,$6,$7,false)
+         RETURNING id,name,code,address,phone,email,logo_url AS "logoUrl",status,is_main AS "isMain"`,
+        [req.params.id,name,code,b.address||null,b.phone||null,b.email||null,b.logoUrl||null]);
+      await pool.query(
+        `INSERT INTO sync_changes(school_id,entity_type,entity_id,operation,payload,changed_by)
+         VALUES($1,'branch',$2,'create',$3::jsonb,$4)`,
+        [req.params.id,rows[0].id,JSON.stringify(rows[0]),req.auth.sub]);
+      res.status(201).json({branch:rows[0]});
+    }catch(err){
+      if(err.code==='23505')return res.status(409).json({error:'Branch code is already in use for this school'});
+      next(err);
+    }
+  });
+
   app.get('/api/platform/schools/:id', authenticate, requireRoles('super_admin'), async (req, res, next) => {
     try {
       const { rows } = await pool.query(
