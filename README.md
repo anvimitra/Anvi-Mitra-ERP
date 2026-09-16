@@ -9,6 +9,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 **Current phase: Core implementation checkpoint → CI contract repair → E2E verification → production sign-off**
 
 ### Next logical module checkpoint — 2026-09-16
+- [x] **Parent Portal implementation checkpoint:** parent-authenticated child overview, attendance, marks/results, fees and homework data APIs are connected to the existing Parent Dashboard; parent access remains tenant-scoped through linked student profiles.
 - [x] **Multi-school Super Admin provisioning API hardened as the next module foundation:** school + settings + main branch + mobile configuration + optional first administrator are provisioned atomically.
 - [x] **School Management API coverage:** school detail, update, branch management and secure school-logo propagation are available to Super Admin.
 - [x] **Teacher marks permission endpoint:** batch permission checks are exposed for the marks-entry UI and use server-side teacher/class/subject/session authorization.
@@ -19,6 +20,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] **Sync device management contract checkpoint (2026-09-16):** added CI coverage for administrator-only device listing, revoke/reactivate controls and cursor reset recovery.
 - [x] **Sync Device Management checkpoint (2026-09-16):** authorized school administrators can list registered devices, revoke/reactivate a device, and reset its server cursor so a client can safely re-pull changes after recovery.
 - [x] **Latest implementation checkpoint (2026-09-16): Super Admin School Management UI now exposes the complete school profile, branding, ERP/mobile-app configuration, main-branch and first-administrator provisioning form, connected to the authenticated multi-school provisioning API.**
+- [x] **Parent Portal implementation checkpoint (2026-09-16):** existing parent dashboard is now backed by authenticated `/api/portal/*` APIs for linked children, attendance, marks/results, fee balances/invoices, homework and recent academic-calendar data.
 - [x] **Core multi-school ERP implementation checkpoint completed**
 - [x] Exam Management UI read endpoints aligned with marks roster/authorization APIs
 - [x] Exam marks integration contract added to CI to guard roster/student/marks API compatibility
@@ -228,12 +230,12 @@ Implementation is marked [x] when the code foundation/UI/harness is present. Int
 - [x] Finance audit trail foundation
 
 ### 8. Parent Portal & Mobile
-- [ ] Parent dashboard
-- [ ] Child switching
-- [ ] Attendance
-- [ ] Marks/results
-- [ ] Homework
-- [ ] Fees/receipts
+- [x] Parent dashboard
+- [x] Child switching
+- [x] Attendance
+- [x] Marks/results
+- [x] Homework
+- [x] Fees/receipts
 - [ ] Notices
 - [ ] Communication
 - [ ] Profile/documents
