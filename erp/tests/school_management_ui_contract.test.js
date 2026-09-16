@@ -6,8 +6,9 @@ const html = fs.readFileSync(path.join(root, 'web/super-admin/schools.html'), 'u
 const organization = fs.readFileSync(path.join(root, 'src/organization.js'), 'utf8');
 const platform = fs.readFileSync(path.join(root, 'src/platform_school_management.js'), 'utf8');
 for (const marker of ['/api/platform/schools','Create School + Admin','adminEmail','adminPassword','appSlug','logoUrl','primaryColor','mainBranchName','mainBranchCode','cached data and pending changes']) assert(html.includes(marker), 'School management UI missing: '+marker);
-for (const marker of ["app.post('/api/platform/schools'",'adminEmail','adminPassword','hashPassword','mobile_app_configs','school_settings','branches','INSERT INTO users']) assert(organization.includes(marker), 'School provisioning API missing: '+marker);
+assert(organization.includes("app.get('/api/public/school-config'"));
+for (const marker of ["app.post('/api/platform/schools'",'adminEmail','adminPassword','hashPassword','mobile_app_configs','school_settings','branches','INSERT INTO users']) assert(platform.includes(marker), 'School provisioning API missing: '+marker);
 for (const marker of ["app.get('/api/platform/schools/:id'","app.patch('/api/platform/schools/:id'","app.post('/api/platform/schools/:id/admin'","app.post('/api/platform/schools/:id/logo'"]) assert(platform.includes(marker), 'School management API missing: '+marker);
-assert(html.includes('Manage School'), 'School detail navigation is not wired');
-assert(html.includes('navigator.onLine'), 'UI does not expose online/offline state');
+assert(html.includes('Manage School'));
+assert(html.includes('navigator.onLine'));
 console.log('school_management_ui_contract: ok');
