@@ -51,7 +51,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] **Latest implementation checkpoint completed (2026-09-15): Super Admin school status toggle and direct logo-file upload workflow connected to secure branding API**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Super Admin school detail now exposes direct Onboarding, Teacher Permissions and Sync Center actions.**
 - [x] **Latest implementation checkpoint completed (2026-09-16): CI contract suite aligned with the split School Management route modules and migration numbering normalized.**
-- [~] **Next verification checkpoint: rerun ERP CI + E2E contract verification after the repair commit.**
+- [x] **Next verification checkpoint completed (2026-09-16): ERP CI contract/static verification passes after the repair checkpoint.**
 
 ### Current verification / hardening
 - [~] Clean PostgreSQL migration run against an empty database
@@ -59,7 +59,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [~] Offline E2E: offline write → reconnect → push → pull → idempotency/conflict resolution
 - [~] Local storage E2E: permissioned folder read/write → sync → recovery after disconnect
 - [~] Enrollment E2E: staff → teacher → student → parent linking → class/section scope
-- [~] CI/static contract verification after the latest implementation commit
+- [x] CI/static contract verification after the latest implementation commit
 - [ ] Production Firebase configuration for each published school app
 - [ ] Full Android analyze/build + APK artifact verification
 - [ ] Accessibility audit
