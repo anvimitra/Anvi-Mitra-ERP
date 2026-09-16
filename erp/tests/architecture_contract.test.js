@@ -16,3 +16,5 @@ assert(platform.includes('/api/platform/schools'));
 assert(platform.includes("requireRoles('super_admin')"));
 assert(readme.includes('[x] **Core multi-school ERP implementation checkpoint completed**'));
 console.log('ERP major architecture contract checks: PASS');
+
+// Checkpoint: README marker and module ownership are part of CI verification.
