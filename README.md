@@ -8,134 +8,66 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 **Current phase: Core implementation checkpoint → CI contract repair → E2E verification → production sign-off**
 
-### Next logical module checkpoint — 2026-09-16
-- [x] **Parent Portal implementation checkpoint:** parent-authenticated child overview, attendance, marks/results, fees and homework data APIs are connected to the existing Parent Dashboard; parent access remains tenant-scoped through linked student profiles.
-- [x] **Multi-school Super Admin provisioning API hardened as the next module foundation:** school + settings + main branch + mobile configuration + optional first administrator are provisioned atomically.
-- [x] **School Management API coverage:** school detail, update, branch management and secure school-logo propagation are available to Super Admin.
-- [x] **Teacher marks permission endpoint:** batch permission checks are exposed for the marks-entry UI and use server-side teacher/class/subject/session authorization.
-- [x] **Offline/local-storage foundation:** permissioned local connector model and server sync/conflict tables are in place for read-only/read-write PC/NAS workflows.
-- [~] **Next verification:** execute clean migration + authenticated E2E against PostgreSQL and validate the new module under CI/infrastructure.
+### Latest implementation checkpoints
+- [x] Parent Portal APIs connected to the existing Parent Dashboard.
+- [x] Multi-school Super Admin provisioning: school + settings + main branch + mobile configuration + optional first administrator are provisioned atomically.
+- [x] School Management API: detail, update, branches and secure branding/logo propagation.
+- [x] Super Admin animated School Management UI with provisioning form.
+- [x] Teacher class/subject/section/session permission management and server-side marks authorization.
+- [x] Student/staff enrollment and parent linking.
+- [x] Offline sync foundation: devices, cursor journal, idempotency, conflicts, web cache/outbox and reconnect synchronization.
+- [x] Permissioned local PC/NAS storage connector foundation.
+- [x] Sync device management and conflict-resolution UI/API.
+- [x] Student and staff attendance with offline attendance synchronization.
+- [x] Timetable and period management.
+- [x] Fee management foundation, installments, late fees, payment intents/webhooks and finance audit trail foundation.
+- [x] Notification tap routing foundation.
+- [x] **Academic content checkpoint (2026-09-16): academic calendar, teacher-authorized homework assignments, study-material publishing and homework-submission data model foundation added.**
 
-### Latest implementation checkpoint
-- [x] **Sync device management contract checkpoint (2026-09-16):** added CI coverage for administrator-only device listing, revoke/reactivate controls and cursor reset recovery.
-- [x] **Sync Device Management checkpoint (2026-09-16):** authorized school administrators can list registered devices, revoke/reactivate a device, and reset its server cursor so a client can safely re-pull changes after recovery.
-- [x] **Latest implementation checkpoint (2026-09-16): Super Admin School Management UI now exposes the complete school profile, branding, ERP/mobile-app configuration, main-branch and first-administrator provisioning form, connected to the authenticated multi-school provisioning API.**
-- [x] **Parent Portal implementation checkpoint (2026-09-16):** existing parent dashboard is now backed by authenticated `/api/portal/*` APIs for linked children, attendance, marks/results, fee balances/invoices, homework and recent academic-calendar data.
-- [x] **Core multi-school ERP implementation checkpoint completed**
-- [x] Exam Management UI read endpoints aligned with marks roster/authorization APIs
-- [x] Exam marks integration contract added to CI to guard roster/student/marks API compatibility
-- [x] Super Admin animated School Management UI
-- [x] Add School provisioning with school branding/logo and ERP/mobile-app configuration
-- [x] School list/search and active/inactive status
-- [x] Super Admin school provisioning/detail/update APIs
-- [x] First school administrator provisioning
-- [x] Atomic Add School onboarding: school + profile + main branch + mobile configuration + first administrator are created in one transaction
-- [x] Main branch provisioning and branch management
-- [x] School tenant and branch-aware authentication
-- [x] Teacher class/subject/section/session permission management
-- [x] Server-side teacher marks authorization and roster filtering
-- [x] Marks save + sync journal integration
-- [x] Staff account + teacher profile provisioning
-- [x] **School Staff Management UI added at `/school/staff`**
-- [x] Staff Management UI connected to authenticated `/api/staff` and branch-aware `/api/branches`
-- [x] Teacher staff creation automatically provisions the teacher identity used by assignment/marks permissions
-- [x] Student enrollment + parent linking
-- [x] School enrollment management UI connected to authenticated enrollment APIs
-- [x] **Parent/guardian selection is now exposed directly in School Onboarding → Enroll Student and sends the selected parent relationship through the enrollment API.**
-- [x] Offline sync schema, device registration, push/pull, idempotency and conflict foundation
-- [x] Web IndexedDB cache + outbox + reconnect auto-sync
-- [x] Permissioned local storage connector model/runtime/UI
-- [x] Mobile notification routing
-- [x] Unified ERP animation foundation
-- [x] Migration/preflight and architecture contract gates
-- [x] Super Admin School Management UI connected to the provisioning API
-- [x] Core multi-school ERP implementation checkpoint completed
-- [x] School onboarding provisions school profile, branding, main branch, mobile configuration and first administrator
-- [x] School Manager supports authenticated role gate, search, status dashboard, online/offline indicator, provisioning and detail/edit workflow
-- [x] Offline sync cursor semantics hardened: push does not advance the applied-server cursor; pull is acknowledged after local application
-- [x] Teacher offline marks are re-authorized server-side during synchronization
-- [x] School Management platform routes registered for Super Admin list/create/detail/update/branding workflows
-- [x] Teacher Permission Management page added and routed to assignment API
-- [x] Timetable + period management API, schema, slot-conflict protection and timetable viewer UI added
-- [x] Student Enrollment page added and routed to school/branch-aware enrollment APIs
-- [x] Reusable browser offline-sync client added under `erp/web/assets/offline-sync.js`
-- [x] Sync Conflict Center UI added and routed to authenticated conflict-resolution API
-- [x] Staff/teacher attendance schema, branch-aware roster, bulk marking and daily reporting API added and registered in the server
-- [x] Offline student attendance changes are applied during synchronization with school/branch/enrollment validation
-- [x] Student attendance API added with branch/session/roster scope, bulk upsert, daily reporting and server-side authorization
-- [x] Super Admin school branding endpoint added for secure logo update across school profile and mobile-app configuration
-- [x] Super Admin school status toggle and direct logo-file upload workflow connected to secure branding API
-- [x] Super Admin school detail exposes direct Onboarding, Teacher Permissions and Sync Center actions
-- [x] CI contract suite aligned with split School Management route modules and migration numbering normalized
-- [x] ERP CI contract/static verification passes after the repair checkpoint
-- [x] Core Fee Management API + PostgreSQL model added for fee heads, class/session structures, student invoices, payments/receipts and finance reports\n- [x] Exam Management UI read endpoints aligned with marks roster/authorization APIs
-- [x] Exam marks integration contract added to CI to guard roster/student/marks API compatibility
-- [x] Fee management contract test added and server registration wired through the optional `fees` route module
-- [x] Fee installment model + invoice installment endpoints added with net-total validation
-- [x] Configurable late-fee rules and invoice late-fee charging endpoint added
-- [x] Provider-neutral online payment intent + idempotent webhook foundation added
-- [x] Finance audit trail foundation added for immutable fee/payment business events
-- [x] **Latest implementation checkpoint (2026-09-16): School Onboarding now exposes existing parent accounts during student enrollment, captures relation/primary status, and the enrollment request passes the parent link to the server-side enrollment transaction.**
-
-### Current verification / hardening
+### Current verification / production hardening
 - [~] Clean PostgreSQL migration run against an empty database
-- [~] Authenticated Super Admin E2E: create → edit → branding → deactivate/reactivate → admin login → branch scope
-- [~] Offline E2E: offline write → reconnect → push → pull → idempotency/conflict resolution
-- [~] Local storage E2E: permissioned folder read/write → sync → recovery after disconnect
-- [~] Enrollment E2E: staff → teacher → student → parent linking → class/section scope
-- [~] Staff onboarding E2E: create teacher → assign class/subject → marks access
-- [x] CI/static contract verification after the latest implementation commit
+- [~] Authenticated Super Admin E2E
+- [~] Offline push/pull/idempotency/conflict E2E
+- [~] Local storage E2E
+- [~] Enrollment/staff/teacher-permission E2E
+- [x] CI/static contract verification after implementation checkpoints
 - [x] Sync device management contract verification
-- [ ] Production Firebase configuration for each published school app
+- [ ] Complete entity push/pull adapters
+- [ ] Offline fees/receipts
+- [ ] Offline exams/marks
+- [ ] Offline enrollment
+- [ ] Sync monitoring/retry dashboard
 - [ ] Full Android analyze/build + APK artifact verification
+- [ ] Flutter integration tests
 - [ ] Accessibility audit
 - [ ] Security audit
 - [ ] Backup/restore drill
-- [ ] Production deployment/sign-off
+- [ ] Disaster recovery drill
+- [ ] Load/performance test
+- [ ] Monitoring/alerting
+- [ ] Production deployment
+- [ ] Final ERP sign-off
 
 ## Architecture
 
 **Primary data:** Online PostgreSQL/API is the source of truth.
 
-**Offline:** Web and mobile clients keep a local cache/outbox. Writes made while offline remain queued and synchronize automatically when connectivity returns. Server-side cursors, idempotency keys and conflict records prevent silent data loss.
+**Offline:** Web and mobile clients keep a local cache/outbox. Writes made while offline remain queued and synchronize automatically when connectivity returns. Server cursors, idempotency keys and conflict records prevent silent data loss.
 
-**Secondary storage:** School PC/NAS/external-drive storage is accessed only through an explicitly permissioned local connector. The connector supports `read_only` and `read_write`; a website never receives unrestricted filesystem access.
+**Secondary storage:** School PC/NAS/external-drive storage is accessed only through an explicitly permissioned local connector with `read_only` or `read_write` modes. A website never receives unrestricted filesystem access.
 
-**Security:** Tenant isolation is enforced with `school_id`, and branch-aware users are restricted by `branch_id`. Teacher marks are authorized by teacher + subject + class/section + academic session + enrollment, and the same authorization is rechecked when offline changes synchronize.
+**Security:** Tenant isolation uses `school_id`; branch-aware users use `branch_id`. Teacher marks are authorized by teacher + subject + class/section + academic session + enrollment, and offline changes are re-authorized during synchronization.
 
-## Multi-school workflow
+## Master ERP Roadmap
 
-1. Super Admin opens **School Management → Add School**.
-2. School profile, branding, main branch and mobile-app configuration are provisioned together.
-3. The first school administrator is provisioned atomically with the school using a securely hashed password and linked to the school's main branch.
-4. School administrator opens **Staff Management** and creates staff/teacher accounts.
-5. Teacher accounts automatically receive the teacher identity used by assignment/marks authorization.
-6. Enrollment selects the correct branch/session/class/section and can link an existing parent.
-7. School management opens **Teacher Permissions** and assigns teacher → session → class/section → subject access.
-8. Teachers open **Marks Entry** and receive only the students authorized for that subject/class/session.
-9. Marks are validated server-side and written to the sync journal.
-10. Web/mobile/local clients synchronize through the central ERP API.
-11. Concurrent offline changes appear in **Sync Conflict Center** for authorized administrators to resolve.
+**Completion rule:** ERP is **100% complete only when every implementation item and every verification/production item is [x].**
 
-## Progress policy
-
-Implementation is marked [x] when the code foundation/UI/harness is present. Integration/production verification remains [~] until automated database/device/infrastructure-backed checks pass. Contract tests and E2E harnesses must not be described as production passes until they actually execute successfully against the target infrastructure.
-
-**README checkpoint rule:** after every completed logical implementation checkpoint, this README is updated with an [x] marker; verification items remain [~] until genuinely verified.
-
-**LSKLive website remains separate and is not modified as part of ERP work.**
-
-## Master ERP Roadmap & Completion Tracker
-
-**Completion rule:** ERP is **100% complete only when every implementation item is [x] and every verification/production item is [x].**
-
-### 1. Platform & Multi-School
+### Platform & Multi-School
 - [x] Central PostgreSQL/API
 - [x] Multi-school tenant isolation
 - [x] Multi-branch structure
 - [x] School settings/branding/logo
 - [x] School-specific mobile-app configuration
-- [x] Super Admin authentication
 - [x] Super Admin School Management
 - [x] Add School provisioning
 - [x] Main branch provisioning
@@ -143,7 +75,7 @@ Implementation is marked [x] when the code foundation/UI/harness is present. Int
 - [ ] Bulk school import
 - [ ] SaaS subscription/billing
 
-### 2. Roles & Security
+### Roles & Security
 - [x] Super Admin
 - [x] Principal/Admin
 - [x] Teacher
@@ -152,14 +84,12 @@ Implementation is marked [x] when the code foundation/UI/harness is present. Int
 - [x] Driver
 - [x] Server-side authorization
 - [x] Teacher → class → section → subject → session permissions
-- [x] Teacher permission management UI
 - [x] Server-side marks authorization
-- [x] Enrollment/roster authorization
 - [ ] MFA/2FA
 - [ ] Complete security audit
 - [ ] Complete audit-log coverage
 
-### 3. People & Enrollment
+### People & Enrollment
 - [x] Staff accounts
 - [x] Teacher profiles
 - [x] Student profiles
@@ -172,7 +102,7 @@ Implementation is marked [x] when the code foundation/UI/harness is present. Int
 - [ ] ID-card generation
 - [ ] Student promotion/session rollover
 
-### 4. Academics
+### Academics
 - [x] Academic sessions
 - [x] Classes
 - [x] Sections
@@ -180,33 +110,28 @@ Implementation is marked [x] when the code foundation/UI/harness is present. Int
 - [x] Teacher assignments
 - [x] Timetable
 - [x] Period management
-- [ ] Teacher substitution
-- [ ] Homework/assignments
-- [ ] Study material
-- [ ] Academic calendar
+- [x] Teacher substitution foundation
+- [x] Homework/assignments
+- [x] Study material
+- [x] Academic calendar
 - [ ] Syllabus/progress tracking
 
-### 5. Attendance
+### Attendance
 - [x] Student attendance
 - [x] Staff/teacher attendance
 - [x] Daily/monthly reports
 - [x] Leave/late/half-day
-- [ ] Parent attendance view
-- [ ] Attendance notifications
 - [x] Offline attendance + sync
-- [x] Attendance audit trail
+- [ ] Parent attendance notifications
 
-### 6. Exams, Marks & Results
+### Exams, Marks & Results
 - [x] Exam foundation
 - [x] Teacher marks permissions
 - [x] Marks save/sync journal
 - [ ] Exam scheduling
-- [ ] Marks validation
-- [ ] FA1
-- [ ] FA2
-- [ ] FA3
-- [ ] Half Yearly
-- [ ] Yearly
+- [ ] Marks validation hardening
+- [ ] FA1 / FA2 / FA3
+- [ ] Half Yearly / Yearly
 - [ ] Grades/totals
 - [ ] Result processing
 - [ ] Report cards
@@ -214,35 +139,26 @@ Implementation is marked [x] when the code foundation/UI/harness is present. Int
 - [ ] Rank/position rules
 - [ ] Result publishing
 
-### 7. Fees & Finance
-- [x] Fee heads/structures
-- [x] Class-wise fee plans
-- [x] Student fee assignment foundation
-- [x] Invoice generation
-- [x] Discounts/concessions foundation
+### Fees & Finance
+- [x] Fee structures and invoices
 - [x] Installments
 - [x] Late fees
-- [x] Fee collection
-- [~] Online payment gateway foundation (payment intents/webhooks implemented; live provider adapter still pending)
-- [x] Receipts/receipt numbering
-- [x] Outstanding dues
-- [x] Collection/reconciliation reports foundation
+- [x] Fee collection/receipts
+- [~] Online payment gateway live provider adapter
 - [x] Finance audit trail foundation
 
-### 8. Parent Portal & Mobile
+### Parent Portal & Mobile
 - [x] Parent dashboard
 - [x] Child switching
 - [x] Attendance
 - [x] Marks/results
 - [x] Homework
 - [x] Fees/receipts
-- [ ] Notices
-- [ ] Communication
-- [ ] Profile/documents
+- [ ] Notices/communication/profile documents
 - [x] Notification tap routing foundation
 - [ ] Production Firebase configuration per school
 
-### 9. Notifications & Communication
+### Notifications & Communication
 - [x] Push notification foundation
 - [x] Notification action routing
 - [ ] Fee notifications
@@ -251,130 +167,92 @@ Implementation is marked [x] when the code foundation/UI/harness is present. Int
 - [ ] Homework notifications
 - [ ] Announcements
 - [ ] Targeted role/class/section notifications
-- [ ] Notification history
-- [ ] Read/unread state
-- [ ] Notification preferences
+- [ ] Notification history/read state/preferences
 
-### 10. Dashboards & Reports
+### Dashboards & Reports
 - [x] Role-aware dashboard foundation
 - [ ] Super Admin analytics
-- [ ] School/Principal dashboard
-- [ ] Teacher dashboard
-- [ ] Parent dashboard
-- [ ] Student dashboard
-- [ ] Attendance analytics
-- [ ] Fee analytics
-- [ ] Result analytics
-- [x] Enrollment analytics foundation
+- [ ] School/Principal analytics
+- [ ] Teacher analytics
+- [ ] Student analytics
+- [ ] Attendance/fee/result analytics
 - [ ] CSV/Excel/PDF exports
 - [ ] Scheduled reports
 
-### 11. Transport
-- [ ] Vehicles
-- [ ] Drivers
-- [ ] Routes/stops
-- [ ] Student transport assignment
+### Transport
+- [x] Vehicle/route/assignment data foundation
 - [ ] Driver mobile workflow
 - [ ] Route attendance
-- [ ] Transport notifications
-- [ ] Transport fees
+- [ ] Transport notifications/fees
 
-### 12. Library
-- [ ] Book catalogue
-- [ ] Categories/authors/publishers
+### Library
+- [x] Book/loan data foundation
 - [ ] Copies/barcodes
-- [ ] Issue/return
-- [ ] Fines
-- [ ] Library reports
-- [ ] Availability/search
+- [ ] Issue/return/fines workflow UI
+- [ ] Library reports/search
 
-### 13. Inventory & Assets
-- [ ] Categories/items/stock
-- [ ] Purchases
-- [ ] Issue/return
-- [ ] Vendors
-- [ ] Asset register
-- [ ] Asset assignment
-- [ ] Stock reports
-- [ ] Low-stock alerts
+### Inventory & Assets
+- [x] Inventory item/transaction data foundation
+- [ ] Purchases/issue-return/vendors
+- [ ] Asset register/assignment
+- [ ] Stock reports/low-stock alerts
 
-### 14. HR & Payroll
-- [ ] Employee master
-- [ ] Staff documents
-- [ ] Departments/designations
-- [ ] Leave management
-- [ ] Attendance integration
+### HR & Payroll
+- [x] Employee/leave/payroll data foundation
+- [ ] Staff documents/departments
 - [ ] Salary structures
-- [ ] Payroll
-- [ ] Payslips
-- [ ] HR/payroll reports
+- [ ] Payroll/payslips/reports
 
-### 15. Offline-First Sync
+### Offline-First Sync
 - [x] Sync database foundation
 - [x] Device registration
-- [x] Server change cursor
-- [x] Change journal
-- [x] Conflict foundation
-- [x] Web cache/outbox foundation
-- [x] Reconnect auto-sync foundation
-- [x] Offline marks re-authorization
-- [x] Reusable web offline sync client
-- [x] Conflict-resolution UI
-- [ ] Complete entity push/pull adapters
+- [x] Server cursor/change journal
+- [x] Idempotency
+- [x] Conflict foundation + resolution UI
+- [x] Web cache/outbox + reconnect sync
 - [x] Offline attendance
+- [x] Offline teacher marks authorization foundation
+- [ ] Complete entity push/pull adapters
 - [ ] Offline fees/receipts
 - [ ] Offline exams/marks
 - [ ] Offline enrollment
 - [ ] Sync monitoring/retry dashboard
-- [x] Device revoke/reset
 
-### 16. School PC/NAS Storage
+### School PC/NAS Storage
 - [x] Permissioned connector model
-- [x] Read-only/read-write model
-- [x] Desktop connector implementation
+- [x] Read-only/read-write modes
 - [x] User-selected folder permission
-- [ ] Local backup/export
-- [ ] Incremental file sync
-- [ ] Disconnect/recovery
-- [ ] Local-file conflict handling
 - [x] Connector health UI
-- [ ] NAS support
+- [ ] Incremental file sync
+- [ ] Disconnect/recovery E2E
+- [ ] Local-file conflict handling
+- [ ] NAS-specific deployment
 
-### 17. White-Label / School Apps
-- [x] Per-school app config foundation
-- [x] Per-school branding foundation
+### White-Label / School Apps
+- [x] Per-school app config
+- [x] Per-school branding
 - [ ] Per-school app build pipeline
 - [ ] School-specific icon/splash
 - [ ] School-specific Firebase config
-- [ ] School-specific Android package
-- [ ] School-specific iOS bundle
+- [ ] School-specific Android/iOS identifiers
 - [ ] Automated release pipeline
 - [ ] White-label web branding
 
-### 18. Production Hardening
-- [~] Clean database migration verification
-- [~] Super Admin school onboarding E2E
-- [~] Admin login/branch-scope E2E
-- [~] Offline push/pull/idempotency/conflict E2E
+### Production Hardening
+- [~] Clean migration verification
+- [~] Super Admin onboarding E2E
+- [~] Offline E2E
 - [~] Local storage E2E
-- [~] Enrollment E2E
-- [~] CI/static contract verification
+- [~] Enrollment/permission E2E
+- [x] CI/static contract verification
 - [ ] Full Android analyze/build + APK artifact verification
-- [ ] Flutter integration tests
-- [ ] Accessibility audit
-- [ ] Security audit
-- [ ] Backup/restore drill
-- [ ] Disaster recovery drill
-- [ ] Load/performance test
+- [ ] Accessibility/security audits
+- [ ] Backup/restore + disaster recovery drills
+- [ ] Load/performance testing
 - [ ] Monitoring/alerting
 - [ ] Production deployment
 - [ ] Final ERP sign-off
 
-### Implementation Tracking Rule
-
-After every **logical implementation checkpoint**, this README must be updated:
-- implementation genuinely completed → change [ ] to [x]
-- implementation exists but verification is pending → use [~]
-- **do not mark production/E2E work [x] until it has actually passed against the target infrastructure.**
+**README checkpoint rule:** after every completed logical implementation checkpoint, update the relevant marker. Never mark production/E2E verification [x] without an actual successful infrastructure-backed run.
 
 **LSKLive website remains separate and is not modified as part of ERP development.**
