@@ -9,6 +9,9 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 **Current phase: Core implementation checkpoint → CI contract repair → E2E verification → production sign-off**
 
 ### Latest implementation checkpoint
+- [x] **Core multi-school ERP implementation checkpoint completed**
+- [x] Exam Management UI read endpoints aligned with marks roster/authorization APIs
+- [x] Exam marks integration contract added to CI to guard roster/student/marks API compatibility
 - [x] Super Admin animated School Management UI
 - [x] Add School provisioning with school branding/logo and ERP/mobile-app configuration
 - [x] School list/search and active/inactive status
