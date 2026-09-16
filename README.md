@@ -50,7 +50,8 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Super Admin school detail exposes direct Onboarding, Teacher Permissions and Sync Center actions
 - [x] CI contract suite aligned with split School Management route modules and migration numbering normalized
 - [x] ERP CI contract/static verification passes after the repair checkpoint
-- [x] Core Fee Management API + PostgreSQL model added for fee heads, class/session structures, student invoices, payments/receipts and finance reports
+- [x] Core Fee Management API + PostgreSQL model added for fee heads, class/session structures, student invoices, payments/receipts and finance reports\n- [x] Exam Management UI read endpoints aligned with marks roster/authorization APIs
+- [x] Exam marks integration contract added to CI to guard roster/student/marks API compatibility
 - [x] Fee management contract test added and server registration wired through the optional `fees` route module
 - [x] Fee installment model + invoice installment endpoints added with net-total validation
 - [x] Configurable late-fee rules and invoice late-fee charging endpoint added
