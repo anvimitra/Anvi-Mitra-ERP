@@ -24,6 +24,9 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Server-side teacher marks authorization and roster filtering
 - [x] Marks save + sync journal integration
 - [x] Staff account + teacher profile provisioning
+- [x] **School Staff Management UI added at `/school/staff`**
+- [x] Staff Management UI connected to authenticated `/api/staff` and branch-aware `/api/branches`
+- [x] Teacher staff creation automatically provisions the teacher identity used by assignment/marks permissions
 - [x] Student enrollment + parent linking
 - [x] School enrollment management UI connected to authenticated enrollment APIs
 - [x] **Parent/guardian selection is now exposed directly in School Onboarding → Enroll Student and sends the selected parent relationship through the enrollment API.**
@@ -68,6 +71,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [~] Offline E2E: offline write → reconnect → push → pull → idempotency/conflict resolution
 - [~] Local storage E2E: permissioned folder read/write → sync → recovery after disconnect
 - [~] Enrollment E2E: staff → teacher → student → parent linking → class/section scope
+- [~] Staff onboarding E2E: create teacher → assign class/subject → marks access
 - [x] CI/static contract verification after the latest implementation commit
 - [ ] Production Firebase configuration for each published school app
 - [ ] Full Android analyze/build + APK artifact verification
@@ -91,13 +95,14 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 1. Super Admin opens **School Management → Add School**.
 2. School profile, branding, main branch and mobile-app configuration are provisioned together.
 3. The first school administrator is provisioned atomically with the school using a securely hashed password and linked to the school's main branch.
-4. School administrator creates staff/teacher accounts and opens **Student Enrollment**.
-5. Enrollment selects the correct branch/session/class/section and can link an existing parent.
-6. School management opens **Teacher Permissions** and assigns teacher → session → class/section → subject access.
-7. Teachers open **Marks Entry** and receive only the students authorized for that subject/class/session.
-8. Marks are validated server-side and written to the sync journal.
-9. Web/mobile/local clients synchronize through the central ERP API.
-10. Concurrent offline changes appear in **Sync Conflict Center** for authorized administrators to resolve.
+4. School administrator opens **Staff Management** and creates staff/teacher accounts.
+5. Teacher accounts automatically receive the teacher identity used by assignment/marks authorization.
+6. Enrollment selects the correct branch/session/class/section and can link an existing parent.
+7. School management opens **Teacher Permissions** and assigns teacher → session → class/section → subject access.
+8. Teachers open **Marks Entry** and receive only the students authorized for that subject/class/session.
+9. Marks are validated server-side and written to the sync journal.
+10. Web/mobile/local clients synchronize through the central ERP API.
+11. Concurrent offline changes appear in **Sync Conflict Center** for authorized administrators to resolve.
 
 ## Progress policy
 
