@@ -172,6 +172,45 @@ function registerSyncRoutes(app, pool) {
     finally { client.release(); }
   });
 
+  app.get('/api/sync/devices', authenticate, requireRoles('super_admin','principal','admin'), async (req,res,next) => {
+    try {
+      const { rows } = await pool.query(
+        `SELECT id,device_key AS "deviceKey",device_name AS "deviceName",platform,last_cursor AS "lastCursor",last_seen_at AS "lastSeenAt",status,created_at AS "createdAt"
+         FROM sync_devices WHERE school_id=$1 ORDER BY last_seen_at DESC NULLS LAST,created_at DESC`,
+        [req.auth.schoolId]
+      );
+      res.json({devices:rows});
+    } catch(err){ next(err); }
+  });
+
+  app.patch('/api/sync/devices/:id', authenticate, requireRoles('super_admin','principal','admin'), async (req,res,next) => {
+    try {
+      const status=String(req.body?.status||'').trim();
+      if(!['active','revoked'].includes(status)) return res.status(400).json({error:'status must be active or revoked'});
+      const {rows}=await pool.query(
+        `UPDATE sync_devices SET status=$1,last_seen_at=now()
+         WHERE id=$2 AND school_id=$3
+         RETURNING id,device_key AS "deviceKey",device_name AS "deviceName",platform,last_cursor AS "lastCursor",last_seen_at AS "lastSeenAt",status,created_at AS "createdAt"`,
+        [status,req.params.id,req.auth.schoolId]
+      );
+      if(!rows.length) return res.status(404).json({error:'Sync device not found'});
+      res.json({device:rows[0]});
+    } catch(err){next(err)}
+  });
+
+  app.post('/api/sync/devices/:id/reset-cursor', authenticate, requireRoles('super_admin','principal','admin'), async (req,res,next) => {
+    try {
+      const {rows}=await pool.query(
+        `UPDATE sync_devices SET last_cursor=0,last_seen_at=now()
+         WHERE id=$1 AND school_id=$2
+         RETURNING id,device_key AS "deviceKey",last_cursor AS "lastCursor",status`,
+        [req.params.id,req.auth.schoolId]
+      );
+      if(!rows.length) return res.status(404).json({error:'Sync device not found'});
+      res.json({device:rows[0],message:'Cursor reset; client will re-pull available changes'});
+    } catch(err){next(err)}
+  });
+
   app.get('/api/sync/conflicts', authenticate, async (req,res,next) => {
     try {
       const result=await pool.query(`SELECT id,device_id,entity_type,entity_id,local_payload,server_payload,resolution,created_at,resolved_at FROM sync_conflicts WHERE school_id=$1 AND resolution='pending' ORDER BY created_at DESC LIMIT 200`,[req.auth.schoolId]);
