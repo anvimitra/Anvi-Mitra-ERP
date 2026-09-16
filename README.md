@@ -4,9 +4,9 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 > Progress marker: [x] implementation complete · [~] verification/hardening pending · [ ] not implemented
 
-## Current Status — 2026-09-15
+## Current Status — 2026-09-16
 
-**Current phase: Core implementation checkpoint complete → attendance/offline-sync checkpoint complete → CI verification → E2E verification → production sign-off**
+**Current phase: Core implementation checkpoint → CI contract repair → E2E verification → production sign-off**
 
 ### Latest implementation checkpoint
 - [x] Super Admin animated School Management UI
@@ -48,10 +48,10 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] **Latest implementation checkpoint completed (2026-09-15): Super Admin school provisioning contract now includes school profile, branding, main branch, mobile configuration and first administrator in one atomic transaction**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Student attendance API added with branch/session/roster scope, bulk upsert, daily reporting and server-side authorization**
 - [x] **Latest implementation checkpoint completed (2026-09-15): Super Admin school branding endpoint added for secure logo update across school profile and mobile-app configuration**
-
 - [x] **Latest implementation checkpoint completed (2026-09-15): Super Admin school status toggle and direct logo-file upload workflow connected to secure branding API**
-
 - [x] **Latest implementation checkpoint completed (2026-09-15): Super Admin school detail now exposes direct Onboarding, Teacher Permissions and Sync Center actions.**
+- [x] **Latest implementation checkpoint completed (2026-09-16): CI contract suite aligned with the split School Management route modules and migration numbering normalized.**
+- [~] **Next verification checkpoint: rerun ERP CI + E2E contract verification after the repair commit.**
 
 ### Current verification / hardening
 - [~] Clean PostgreSQL migration run against an empty database
