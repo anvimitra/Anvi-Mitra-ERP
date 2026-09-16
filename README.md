@@ -54,6 +54,8 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] **Next verification checkpoint completed (2026-09-16): ERP CI contract/static verification passes after the repair checkpoint.**
 - [x] **Next implementation checkpoint completed (2026-09-16): Core Fee Management API + PostgreSQL model added for fee heads, class/session structures, student invoices, payments/receipts and finance reports.**
 - [x] **Next implementation checkpoint completed (2026-09-16): Fee management contract test added and server registration already wired through the optional `fees` route module.**
+- [x] **Latest implementation checkpoint completed (2026-09-16): Fee installment model + invoice installment endpoints added with net-total validation.**
+- [x] **Latest implementation checkpoint completed (2026-09-16): Configurable late-fee rules and invoice late-fee charging endpoint added with grace-period, percentage/daily/fixed and cap support.**
 
 ### Current verification / hardening
 - [~] Clean PostgreSQL migration run against an empty database
@@ -195,8 +197,8 @@ Implementation is marked [x] when the code foundation/UI/harness is present. Int
 - [x] Student fee assignment foundation
 - [x] Invoice generation
 - [x] Discounts/concessions foundation
-- [ ] Installments
-- [ ] Late fees
+- [x] **Installments**
+- [x] **Late fees**
 - [x] Fee collection
 - [ ] Online payments
 - [x] Receipts/receipt numbering
@@ -296,7 +298,7 @@ Implementation is marked [x] when the code foundation/UI/harness is present. Int
 - [x] Reusable web offline sync client
 - [x] Conflict-resolution UI
 - [ ] Complete entity push/pull adapters
-- [ ] Offline attendance
+- [x] Offline attendance
 - [ ] Offline fees/receipts
 - [ ] Offline exams/marks
 - [ ] Offline enrollment
@@ -350,6 +352,6 @@ Implementation is marked [x] when the code foundation/UI/harness is present. Int
 After every **logical implementation checkpoint**, this README must be updated:
 - implementation genuinely completed → change [ ] to [x]
 - implementation exists but verification is pending → use [~]
-- do **not** mark production/E2E work [x] until it has actually passed against the target infrastructure.
+- **do not mark production/E2E work [x] until it has actually passed against the target infrastructure.**
 
 **LSKLive website remains separate and is not modified as part of ERP development.**
