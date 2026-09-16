@@ -11,9 +11,31 @@ function registerNotificationRoutes(app, pool) {
                 n.read_at AS "readAt",n.created_at AS "createdAt",n.expires_at AS "expiresAt"
          FROM notifications n
          WHERE n.school_id=$1 AND (n.expires_at IS NULL OR n.expires_at>now())
-           AND (n.recipient_user_id=$2 OR
-                (n.recipient_user_id IS NULL AND (n.recipient_role IS NULL OR n.recipient_role=$3)
-                 AND n.class_id IS NULL AND n.section_id IS NULL))
+           AND (n.recipient_user_id=$2
+                OR (n.recipient_user_id IS NULL AND (n.recipient_role IS NULL OR n.recipient_role=$3)
+                    AND n.class_id IS NULL AND n.section_id IS NULL)
+                OR (n.recipient_user_id IS NULL AND (n.class_id IS NOT NULL OR n.section_id IS NOT NULL)
+                    AND (
+                      EXISTS (
+                        SELECT 1 FROM enrollments en
+                        JOIN students st ON st.id=en.student_id AND st.school_id=en.school_id
+                        WHERE en.school_id=n.school_id AND en.status='active'
+                          AND en.session_id IS NOT NULL
+                          AND (n.class_id IS NULL OR EXISTS (SELECT 1 FROM sections sx WHERE sx.id=en.section_id AND sx.class_id=n.class_id))
+                          AND (n.section_id IS NULL OR en.section_id=n.section_id)
+                          AND (st.user_id=$2 OR EXISTS (
+                            SELECT 1 FROM student_portal_profiles spp
+                            WHERE spp.school_id=st.school_id AND spp.student_id=st.id AND spp.user_id=$2 AND spp.status='active'
+                          ))
+                      )
+                      OR EXISTS (
+                        SELECT 1 FROM teacher_subjects ts
+                        JOIN teachers tt ON tt.id=ts.teacher_id AND tt.school_id=ts.school_id
+                        WHERE ts.school_id=n.school_id AND tt.user_id=$2 AND ts.status='active'
+                          AND (n.section_id IS NULL OR ts.section_id=n.section_id)
+                          AND (n.class_id IS NULL OR EXISTS (SELECT 1 FROM sections sx WHERE sx.id=ts.section_id AND sx.class_id=n.class_id))
+                      )
+                    )))
          ORDER BY n.created_at DESC LIMIT $4`,
         [req.auth.schoolId,req.auth.sub,req.auth.role,limit]);
       res.json({notifications:rows});
@@ -38,9 +60,31 @@ function registerNotificationRoutes(app, pool) {
       const {rows}=await pool.query(
         `SELECT COUNT(*)::int AS count FROM notifications n
          WHERE n.school_id=$1 AND n.read_at IS NULL AND (n.expires_at IS NULL OR n.expires_at>now())
-           AND (n.recipient_user_id=$2 OR
-                (n.recipient_user_id IS NULL AND (n.recipient_role IS NULL OR n.recipient_role=$3)
-                 AND n.class_id IS NULL AND n.section_id IS NULL))`,
+           AND (n.recipient_user_id=$2
+                OR (n.recipient_user_id IS NULL AND (n.recipient_role IS NULL OR n.recipient_role=$3)
+                    AND n.class_id IS NULL AND n.section_id IS NULL)
+                OR (n.recipient_user_id IS NULL AND (n.class_id IS NOT NULL OR n.section_id IS NOT NULL)
+                    AND (
+                      EXISTS (
+                        SELECT 1 FROM enrollments en
+                        JOIN students st ON st.id=en.student_id AND st.school_id=en.school_id
+                        WHERE en.school_id=n.school_id AND en.status='active'
+                          AND en.session_id IS NOT NULL
+                          AND (n.class_id IS NULL OR EXISTS (SELECT 1 FROM sections sx WHERE sx.id=en.section_id AND sx.class_id=n.class_id))
+                          AND (n.section_id IS NULL OR en.section_id=n.section_id)
+                          AND (st.user_id=$2 OR EXISTS (
+                            SELECT 1 FROM student_portal_profiles spp
+                            WHERE spp.school_id=st.school_id AND spp.student_id=st.id AND spp.user_id=$2 AND spp.status='active'
+                          ))
+                      )
+                      OR EXISTS (
+                        SELECT 1 FROM teacher_subjects ts
+                        JOIN teachers tt ON tt.id=ts.teacher_id AND tt.school_id=ts.school_id
+                        WHERE ts.school_id=n.school_id AND tt.user_id=$2 AND ts.status='active'
+                          AND (n.section_id IS NULL OR ts.section_id=n.section_id)
+                          AND (n.class_id IS NULL OR EXISTS (SELECT 1 FROM sections sx WHERE sx.id=ts.section_id AND sx.class_id=n.class_id))
+                      )
+                    )))`,
         [req.auth.schoolId,req.auth.sub,req.auth.role]);
       res.json({count:rows[0].count});
     }catch(err){next(err)}
