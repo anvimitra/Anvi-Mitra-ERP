@@ -23,6 +23,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Staff account + teacher profile provisioning
 - [x] Student enrollment + parent linking
 - [x] School enrollment management UI connected to authenticated enrollment APIs
+- [x] **Parent/guardian selection is now exposed directly in School Onboarding → Enroll Student and sends the selected parent relationship through the enrollment API.**
 - [x] Offline sync schema, device registration, push/pull, idempotency and conflict foundation
 - [x] Web IndexedDB cache + outbox + reconnect auto-sync
 - [x] Permissioned local storage connector model/runtime/UI
@@ -55,7 +56,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Configurable late-fee rules and invoice late-fee charging endpoint added
 - [x] Provider-neutral online payment intent + idempotent webhook foundation added
 - [x] Finance audit trail foundation added for immutable fee/payment business events
-- [x] **Latest implementation checkpoint (2026-09-16): duplicate `POST /api/platform/schools` ownership removed from `organization.js`; `platform_school_management.js` is now the single provisioning route owner, eliminating Express registration-order ambiguity.**
+- [x] **Latest implementation checkpoint (2026-09-16): School Onboarding now exposes existing parent accounts during student enrollment, captures relation/primary status, and the enrollment request passes the parent link to the server-side enrollment transaction.**
 
 ### Current verification / hardening
 - [~] Clean PostgreSQL migration run against an empty database
