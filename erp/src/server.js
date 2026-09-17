@@ -20,6 +20,7 @@ app.get('/super-admin/school-onboarding', (_req,res) => res.sendFile(path.join(_
 app.get('/super-admin/school', (_req,res) => res.sendFile(path.join(__dirname,'../web/super-admin/school.html')));
 app.get('/super-admin/teacher-permissions', (_req,res) => res.sendFile(path.join(__dirname,'../web/super-admin/teacher-assignments.html')));
 app.get('/super-admin/sync-conflicts', (_req,res) => res.sendFile(path.join(__dirname,'../web/super-admin/sync-conflicts.html')));
+app.get('/super-admin/sync-monitoring', (_req,res) => res.sendFile(path.join(__dirname,'../web/super-admin/sync-monitoring.html')));
 app.get('/school/enrollment', (_req,res) => res.sendFile(path.join(__dirname,'../web/school/enrollment.html')));
 app.get('/school/staff', (_req,res) => res.sendFile(path.join(__dirname,'../web/school/staff.html')));
 app.get('/staff-attendance', (_req,res) => res.sendFile(path.join(__dirname,'../web/staff-attendance.html')));
