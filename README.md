@@ -4,7 +4,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 
 > Progress marker: [x] implementation complete · [~] verification/hardening pending · [ ] not implemented
 
-## Current Status — 2026-09-16
+## Current Status — 2026-09-17
 
 **Current phase: Core implementation checkpoint → CI contract repair → E2E verification → production sign-off**
 
@@ -25,6 +25,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Fee management foundation, installments, late fees, payment intents/webhooks and finance audit trail foundation.
 - [x] Notification tap routing foundation.
 - [x] **Academic content checkpoint (2026-09-16): academic calendar, teacher-authorized homework assignments, study-material publishing and homework-submission data model foundation added.**
+- [x] **Sync monitoring checkpoint (2026-09-17): Super Admin sync health dashboard added with device health, journal cursor/change counts and pending-conflict visibility.**
 
 ### Current verification / production hardening
 - [~] Clean PostgreSQL migration run against an empty database
@@ -38,7 +39,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [ ] Offline fees/receipts
 - [ ] Offline exams/marks
 - [ ] Offline enrollment
-- [ ] Sync monitoring/retry dashboard
+- [x] Sync monitoring/retry dashboard implementation
 - [ ] Full Android analyze/build + APK artifact verification
 - [ ] Flutter integration tests
 - [ ] Accessibility audit
@@ -218,7 +219,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [ ] Offline fees/receipts
 - [ ] Offline exams/marks
 - [ ] Offline enrollment
-- [ ] Sync monitoring/retry dashboard
+- [x] Sync monitoring/retry dashboard
 
 ### School PC/NAS Storage
 - [x] Permissioned connector model
