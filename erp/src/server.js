@@ -22,7 +22,7 @@ app.get('/super-admin/teacher-permissions', (_req, res) => res.sendFile(path.joi
 app.get('/super-admin/sync-conflicts', (_req, res) => res.sendFile(path.join(__dirname, '../web/super-admin/sync-conflicts.html')));
 app.get('/super-admin/sync-monitoring', (_req, res) => res.sendFile(path.join(__dirname, '../web/super-admin/sync-monitoring.html')));
 app.get('/super-admin/local-storage', (_req, res) => res.sendFile(path.join(__dirname, '../web/super-admin/local-storage.html')));
-app.get('/local-storage', (_req, res) => res.sendFile(path.join(__dirname, '../web/local-storage.html'));
+app.get('/local-storage', (_req, res) => res.sendFile(path.join(__dirname, '../web/local-storage.html')));
 app.get('/school/enrollment', (_req, res) => res.sendFile(path.join(__dirname, '../web/school/enrollment.html')));
 app.get('/school/staff', (_req, res) => res.sendFile(path.join(__dirname, '../web/school/staff.html')));
 app.get('/staff-attendance', (_req, res) => res.sendFile(path.join(__dirname, '../web/staff-attendance.html')));
@@ -51,6 +51,11 @@ if (pool) {
   registerAuthRoutes(app, pool);
   registerExtendedModuleRoutes(app, pool);
   const modules = [
+    ['sync_routes', 'registerSyncRoutes'],
+    ['local_storage', 'registerLocalStorageRoutes'],
+    ['organization', 'registerOrganizationRoutes'],
+    ['platform_school_management', 'registerPlatformSchoolManagementRoutes'],
+    ['platform_compat', 'registerPlatformCompatRoutes'],
     ['routes', 'registerRoutes'], ['people', 'registerPeopleRoutes'], ['staff', 'registerStaffRoutes'],
     ['attendance', 'registerAttendanceRoutes'], ['staff_attendance', 'registerStaffAttendanceRoutes'],
     ['attendance_reports', 'registerAttendanceReportRoutes'], ['exams', 'registerExamRoutes'],
@@ -65,13 +70,10 @@ if (pool) {
     ['academic_progress', 'registerAcademicProgressRoutes'], ['admissions', 'registerAdmissionRoutes'],
     ['portal', 'registerPortalRoutes'], ['student_crud', 'registerStudentCrudRoutes'],
     ['student_enrollment', 'registerStudentEnrollmentRoutes'], ['enrollment', 'registerEnrollmentRoutes'],
-    ['teacher_assignments', 'registerTeacherAssignmentRoutes'], ['organization', 'registerOrganizationRoutes'],
-    ['platform_school_management', 'registerPlatformSchoolManagementRoutes'], ['platform_compat', 'registerPlatformCompatRoutes'],
-    ['school_summary', 'registerSchoolSummaryRoutes'], ['mobile', 'registerMobileRoutes'],
-    ['mobile_dashboards', 'registerMobileDashboardRoutes'], ['transport', 'registerTransportRoutes'],
-    ['sync_routes','registerSyncRoutes'], ['sync_admin', 'registerSyncAdminRoutes'],
-    ['sync_conflict_resolution', 'registerSyncConflictResolutionRoutes'], ['local_storage','registerLocalStorageRoutes'],
-    ['teacher_permissions', 'registerTeacherPermissionRoutes']
+    ['teacher_assignments', 'registerTeacherAssignmentRoutes'], ['school_summary', 'registerSchoolSummaryRoutes'],
+    ['mobile', 'registerMobileRoutes'], ['mobile_dashboards', 'registerMobileDashboardRoutes'],
+    ['transport', 'registerTransportRoutes'], ['sync_admin', 'registerSyncAdminRoutes'],
+    ['sync_conflict_resolution', 'registerSyncConflictResolutionRoutes'], ['teacher_permissions', 'registerTeacherPermissionRoutes']
   ];
   for (const [moduleName, registerName] of modules) registerOptional(moduleName, registerName);
   try { require('./notification_worker').startNotificationWorker(pool); } catch (_) { console.warn('Notification worker unavailable'); }
