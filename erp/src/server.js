@@ -24,7 +24,7 @@ app.get('/super-admin/sync-monitoring', (_req, res) => res.sendFile(path.join(__
 app.get('/super-admin/local-storage', (_req, res) => res.sendFile(path.join(__dirname, '../web/local-storage.html')));
 app.get('/local-storage', (_req, res) => res.sendFile(path.join(__dirname, '../web/local-storage.html')));
 app.get('/school/enrollment', (_req, res) => res.sendFile(path.join(__dirname, '../web/school/enrollment.html')));
-app.get('/school/staff', (_req, res) => res.sendFile(path.join(__dirname, '../web/school/staff.html')));
+app.get('/school/staff', (_req, res) => res.sendFile(path.join(__dirname, '../web/staff-management.html')));
 app.get('/staff-attendance', (_req, res) => res.sendFile(path.join(__dirname, '../../attendance.html')));
 app.get('/attendance', (_req, res) => res.sendFile(path.join(__dirname, '../../attendance.html')));
 app.get('/attendance-report', (_req, res) => res.sendFile(path.join(__dirname, '../../attendance-report.html')));
@@ -36,8 +36,16 @@ app.get('/api/health', async (_req, res) => {
 function registerOptional(moduleName, registerName) {
   let file;
   try { file = require.resolve('./' + moduleName); } catch (_) { console.warn('Optional ERP module not present: ' + moduleName + '.js'); return false; }
-  try { const mod = require(file); if (typeof mod[registerName) !== 'function') { console.warn('ERP module ' + moduleName + '.js does not export ' + registerName); return false; } mod[registerName](app, pool); return true; }
-  catch (error) { console.error('Failed to load ERP module ' + moduleName + '.js:', error); if (process.env.NODE_ENV === 'production') throw error; return false; }
+  try {
+    const mod = require(file);
+    if (typeof mod[registerName] !== 'function') { console.warn('ERP module ' + moduleName + '.js does not export ' + registerName); return false; }
+    mod[registerName](app, pool);
+    return true;
+  } catch (error) {
+    console.error('Failed to load ERP module ' + moduleName + '.js:', error);
+    if (process.env.NODE_ENV === 'production') throw error;
+    return false;
+  }
 }
 if (pool) {
   registerAuthRoutes(app, pool);
