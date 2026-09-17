@@ -22,20 +22,35 @@ function registerPlatformCompatRoutes(app, pool) {
     if (logoUrl === undefined && primaryColor === undefined && secondaryColor === undefined) {
       return res.status(400).json({ error: 'logoUrl, primaryColor or secondaryColor is required' });
     }
-    if (logoUrl !== undefined && logoUrl && !/^https:\/\//.test(logoUrl) && !/^data:image\/(png|jpeg|webp|svg\\+xml);base64,[A-Za-z0-9+/=]+$/.test(logoUrl)) {
+    if (logoUrl !== undefined && logoUrl && !/^https:\/\//.test(logoUrl) && !/^data:image\/(png|jpeg|webp|svg\+xml);base64,[A-Za-z0-9+/=]+$/.test(logoUrl)) {
       return res.status(400).json({ error: 'Logo must be an HTTPS URL or supported image data URL' });
     }
     try {
       const school = await pool.query('SELECT id FROM schools WHERE id=$1', [req.params.id]);
       if (!school.rowCount) return res.status(404).json({ error: 'School not found' });
-      const values = [req.params.id];
-      const set = [];
+
+      const settingsSet = [];
+      const settingsValues = [];
       for (const [column, value] of [['logo_url', logoUrl], ['primary_color', primaryColor], ['secondary_color', secondaryColor]]) {
-        if (value !== undefined) { values.push(value || null); set.push(`${column}=$${values.length}`); }
+        if (value !== undefined) { settingsValues.push(value || null); settingsSet.push(`${column}=$${settingsValues.length}`); }
       }
-      const settings = await pool.query(`UPDATE school_settings SET ${set.join(',')}, updated_at=now() WHERE school_id=$1`, values);
+      settingsValues.push(req.params.id);
+      const settings = await pool.query(
+        `UPDATE school_settings SET ${settingsSet.join(',')}, updated_at=now() WHERE school_id=$${settingsValues.length}`,
+        settingsValues,
+      );
       if (!settings.rowCount) return res.status(404).json({ error: 'School settings not found' });
-      await pool.query(`UPDATE mobile_app_configs SET ${set.join(',')}, updated_at=now() WHERE school_id=$1`, values);
+
+      const appSet = [];
+      const appValues = [];
+      for (const [column, value] of [['logo_url', logoUrl], ['primary_color', primaryColor], ['secondary_color', secondaryColor]]) {
+        if (value !== undefined) { appValues.push(value || null); appSet.push(`${column}=$${appValues.length}`); }
+      }
+      appValues.push(req.params.id);
+      await pool.query(
+        `UPDATE mobile_app_configs SET ${appSet.join(',')}, updated_at=now() WHERE school_id=$${appValues.length}`,
+        appValues,
+      );
       res.json({ message: 'School branding updated' });
     } catch (err) { next(err); }
   });
