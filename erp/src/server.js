@@ -54,7 +54,7 @@ if (pool) {
     ['academics','registerAcademicRoutes'], ['timetable','registerTimetableRoutes'], ['academic_master','registerAcademicMasterRoutes'], ['academic_progress','registerAcademicProgressRoutes'],
     ['analytics','registerAnalyticsRoutes'], ['report_exports','registerReportExportRoutes'],
     ['admissions','registerAdmissionRoutes'], ['portal','registerPortalRoutes'], ['student_crud','registerStudentCrudRoutes'], ['student_enrollment','registerStudentEnrollmentRoutes'],
-    ['enrollment','registerEnrollmentRoutes'], ['teacher_assignments','registerTeacherAssignmentRoutes'], ['school_summary','registerSchoolSummaryRoutes'], ['mobile','registerMobileRoutes'],
+    ['student_promotion','registerStudentPromotionRoutes'], ['enrollment','registerEnrollmentRoutes'], ['teacher_assignments','registerTeacherAssignmentRoutes'], ['school_summary','registerSchoolSummaryRoutes'], ['mobile','registerMobileRoutes'],
     ['mobile_dashboards','registerMobileDashboardRoutes'], ['transport','registerTransportRoutes'], ['sync_admin','registerSyncAdminRoutes'], ['sync_conflict_resolution','registerSyncConflictResolutionRoutes'], ['teacher_permissions','registerTeacherPermissionRoutes']
   ];
   for (const [moduleName, registerName] of modules) registerOptional(moduleName, registerName);
