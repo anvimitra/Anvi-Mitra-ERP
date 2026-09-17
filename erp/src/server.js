@@ -25,7 +25,7 @@ app.get('/super-admin/local-storage', (_req, res) => res.sendFile(path.join(__di
 app.get('/local-storage', (_req, res) => res.sendFile(path.join(__dirname, '../web/local-storage.html')));
 app.get('/school/enrollment', (_req, res) => res.sendFile(path.join(__dirname, '../web/school/enrollment.html')));
 app.get('/school/staff', (_req, res) => res.sendFile(path.join(__dirname, '../web/school/staff.html')));
-app.get('/staff-attendance', (_req, res) => res.sendFile(path.join(__dirname, '../web/staff-attendance.html')));
+app.get('/staff-attendance', (_req, res) => res.sendFile(path.join(__dirname, '../../attendance.html')));
 app.get('/attendance', (_req, res) => res.sendFile(path.join(__dirname, '../../attendance.html')));
 app.get('/attendance-report', (_req, res) => res.sendFile(path.join(__dirname, '../../attendance-report.html')));
 app.get('/api/health', async (_req, res) => {
@@ -52,7 +52,7 @@ if (pool) {
     ['notifications','registerNotificationRoutes'], ['reportcard_engine_route','registerReportCardEngineRoute'], ['reportcard_result_sync','registerReportCardResultSyncRoutes'],
     ['reportcards','registerReportCardRoutes'], ['reportcard_context','registerReportCardContextRoutes'], ['reportcard_list','registerReportCardListRoutes'], ['reportcard_bulk','registerReportCardBulkRoutes'],
     ['academics','registerAcademicRoutes'], ['timetable','registerTimetableRoutes'], ['academic_master','registerAcademicMasterRoutes'], ['academic_progress','registerAcademicProgressRoutes'],
-    ['analytics','registerAnalyticsRoutes'],
+    ['analytics','registerAnalyticsRoutes'], ['report_exports','registerReportExportRoutes'],
     ['admissions','registerAdmissionRoutes'], ['portal','registerPortalRoutes'], ['student_crud','registerStudentCrudRoutes'], ['student_enrollment','registerStudentEnrollmentRoutes'],
     ['enrollment','registerEnrollmentRoutes'], ['teacher_assignments','registerTeacherAssignmentRoutes'], ['school_summary','registerSchoolSummaryRoutes'], ['mobile','registerMobileRoutes'],
     ['mobile_dashboards','registerMobileDashboardRoutes'], ['transport','registerTransportRoutes'], ['sync_admin','registerSyncAdminRoutes'], ['sync_conflict_resolution','registerSyncConflictResolutionRoutes'], ['teacher_permissions','registerTeacherPermissionRoutes']
