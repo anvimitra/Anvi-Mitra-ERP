@@ -1,22 +1,15 @@
 {
-  "name": "anvi-mitra-erp-server",
-  "version": "1.0.0",
-  "private": true,
-  "description": "Anvi Mitra multi-school ERP API and web portal",
-  "main": "src/server.js",
-  "scripts": {
-    "start": "node src/server.js",
-    "check": "for f in src/*.js; do node --check \"$f\"; done",
-    "test": "node tests/erp_contract.test.js && node tests/school_provisioning_contract.test.js && node tests/school_provisioning_sync_contract.test.js && node tests/enrollment_contract.test.js && node tests/teacher_marks_ui_contract.test.js && node tests/offline_web_contract.test.js && node tests/migration_preflight.test.js && node tests/architecture_contract.test.js && node tests/major_process_contract.test.js && node tests/school_management_ui_contract.test.js && node tests/school_summary_contract.test.js && node tests/local_storage_ui_contract.test.js && node tests/timetable_contract.test.js && node tests/staff_attendance_contract.test.js && node tests/offline_attendance_contract.test.js && node tests/exam_management_integration_contract.test.js && node tests/extended_modules_contract.test.js && node tests/notifications_contract.test.js && node tests/result_processing_contract.test.js && node tests/offline_entity_adapters_contract.test.js && node tests/academic_progress_contract.test.js && node tests/analytics_contract.test.js && node tests/report_exports_contract.test.js && node tests/student_promotion_contract.test.js && node tests/notification_automation_contract.test.js && node tests/integration_seams_contract.test.js",
-    "migrate": "node src/migrate.js"
+  "name":"anvi-mitra-erp-server",
+  "version":"1.0.0",
+  "private":true,
+  "description":"Anvi Mitra multi-school ERP API and web portal",
+  "main":"src/server.js",
+  "scripts":{
+    "start":"node src/server.js",
+    "check":"for f in src/*.js; do node --check \"$f\"; done",
+    "test":"node tests/erp_contract.test.js && node tests/school_provisioning_contract.test.js && node tests/school_provisioning_sync_contract.test.js && node tests/enrollment_contract.test.js && node tests/teacher_marks_ui_contract.test.js && node tests/offline_web_contract.test.js && node tests/migration_preflight.test.js && node tests/architecture_contract.test.js && node tests/major_process_contract.test.js && node tests/school_management_ui_contract.test.js && node tests/school_summary_contract.test.js && node tests/local_storage_ui_contract.test.js && node tests/timetable_contract.test.js && node tests/staff_attendance_contract.test.js && node tests/offline_attendance_contract.test.js && node tests/exam_management_integration_contract.test.js && node tests/extended_modules_contract.test.js && node tests/notifications_contract.test.js && node tests/result_processing_contract.test.js && node tests/offline_entity_adapters_contract.test.js && node tests/academic_progress_contract.test.js && node tests/analytics_contract.test.js && node tests/report_exports_contract.test.js && node tests/student_promotion_contract.test.js && node tests/notification_automation_contract.test.js && node tests/integration_seams_contract.test.js && node tests/exam_scheduling_contract.test.js",
+    "migrate":"node src/migrate.js"
   },
-  "engines": {
-    "node": ">=20"
-  },
-  "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^16.6.1",
-    "express": "^5.1.0",
-    "pg": "^8.16.3"
-  }
+  "engines":{"node":">=20"},
+  "dependencies":{"cors":"^2.8.5","dotenv":"^16.6.1","express":"^5.1.0","pg":"^8.16.3"}
 }
