@@ -52,6 +52,7 @@ if (pool) {
     ['notifications','registerNotificationRoutes'], ['reportcard_engine_route','registerReportCardEngineRoute'], ['reportcard_result_sync','registerReportCardResultSyncRoutes'],
     ['reportcards','registerReportCardRoutes'], ['reportcard_context','registerReportCardContextRoutes'], ['reportcard_list','registerReportCardListRoutes'], ['reportcard_bulk','registerReportCardBulkRoutes'],
     ['academics','registerAcademicRoutes'], ['timetable','registerTimetableRoutes'], ['academic_master','registerAcademicMasterRoutes'], ['academic_progress','registerAcademicProgressRoutes'],
+    ['analytics','registerAnalyticsRoutes'],
     ['admissions','registerAdmissionRoutes'], ['portal','registerPortalRoutes'], ['student_crud','registerStudentCrudRoutes'], ['student_enrollment','registerStudentEnrollmentRoutes'],
     ['enrollment','registerEnrollmentRoutes'], ['teacher_assignments','registerTeacherAssignmentRoutes'], ['school_summary','registerSchoolSummaryRoutes'], ['mobile','registerMobileRoutes'],
     ['mobile_dashboards','registerMobileDashboardRoutes'], ['transport','registerTransportRoutes'], ['sync_admin','registerSyncAdminRoutes'], ['sync_conflict_resolution','registerSyncConflictResolutionRoutes'], ['teacher_permissions','registerTeacherPermissionRoutes']
