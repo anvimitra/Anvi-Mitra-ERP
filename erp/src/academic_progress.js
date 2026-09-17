@@ -44,15 +44,17 @@ function registerAcademicProgressRoutes(app,pool){
       const b=req.body||{};
       const percent=Number(b.progressPercent);
       if(!b.sessionId||!b.classId||!b.subjectId||!Number.isFinite(percent)||percent<0||percent>100)return res.status(400).json({error:'sessionId, classId, subjectId and progressPercent 0-100 are required'});
+      let teacherId=null;
       if(req.auth.role==='teacher'){
         const permission=await pool.query(
-          `SELECT 1 FROM teacher_subjects ts JOIN teachers t ON t.id=ts.teacher_id AND t.school_id=ts.school_id
+          `SELECT ts.teacher_id AS "teacherId" FROM teacher_subjects ts JOIN teachers t ON t.id=ts.teacher_id AND t.school_id=ts.school_id
            WHERE ts.school_id=$1 AND t.user_id=$2 AND ts.session_id=$3 AND ts.subject_id=$4 AND ts.can_mark=true AND ts.status='active'
              AND ($5::uuid IS NULL OR ts.section_id=$5)
              AND ($6::uuid IS NULL OR ts.branch_id=$6 OR ts.branch_id IS NULL) LIMIT 1`,
           [req.auth.schoolId,req.auth.sub,b.sessionId,b.subjectId,b.sectionId||null,req.auth.branchId||null]
         );
         if(!permission.rowCount)return res.status(403).json({error:'Teacher is not assigned to this subject/section'});
+        teacherId=permission.rows[0].teacherId;
       }
       const {rows}=await pool.query(
         `INSERT INTO syllabus_progress(school_id,session_id,syllabus_unit_id,teacher_id,class_id,section_id,subject_id,progress_percent,completed_at,notes,updated_by)
@@ -60,7 +62,7 @@ function registerAcademicProgressRoutes(app,pool){
          ON CONFLICT(school_id,session_id,syllabus_unit_id,class_id,section_id,subject_id)
          DO UPDATE SET teacher_id=EXCLUDED.teacher_id,progress_percent=EXCLUDED.progress_percent,completed_at=EXCLUDED.completed_at,notes=EXCLUDED.notes,updated_by=EXCLUDED.updated_by,updated_at=now()
          RETURNING id,syllabus_unit_id AS "syllabusUnitId",section_id AS "sectionId",progress_percent AS "progressPercent",completed_at AS "completedAt",notes`,
-        [req.auth.schoolId,b.sessionId,req.params.id,req.auth.sub,b.classId,b.sectionId||null,b.subjectId,percent,b.notes||null,req.auth.sub]
+        [req.auth.schoolId,b.sessionId,req.params.id,teacherId,b.classId,b.sectionId||null,b.subjectId,percent,b.notes||null,req.auth.sub]
       );
       await pool.query(
         `INSERT INTO sync_changes(school_id,entity_type,entity_id,operation,payload,changed_by)
