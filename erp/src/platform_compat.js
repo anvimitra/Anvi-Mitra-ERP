@@ -29,18 +29,28 @@ function registerPlatformCompatRoutes(app, pool) {
       }
       await client.query('BEGIN');
       const exists = await client.query('SELECT id FROM schools WHERE id=$1', [req.params.id]);
-      if (!exists.rowCount) { await client.query('ROLLBACK'); return res.status(404).json({ error: 'School not found' }); }
-      const values = [req.params.id];
-      const sets = [];
-      for (const [key, value] of [['logo_url', logoUrl], ['primary_color', primaryColor], ['secondary_color', secondaryColor]]) {
-        if (value !== undefined) { values.push(value || null); sets.push(`${key}=$${values.length - 1}`); }
+      if (!exists.rowCount) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'School not found' });
       }
-      await client.query(`UPDATE school_settings SET ${sets.join(',')}, updated_at=now() WHERE school_id=$1`, values);
-      await client.query(`UPDATE mobile_app_configs SET ${sets.filter(x => ['logo_url','primary_color','secondary_color'].some(k => x.startsWith(k+'='))).join(',')}, updated_at=now() WHERE school_id=$1`, values).catch(() => {});
+      const settings = [];
+      const settingsValues = [req.params.id];
+      for (const [column, value] of [['logo_url', logoUrl], ['primary_color', primaryColor], ['secondary_color', secondaryColor]]) {
+        if (value !== undefined) {
+          settingsValues.push(value || null);
+          settings.push(`${column}=$${settingsValues.length}`);
+        }
+      }
+      await client.query(`UPDATE school_settings SET ${settings.join(',')}, updated_at=now() WHERE school_id=$1`, settingsValues);
+      await client.query(`UPDATE mobile_app_configs SET ${settings.join(',')}, updated_at=now() WHERE school_id=$1`, settingsValues);
       await client.query('COMMIT');
       res.json({ message: 'School branding updated' });
-    } catch (err) { await client.query('ROLLBACK').catch(() => {}); next(err); }
-    finally { client.release(); }
+    } catch (err) {
+      await client.query('ROLLBACK').catch(() => {});
+      next(err);
+    } finally {
+      client.release();
+    }
   });
 }
 
