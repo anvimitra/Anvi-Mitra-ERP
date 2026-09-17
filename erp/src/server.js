@@ -57,7 +57,7 @@ if (pool) {
     ['staff_attendance','registerStaffAttendanceRoutes'], ['attendance_reports','registerAttendanceReportRoutes'], ['exams','registerExamRoutes'],
     ['exam_results','registerExamResultRoutes'], ['exam_marks','registerExamMarkRoutes'], ['fees','registerFeeRoutes'], ['fee_ledger','registerFeeLedgerRoutes'],
     ['fee_assignments','registerFeeAssignmentRoutes'], ['fee_receipts','registerFeeReceiptRoutes'], ['payments','registerPaymentRoutes'],
-    ['notifications','registerNotificationRoutes'], ['notification_automation','registerNotificationAutomationRoutes'],
+    ['notifications','registerNotificationRoutes'], ['notification_automation','registerNotificationAutomationRoutes'], ['integration_seams','registerIntegrationSeamRoutes'],
     ['reportcard_engine_route','registerReportCardEngineRoute'], ['reportcard_result_sync','registerReportCardResultSyncRoutes'],
     ['reportcards','registerReportCardRoutes'], ['reportcard_context','registerReportCardContextRoutes'], ['reportcard_list','registerReportCardListRoutes'], ['reportcard_bulk','registerReportCardBulkRoutes'],
     ['academics','registerAcademicRoutes'], ['timetable','registerTimetableRoutes'], ['academic_master','registerAcademicMasterRoutes'], ['academic_progress','registerAcademicProgressRoutes'],
