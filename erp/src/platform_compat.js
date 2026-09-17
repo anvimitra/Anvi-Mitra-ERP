@@ -29,26 +29,32 @@ function registerPlatformCompatRoutes(app, pool) {
       const school = await pool.query('SELECT id FROM schools WHERE id=$1', [req.params.id]);
       if (!school.rowCount) return res.status(404).json({ error: 'School not found' });
 
-      const settingsSet = [];
+      const settingsColumns = [];
       const settingsValues = [];
       for (const [column, value] of [['logo_url', logoUrl], ['primary_color', primaryColor], ['secondary_color', secondaryColor]]) {
-        if (value !== undefined) { settingsValues.push(value || null); settingsSet.push(`${column}=$${settingsValues.length}`); }
+        if (value !== undefined) {
+          settingsValues.push(value || null);
+          settingsColumns.push(`${column}=$${settingsValues.length}`);
+        }
       }
       settingsValues.push(req.params.id);
       const settings = await pool.query(
-        `UPDATE school_settings SET ${settingsSet.join(',')}, updated_at=now() WHERE school_id=$${settingsValues.length}`,
+        `UPDATE school_settings SET ${settingsColumns.join(',')}, updated_at=now() WHERE school_id=$${settingsValues.length}`,
         settingsValues,
       );
       if (!settings.rowCount) return res.status(404).json({ error: 'School settings not found' });
 
-      const appSet = [];
+      const appColumns = [];
       const appValues = [];
       for (const [column, value] of [['logo_url', logoUrl], ['primary_color', primaryColor], ['secondary_color', secondaryColor]]) {
-        if (value !== undefined) { appValues.push(value || null); appSet.push(`${column}=$${appValues.length}`); }
+        if (value !== undefined) {
+          appValues.push(value || null);
+          appColumns.push(`${column}=$${appValues.length}`);
+        }
       }
       appValues.push(req.params.id);
       await pool.query(
-        `UPDATE mobile_app_configs SET ${appSet.join(',')}, updated_at=now() WHERE school_id=$${appValues.length}`,
+        `UPDATE mobile_app_configs SET ${appColumns.join(',')}, updated_at=now() WHERE school_id=$${appValues.length}`,
         appValues,
       );
       res.json({ message: 'School branding updated' });
