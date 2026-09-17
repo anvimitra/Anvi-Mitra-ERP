@@ -26,6 +26,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [x] Notification tap routing foundation.
 - [x] **Academic content checkpoint (2026-09-16): academic calendar, teacher-authorized homework assignments, study-material publishing and homework-submission data model foundation added.**
 - [x] **Sync monitoring checkpoint (2026-09-17): Super Admin sync health dashboard added with device health, journal cursor/change counts and pending-conflict visibility.**
+- [x] **Sync runtime contract checkpoint (2026-09-17): journal schema hardened for device-aware idempotency and base-cursor conflict detection; migration `033_sync_runtime_contract.sql` added.**
 
 ### Current verification / production hardening
 - [~] Clean PostgreSQL migration run against an empty database
@@ -220,6 +221,7 @@ Multi-school, multi-branch School ERP with Web + Flutter mobile clients, central
 - [ ] Offline exams/marks
 - [ ] Offline enrollment
 - [x] Sync monitoring/retry dashboard
+- [x] Sync runtime schema contract for device-aware idempotency/base cursors
 
 ### School PC/NAS Storage
 - [x] Permissioned connector model
