@@ -150,3 +150,42 @@ jobs:
           SELECT 1 FROM pg_class WHERE relname='sync_conflicts';
           SELECT 1 FROM pg_class WHERE relname='local_storage_connectors';
           SQL
+
+  platform-e2e:
+    runs-on: ubuntu-latest
+    needs: migration-contract
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: erp_ci
+          POSTGRES_DB: anvi_mitra_erp_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U erp_ci -d anvi_mitra_erp_e2e"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install ERP dependencies
+        working-directory: erp
+        run: npm ci
+      - name: Migrate clean E2E database
+        working-directory: erp
+        env:
+          DATABASE_URL: postgresql://erp_ci:postgres@localhost:5432/anvi_mitra_erp_e2e
+        run: npm run migrate
+      - name: Run authenticated school provisioning E2E
+        working-directory: erp
+        env:
+          DATABASE_URL: postgresql://erp_ci:postgres@localhost:5432/anvi_mitra_erp_e2e
+          JWT_SECRET: e2e-test-secret-at-least-32-characters-long
+          NODE_ENV: test
+          ERP_BASE_URL: http://127.0.0.1:4183
+        run: node scripts/school-management-e2e.js
