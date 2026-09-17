@@ -33,11 +33,9 @@ for (const file of requiredPages) {
 }
 
 const migrationNames = fs.readdirSync(sql).filter(f => /^\d+.*\.sql$/i.test(f)).sort((a,b)=>a.localeCompare(b, undefined, {numeric:true}));
-// The core/baseline PostgreSQL schema is managed by the deployment database. This
-// repository carries the ERP extension migrations that build on that baseline.
 assert(migrationNames.length >= 5, 'Expected ERP extension migrations');
 assert(migrationNames.includes('032_offline_sync_access_control.sql'), 'Offline access-control migration missing');
-assert(migrationNames.includes('034_sync_teacher_marks_guard.sql'), 'Teacher marks sync guard missing');
+assert(migrationNames.includes('101_sync_teacher_marks_guard.sql'), 'Teacher marks sync guard missing');
 assert(migrationNames.includes('036_sync_idempotency.sql'), 'Sync idempotency migration missing');
 
 const server = fs.readFileSync(path.join(src, 'server.js'), 'utf8');
