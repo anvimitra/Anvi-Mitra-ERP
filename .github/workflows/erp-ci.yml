@@ -106,6 +106,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Install ERP dependencies
+        working-directory: erp
+        run: npm ci
       - name: Validate migration runner
         working-directory: erp
         run: node --check src/migrate.js
@@ -142,7 +145,7 @@ jobs:
           PGPASSWORD: postgres
         run: |
           set -euo pipefail
-          psql "postgresql://erp_ci@localhost:5432/anvi_mitra_erp_ci" -v ON_ERROR_STOP=1 <<'SQL'
+          psql "postgresql://erp_ci:postgres@localhost:5432/anvi_mitra_erp_ci" -v ON_ERROR_STOP=1 <<'SQL'
           SELECT 1 FROM pg_proc WHERE proname='teacher_can_edit_exam_subject';
           SELECT 1 FROM pg_proc WHERE proname='guard_sync_teacher_exam_marks';
           SELECT 1 FROM pg_class WHERE relname='sync_devices';
