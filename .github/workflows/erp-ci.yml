@@ -108,7 +108,7 @@ jobs:
           node-version: 20
       - name: Install ERP dependencies
         working-directory: erp
-        run: npm ci
+        run: npm install --no-audit --no-fund
       - name: Validate migration runner
         working-directory: erp
         run: node --check src/migrate.js
@@ -178,7 +178,7 @@ jobs:
           node-version: 20
       - name: Install ERP dependencies
         working-directory: erp
-        run: npm ci
+        run: npm install --no-audit --no-fund
       - name: Migrate clean E2E database
         working-directory: erp
         env:
