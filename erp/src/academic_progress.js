@@ -44,16 +44,28 @@ function registerAcademicProgressRoutes(app,pool){
       const b=req.body||{};
       const percent=Number(b.progressPercent);
       if(!b.sessionId||!b.classId||!b.subjectId||!Number.isFinite(percent)||percent<0||percent>100)return res.status(400).json({error:'sessionId, classId, subjectId and progressPercent 0-100 are required'});
+      const unit=await pool.query(
+        `SELECT id FROM syllabus_units WHERE id=$1 AND school_id=$2 AND session_id=$3 AND class_id=$4 AND subject_id=$5 AND status='active'`,
+        [req.params.id,req.auth.schoolId,b.sessionId,b.classId,b.subjectId]
+      );
+      if(!unit.rowCount)return res.status(404).json({error:'Syllabus unit not found in the requested school/session/class/subject'});
+      if(b.sectionId){
+        const section=await pool.query(`SELECT id FROM sections WHERE id=$1 AND school_id=$2 AND class_id=$3 AND status='active'`,[b.sectionId,req.auth.schoolId,b.classId]);
+        if(!section.rowCount)return res.status(400).json({error:'Section is not part of the requested class'});
+      }
       let teacherId=null;
       if(req.auth.role==='teacher'){
         const permission=await pool.query(
-          `SELECT ts.teacher_id AS "teacherId" FROM teacher_subjects ts JOIN teachers t ON t.id=ts.teacher_id AND t.school_id=ts.school_id
-           WHERE ts.school_id=$1 AND t.user_id=$2 AND ts.session_id=$3 AND ts.subject_id=$4 AND ts.can_mark=true AND ts.status='active'
-             AND ($5::uuid IS NULL OR ts.section_id=$5)
-             AND ($6::uuid IS NULL OR ts.branch_id=$6 OR ts.branch_id IS NULL) LIMIT 1`,
-          [req.auth.schoolId,req.auth.sub,b.sessionId,b.subjectId,b.sectionId||null,req.auth.branchId||null]
+          `SELECT ts.teacher_id AS "teacherId" FROM teacher_subjects ts
+           JOIN teachers t ON t.id=ts.teacher_id AND t.school_id=ts.school_id
+           JOIN sections sec ON sec.id=ts.section_id AND sec.school_id=ts.school_id
+           WHERE ts.school_id=$1 AND t.user_id=$2 AND ts.session_id=$3 AND ts.subject_id=$4
+             AND sec.class_id=$5 AND ts.can_mark=true AND ts.status='active'
+             AND ($6::uuid IS NULL OR ts.section_id=$6)
+             AND ($7::uuid IS NULL OR ts.branch_id=$7 OR ts.branch_id IS NULL) LIMIT 1`,
+          [req.auth.schoolId,req.auth.sub,b.sessionId,b.subjectId,b.classId,b.sectionId||null,req.auth.branchId||null]
         );
-        if(!permission.rowCount)return res.status(403).json({error:'Teacher is not assigned to this subject/section'});
+        if(!permission.rowCount)return res.status(403).json({error:'Teacher is not assigned to this class/subject/section'});
         teacherId=permission.rows[0].teacherId;
       }
       const {rows}=await pool.query(
@@ -64,10 +76,11 @@ function registerAcademicProgressRoutes(app,pool){
          RETURNING id,syllabus_unit_id AS "syllabusUnitId",section_id AS "sectionId",progress_percent AS "progressPercent",completed_at AS "completedAt",notes`,
         [req.auth.schoolId,b.sessionId,req.params.id,teacherId,b.classId,b.sectionId||null,b.subjectId,percent,b.notes||null,req.auth.sub]
       );
+      const payload={syllabusUnitId:req.params.id,sessionId:b.sessionId,classId:b.classId,sectionId:b.sectionId||null,subjectId:b.subjectId,progressPercent:percent,notes:b.notes||null};
       await pool.query(
         `INSERT INTO sync_changes(school_id,entity_type,entity_id,operation,payload,changed_by)
          VALUES($1,'syllabus_progress',$2,'update',$3::jsonb,$4)`,
-        [req.auth.schoolId,rows[0].id,JSON.stringify({syllabusUnitId:req.params.id,sessionId:b.sessionId,classId:b.classId,sectionId:b.sectionId||null,subjectId:b.subjectId,progressPercent:percent,notes:b.notes||null}),req.auth.sub]
+        [req.auth.schoolId,rows[0].id,JSON.stringify(payload),req.auth.sub]
       );
       res.json({progress:rows[0]});
     }catch(err){next(err)}

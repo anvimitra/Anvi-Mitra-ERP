@@ -25,7 +25,7 @@ function registerAuthRoutes(app, pool) {
          FROM users u
          LEFT JOIN schools s ON s.id=u.school_id
          WHERE (lower(u.email)=lower($1) OR u.phone=$1)
-           AND (u.role='super_admin' OR ($2 IS NOT NULL AND s.code=$2))
+           AND (u.role='super_admin' OR ($2::text IS NOT NULL AND s.code=$2::text))
          LIMIT 1`,
         [normalizeLogin(login), schoolCode ? String(schoolCode).trim() : null]
       );

@@ -41,134 +41,66 @@ async function main() {
   let createdId;
 
   try {
-    const school = await client.query(
-      "INSERT INTO schools(name,code,status) VALUES($1,$2,'active') RETURNING id",
-      ['E2E Platform School', seedCode],
-    );
+    const school = await client.query("INSERT INTO schools(name,code,status) VALUES($1,$2,'active') RETURNING id", ['E2E Platform School', seedCode]);
     const schoolId = school.rows[0].id;
-    const branch = await client.query(
-      "INSERT INTO branches(school_id,name,code,is_main) VALUES($1,'Main Branch',$2,true) RETURNING id",
-      [schoolId, 'MAIN'],
-    );
-    await client.query(
-      "INSERT INTO school_settings(school_id,display_name,timezone,currency_code,locale,date_format) VALUES($1,'E2E Platform School','Asia/Kolkata','INR','en-IN','DD-MM-YYYY')",
-      [schoolId],
-    );
-    await client.query(
-      "INSERT INTO mobile_app_configs(school_id,app_name,app_slug) VALUES($1,'E2E Platform School','e2e-platform-school')",
-      [schoolId],
-    );
-    await client.query(
-      "INSERT INTO users(school_id,branch_id,email,password_hash,role,status) VALUES($1,$2,$3,$4,'super_admin','active')",
-      [schoolId, branch.rows[0].id, seedEmail, await hashPassword(seedPassword)],
-    );
+    const branch = await client.query("INSERT INTO branches(school_id,name,code,is_main) VALUES($1,'Main Branch',$2,true) RETURNING id", [schoolId, 'MAIN']);
+    await client.query("INSERT INTO school_settings(school_id,display_name,timezone,currency_code,locale,date_format) VALUES($1,'E2E Platform School','Asia/Kolkata','INR','en-IN','DD-MM-YYYY')", [schoolId]);
+    await client.query("INSERT INTO mobile_app_configs(school_id,app_name,app_slug) VALUES($1,'E2E Platform School','e2e-platform-school')", [schoolId]);
+    await client.query("INSERT INTO users(school_id,branch_id,email,password_hash,role,status) VALUES($1,$2,$3,$4,'super_admin','active')", [schoolId, branch.rows[0].id, seedEmail, await hashPassword(seedPassword)]);
 
     child = spawn(process.execPath, ['src/server.js'], {
       cwd: require('path').resolve(__dirname, '..'),
       env: { ...process.env, PORT: '4183', NODE_ENV: 'test', DATABASE_URL: db, JWT_SECRET: process.env.JWT_SECRET || 'e2e-test-secret-at-least-32-characters-long' },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
+    child.stdout.on('data', chunk => process.stdout.write('[erp-api] ' + chunk));
+    child.stderr.on('data', chunk => process.stderr.write('[erp-api] ' + chunk));
 
     await waitForHealth();
 
-    const login = await fetchJson('/api/auth/login', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({schoolCode:seedCode,login:seedEmail,password:seedPassword}),
-    });
+    const login = await fetchJson('/api/auth/login', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({schoolCode:seedCode,login:seedEmail,password:seedPassword}) });
     if (!login.response.ok || !login.data.accessToken) throw new Error('Super Admin login failed: ' + JSON.stringify(login.data));
     const auth = {Authorization:'Bearer ' + login.data.accessToken, 'Content-Type':'application/json'};
 
     const createdCode = 'E2E-' + stamp + '-NEW';
-    const create = await fetchJson('/api/platform/schools', {
-      method:'POST',
-      headers:auth,
-      body: JSON.stringify({
-        name:'E2E New School',
-        code:createdCode,
-        displayName:'E2E New School',
-        appName:'E2E New School',
-        appSlug:'e2e-new-' + stamp,
-        adminEmail:createdAdminEmail,
-        adminPassword:createdAdminPassword,
-        mainBranchName:'Main Campus',
-        mainBranchCode:'MAIN',
-        timezone:'Asia/Kolkata',
-        currencyCode:'INR',
-        locale:'en-IN'
-      }),
-    });
-    if (create.response.status !== 201 || !create.data.school?.id || !create.data.admin?.id) {
-      throw new Error('School create E2E failed: HTTP ' + create.response.status + ' ' + JSON.stringify(create.data));
-    }
+    const create = await fetchJson('/api/platform/schools', { method:'POST', headers:auth, body: JSON.stringify({name:'E2E New School',code:createdCode,displayName:'E2E New School',appName:'E2E New School',appSlug:'e2e-new-' + stamp,adminEmail:createdAdminEmail,adminPassword:createdAdminPassword,mainBranchName:'Main Campus',mainBranchCode:'MAIN',timezone:'Asia/Kolkata',currencyCode:'INR',locale:'en-IN'}) });
+    if (create.response.status !== 201 || !create.data.school?.id || !create.data.admin?.id) throw new Error('School create E2E failed: HTTP ' + create.response.status + ' ' + JSON.stringify(create.data));
 
     createdId = create.data.school.id;
     const createdBranchId = create.data.admin.branchId;
     const detail = await fetchJson('/api/platform/schools/' + createdId, {headers:auth});
-    if (!detail.response.ok || detail.data.school?.code !== createdCode || !detail.data.branches?.length) throw new Error('School detail/branch E2E failed');
+    if (!detail.response.ok || detail.data.school?.code !== createdCode || !detail.data.branches?.length) throw new Error('School detail/branch E2E failed: HTTP ' + detail.response.status + ' ' + JSON.stringify(detail.data));
 
-    const edit = await fetchJson('/api/platform/schools/' + createdId, {
-      method:'PATCH',
-      headers:auth,
-      body:JSON.stringify({displayName:'E2E New School Updated',primaryColor:'#123456'})
-    });
-    if (!edit.response.ok) throw new Error('School edit E2E failed: ' + JSON.stringify(edit.data));
+    const edit = await fetchJson('/api/platform/schools/' + createdId, {method:'PATCH',headers:auth,body:JSON.stringify({displayName:'E2E New School Updated',primaryColor:'#123456'})});
+    if (!edit.response.ok) throw new Error('School edit E2E failed: HTTP ' + edit.response.status + ' ' + JSON.stringify(edit.data));
 
-    const branding = await fetchJson('/api/platform/schools/' + createdId + '/branding', {
-      method:'PATCH',
-      headers:auth,
-      body:JSON.stringify({logoUrl:'https://example.test/logo.svg',secondaryColor:'#654321'})
-    });
-    if (!branding.response.ok) throw new Error('School branding E2E failed: ' + JSON.stringify(branding.data));
+    const branding = await fetchJson('/api/platform/schools/' + createdId + '/branding', {method:'PATCH',headers:auth,body:JSON.stringify({logoUrl:'https://example.test/logo.svg',secondaryColor:'#654321'})});
+    if (!branding.response.ok) throw new Error('School branding E2E failed: HTTP ' + branding.response.status + ' ' + JSON.stringify(branding.data));
 
-    const deactivate = await fetchJson('/api/platform/schools/' + createdId, {
-      method:'PATCH',
-      headers:auth,
-      body:JSON.stringify({status:'inactive'})
-    });
-    if (!deactivate.response.ok) throw new Error('School deactivate E2E failed: ' + JSON.stringify(deactivate.data));
+    const deactivate = await fetchJson('/api/platform/schools/' + createdId, {method:'PATCH',headers:auth,body:JSON.stringify({status:'inactive'})});
+    if (!deactivate.response.ok) throw new Error('School deactivate E2E failed: HTTP ' + deactivate.response.status + ' ' + JSON.stringify(deactivate.data));
 
     const publicConfig = await fetchJson('/api/public/school-config?schoolCode=' + encodeURIComponent(createdCode));
-    if (publicConfig.response.status !== 404) throw new Error('Inactive school leaked through public config: HTTP ' + publicConfig.response.status);
+    if (publicConfig.response.status !== 404) throw new Error('Inactive school leaked through public config: HTTP ' + publicConfig.response.status + ' ' + JSON.stringify(publicConfig.data));
 
-    const reactivate = await fetchJson('/api/platform/schools/' + createdId, {
-      method:'PATCH',
-      headers:auth,
-      body:JSON.stringify({status:'active'})
-    });
-    if (!reactivate.response.ok) throw new Error('School reactivate E2E failed: ' + JSON.stringify(reactivate.data));
+    const reactivate = await fetchJson('/api/platform/schools/' + createdId, {method:'PATCH',headers:auth,body:JSON.stringify({status:'active'})});
+    if (!reactivate.response.ok) throw new Error('School reactivate E2E failed: HTTP ' + reactivate.response.status + ' ' + JSON.stringify(reactivate.data));
 
     const activeConfig = await fetchJson('/api/public/school-config?schoolCode=' + encodeURIComponent(createdCode));
-    if (!activeConfig.response.ok || activeConfig.data.school?.code !== createdCode) throw new Error('Active public school config E2E failed');
+    if (!activeConfig.response.ok || activeConfig.data.school?.code !== createdCode) throw new Error('Active public school config E2E failed: HTTP ' + activeConfig.response.status + ' ' + JSON.stringify(activeConfig.data));
 
-    const adminLogin = await fetchJson('/api/auth/login', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({schoolCode:createdCode,login:createdAdminEmail,password:createdAdminPassword})
-    });
-    if (!adminLogin.response.ok || adminLogin.data.user?.role !== 'admin' || !adminLogin.data.accessToken) {
-      throw new Error('Provisioned school administrator login failed: ' + JSON.stringify(adminLogin.data));
-    }
+    const adminLogin = await fetchJson('/api/auth/login', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({schoolCode:createdCode,login:createdAdminEmail,password:createdAdminPassword})});
+    if (!adminLogin.response.ok || adminLogin.data.user?.role !== 'admin' || !adminLogin.data.accessToken) throw new Error('Provisioned school administrator login failed: HTTP ' + adminLogin.response.status + ' ' + JSON.stringify(adminLogin.data));
 
-    const adminBranchSwitch = await fetchJson('/api/auth/switch-branch', {
-      method:'POST',
-      headers:{Authorization:'Bearer '+adminLogin.data.accessToken,'Content-Type':'application/json'},
-      body:JSON.stringify({branchId:createdBranchId})
-    });
-    if (!adminBranchSwitch.response.ok || !adminBranchSwitch.data.accessToken || String(adminBranchSwitch.data.branchId) !== String(createdBranchId)) {
-      throw new Error('Provisioned administrator branch scope failed: ' + JSON.stringify(adminBranchSwitch.data));
-    }
+    const adminBranchSwitch = await fetchJson('/api/auth/switch-branch', {method:'POST',headers:{Authorization:'Bearer '+adminLogin.data.accessToken,'Content-Type':'application/json'},body:JSON.stringify({branchId:createdBranchId})});
+    if (!adminBranchSwitch.response.ok || !adminBranchSwitch.data.accessToken || String(adminBranchSwitch.data.branchId) !== String(createdBranchId)) throw new Error('Provisioned administrator branch scope failed: HTTP ' + adminBranchSwitch.response.status + ' ' + JSON.stringify(adminBranchSwitch.data));
 
     const list = await fetchJson('/api/platform/schools', {headers:auth});
-    if (!list.response.ok || !Array.isArray(list.data.schools)) throw new Error('School list E2E failed');
+    if (!list.response.ok || !Array.isArray(list.data.schools)) throw new Error('School list E2E failed: HTTP ' + list.response.status + ' ' + JSON.stringify(list.data));
 
     console.log('Authenticated Super Admin create -> edit -> branding -> deactivate/reactivate -> provisioned admin login -> branch scope E2E: PASS');
   } finally {
-    if (child) {
-      child.kill('SIGTERM');
-      await sleep(300);
-      if (!child.killed) child.kill('SIGKILL');
-    }
+    if (child) { child.kill('SIGTERM'); await sleep(300); if (!child.killed) child.kill('SIGKILL'); }
     if (createdId) await client.query("UPDATE schools SET status='inactive' WHERE id=$1", [createdId]).catch(() => {});
     await client.query("UPDATE schools SET status='inactive' WHERE code=$1", [seedCode]).catch(() => {});
     await client.end().catch(() => {});
