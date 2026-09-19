@@ -2,6 +2,14 @@ const { authenticate, requireRoles } = require('./auth');
 const { hashPassword } = require('./security');
 
 function registerPlatformSchoolManagementRoutes(app, pool) {
+  app.get('/api/platform/schools', authenticate, requireRoles('super_admin'), async (req,res,next) => {
+    try {
+      const { rows } = await pool.query(
+        'SELECT s.id,s.name,s.code,s.status,s.created_at AS "createdAt", ss.display_name AS "displayName",ss.logo_url AS "logoUrl", ss.primary_color AS "primaryColor",ss.secondary_color AS "secondaryColor", ss.address,ss.phone,ss.email,ss.website, mac.app_name AS "appName",mac.app_slug AS "appSlug", mac.android_package AS "androidPackage",mac.api_base_url AS "apiBaseUrl" FROM schools s LEFT JOIN school_settings ss ON ss.school_id=s.id LEFT JOIN mobile_app_configs mac ON mac.school_id=s.id ORDER BY s.created_at DESC,s.name ASC'
+      );
+      res.json({schools:rows});
+    } catch(err){ next(err); }
+  });
 
   app.get('/api/platform/schools/:id/branches', authenticate, requireRoles('super_admin'), async (req,res,next) => {
     try {
